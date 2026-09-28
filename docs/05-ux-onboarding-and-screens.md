@@ -16,9 +16,12 @@ Keep it to **three tabs**. Put "Send a warm note" as a floating action on Today 
 
 ---
 
-## 2. Welcome screen
+## 2. Intro and welcome
 
-- Slow, soft animation (for example leaves rustling, or paper notes drifting).
+**Intro screen (every cold start, decided 2026-09-28):** the wordmark *rustle* and the folded-note mark on paper, with **leaves drifting and swaying softly** behind them, in sage on paper at low opacity, about 12–14 leaves at walking pace. The wordmark fades up over 1.6 s. It lasts about two seconds, then moves to Welcome (first launch) or Today (returning users); a tap skips it. No sound, no bounce, no logo animation. With reduce-motion on, the leaves hold still and the wordmark fades only. On a warm start (app already in memory) it is skipped. The live reference is on the style board (doc 20 §6).
+
+**Welcome screen (first launch, after the intro):**
+- The leaves keep drifting, slower and fewer, behind the content.
 - Headline: **"Notes that know what you're going through."**
 - Sub: *"Tell me a little. I'll remember, and leave you something kind when you need it."*
 - Buttons: **Begin** · small "I already have an account" (sign-in for reinstall/restore).

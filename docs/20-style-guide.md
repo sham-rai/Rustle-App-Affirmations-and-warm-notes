@@ -167,7 +167,8 @@ Two families: a **warm serif for anything Rustle writes** (notes, replies, recap
 
 | Moment | Motion | Duration |
 |---|---|---|
-| App open | Paper settles; hero note fades up 8 pt | 400 ms, ease-out |
+| Intro (cold start) | Wordmark and mark fade up over leaves that drift and sway at walking pace, sage on paper, low opacity; ~2 s, tap to skip; reduce-motion → leaves still (doc 05 §2) | 1.6 s fade, 2 s total |
+| App open (warm) | Paper settles; hero note fades up 8 pt | 400 ms, ease-out |
 | First note being written | A pen line draws across a card, then the note appears line by line | 2–4 s (covers the real generation), can be skipped |
 | A reply arrives | The reply note slides in and *sticks* onto the user's note with a small settle | 500 ms |
 | ❤️ on a note | The heart fills; a single leaf drifts up and fades | 600 ms, no confetti |
@@ -347,7 +348,7 @@ Dark values for `sageDeep` and the dark pastels are proposals; the designer shou
 
 ## 14. Designer brief (what to ask for, in order)
 
-1. **Wordmark and folded-note mark**, in one colour, tested at 16 px and as an app icon on light and dark wallpapers.
+1. **Wordmark and folded-note mark**, in one colour, tested at 16 px and as an app icon on light and dark wallpapers. Plus the **intro screen**: the leaf shapes and their motion (doc 05 §2); a live reference exists on the style board.
 2. **Paper and Night themes** as full token sets, with the texture asset.
 3. **Eight key screens** at phone width, in English *and* French, at default and at one accessibility text size: Welcome · onboarding step 2 (chips) · first note · Today · Notes board with a reply · New note sheet · What Rustle remembers · Paywall (soft). Plus the **crisis screen**.
 4. **Notification and small/medium widget** mockups on a real lock screen and home screen.
