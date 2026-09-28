@@ -167,7 +167,7 @@ Two families: a **warm serif for anything Rustle writes** (notes, replies, recap
 
 | Moment | Motion | Duration |
 |---|---|---|
-| Intro (cold start) | Wordmark and mark fade up over leaves that drift and sway at walking pace, sage on paper, low opacity; ~2 s, tap to skip; reduce-motion → leaves still (doc 05 §2) | 1.6 s fade, 2 s total |
+| Intro (cold start) | Wordmark and mark fade up in front of a tree at the edge of the screen: soft ink branches, sage leaves swaying in slow gusts, one letting go now and then; ~2 s, tap to skip; reduce-motion → tree still (doc 05 §2) | 1.6 s fade, 2 s total |
 | App open (warm) | Paper settles; hero note fades up 8 pt | 400 ms, ease-out |
 | First note being written | A pen line draws across a card, then the note appears line by line | 2–4 s (covers the real generation), can be skipped |
 | A reply arrives | The reply note slides in and *sticks* onto the user's note with a small settle | 500 ms |
