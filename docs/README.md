@@ -29,6 +29,7 @@
 | 19 | [Pre-build Review](19-pre-build-review.md) | **Read before coding:** the concept reviewed from every seat (user, product owner, PM, BA, engineering, legal, UX, marketing, finance), contradictions found, change list, questions for the founder |
 | 20 | [Style Guide](20-style-guide.md) | Visual and verbal style: principles, palette with checked contrast, typography, components, motion, notifications, share cards, microcopy, accessibility, design tokens, designer brief |
 | 21 | [Requirements](21-requirements.md) | **Build from this:** acceptance criteria for every MVP item, in build order, with the doc each one comes from |
+| 22 | [Working Agreement](22-working-agreement.md) | How the PO and the team lead work: tickets, weekly cadence, delegation to subagents, review ladder, monitoring, model routing (Fable vs Opus vs Sonnet), the M1 ticket split |
 
 **Presentation:** [Rustle: Pitch & Roadmap deck](https://claude.ai/artifact/M5EB2Wrj9HiSiEniGfV1hE) (16 slides; private until shared)
 
@@ -59,5 +60,5 @@
 1. Action items in [13-open-questions-and-decisions.md §B](13-open-questions-and-decisions.md): write the founder story (placeholder in doc 10 §3.5b), name the clinical advisor, trademark check.
 2. Run a trademark check for "Rustle" and secure the domain and handles.
 3. Run the 2-week concierge test with 20–30 people.
-4. Brief a designer (docs 05 and 20). First coding session: `CLAUDE.md`, doc 15 §4 session 1, and the acceptance criteria in doc 21.
+4. Brief a designer (docs 05 and 20). First coding session: approve the M1 split in `backlog/M1/` (doc 22 §9), then "run M1-01".
 5. Start the TikTok/IG accounts and the waitlist landing page 8 weeks before the beta.

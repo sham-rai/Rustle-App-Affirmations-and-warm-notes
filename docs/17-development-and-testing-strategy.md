@@ -37,7 +37,7 @@
 | Legal & stores | Sign up, submit, answer App Review | Drafts policies, store listings, consent screens | Lawyer reviews the documents |
 | Marketing | Be the face, post content, talk to creators | Drafts posts, scripts, press kit, ASO keywords in EN/FR | Optional: video editor |
 
-**Your weekly time budget (full-time):** ~50% building with Claude, 20% testing on devices, 15% users and research, 15% marketing and admin.
+**Your weekly time budget (full-time):** ~50% building with Claude, 20% testing on devices, 15% users and research, 15% marketing and admin. The weekly cadence, the ticket format and who reviews what are in [22-working-agreement.md](22-working-agreement.md).
 
 ---
 

@@ -27,6 +27,8 @@ The file lives at the repo root (created 2026-09-28, D39) and is the source of t
 
 ## 3. How to work with Claude Code, session by session
 
+**The team model** (roles, tickets, delegation to subagents, review ladder, model routing) is in [22-working-agreement.md](22-working-agreement.md); the tickets are in `backlog/`. The loop below is what happens inside one ticket.
+
 **The loop for every feature:**
 1. **Start with the doc.** "Read docs/05 §5 (Notes board) and docs/07 §3–4. Then plan the Notes board feature." Use **plan mode** for anything bigger than a small fix, so Claude proposes a plan before touching files. Read the plan and push back on it.
 2. **Build in slices.** Do the database migration, then the API, then the UI, then the tests. Each slice should be runnable.

@@ -10,6 +10,13 @@ Mobile app (iOS + Android) that writes short, personal support notes from what u
 - Monetization states and the paywall: `docs/09-monetization.md`
 - Risks, edge cases, legal: `docs/11-risks-edge-cases-safety.md` · Analytics events: `docs/12-metrics-and-analytics.md`
 - Style, tokens, microcopy: `docs/20-style-guide.md` · Decisions: `docs/13-open-questions-and-decisions.md`
+- **How we work** (roles, tickets, delegation, review ladder, model routing): `docs/22-working-agreement.md` · Tickets and board: `backlog/`
+
+## Working as the team lead
+- The PO (Daria) approves the ticket split on Monday and merges PRs; the lead never merges to `main`.
+- One ticket per subagent, in its own worktree, with only the ticket, this file and the linked doc sections. At most three subagents at once, on disjoint `owner_files`.
+- The lead writes migrations, RLS, encryption, `LLMClient`, the safety gate, the planner, the paywall and first-note state machines, and the notification extension itself; subagents get screens, wiring, tests, i18n and the web (routing table in docs/22 §6).
+- Every ticket gets a lead review (typecheck, tests, `/code-review`, `/security-review` where it applies, `npm run eval` for prompts) before a PR. Update `backlog/BOARD.md` on every state change.
 
 ## Glossary (docs/00). One name per thing, in UI, schema, events and docs
 | Thing | UI | Schema | Events |
