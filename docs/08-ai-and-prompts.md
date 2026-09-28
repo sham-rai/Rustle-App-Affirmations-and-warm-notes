@@ -13,7 +13,7 @@ User text (onboarding / note / check-in)
 [1] SAFETY GATE ──crisis──► Crisis flow (resources, no generic affirmation, human-safe copy)
       │ ok / low / elevated
       ▼
-[2] MEMORY EXTRACTOR ──► memory_items (+embeddings) ──► [3] MEMORY SUMMARISER (rolling "now" state)
+[2] MEMORY EXTRACTOR ──► memory_items ──────────► [3] MEMORY SUMMARISER (rolling "now" state)
                                                                   │
                      ┌────────────────────────────────────────────┤
                      ▼                    ▼                        ▼
@@ -30,22 +30,22 @@ Every step is a **separate, small, testable prompt** with a versioned template, 
 
 ## 2. Model strategy
 
-As of 2026, Claude pricing per 1M tokens (input/output) is roughly: **Opus 5** $5/$25 · **Sonnet 5** $2/$10 · **Haiku 4.5** $1/$5. The Batch API gives 50% off, and cached prompt reads are much cheaper than fresh input.
+As of September 2026, Claude pricing per 1M tokens (input/output) is roughly: **Opus 5.5** $4/$20 · **Opus 5** $5/$25 · **Sonnet 5** $2/$10 · **Haiku 4.5** $1/$5 (verify in the console before the blind test). The Batch API gives 50% off, and cached prompt reads are much cheaper than fresh input. Opus 5.5 replaces Opus 5 in every test below: it's the newer model at the lower price.
 
 | Step | Recommended model | Why |
 |---|---|---|
 | Safety gate | `claude-haiku-4-5` (+ keyword/regex pre-filter) | Fast and cheap, runs on every input; a classification task |
 | Memory extraction | `claude-haiku-4-5` or `claude-sonnet-5` (structured JSON output) | Extraction quality matters; test both |
 | Memory summary | `claude-sonnet-5` | Runs weekly or on big changes; needs nuance |
-| **Daily notes** | **Blind test: `claude-haiku-4-5` vs `claude-sonnet-5` vs `claude-opus-5`** via **Batch API** | The writing quality *is* the product. Notes are 1–4 sentences, which small models may handle well, so let the data decide. |
+| **Daily notes** | **Blind test: `claude-haiku-4-5` vs `claude-sonnet-5` vs `claude-opus-5-5`** via **Batch API** | The writing quality *is* the product. Notes are 1–4 sentences, which small models may handle well, so let the data decide. |
 | Note replies | Same test as daily notes | The most emotionally sensitive output; may justify a higher tier than daily notes |
-| Monthly recap | `claude-sonnet-5` or `claude-opus-5` (effort `high`) | Once a month; must be excellent; cost is small either way |
+| Monthly recap | `claude-sonnet-5` or `claude-opus-5-5` (effort `high`) | Once a month; must be excellent; cost is small either way |
 | Warm notes to friends | Same test as daily notes | Less context needed |
 | Output guardrail | Rules + `claude-haiku-4-5` | Cheap check |
 
-> **How the model for user-facing writing is chosen:** run the golden persona set (§8) through all three models with the same prompts, then have the founders and testers **blind-rate** the notes, and in beta compare the ❤️-rate. **Pick the cheapest model that users can't tell apart from the best one.** Rough cost per premium user per month (§9): Haiku 4.5 ≈ $0.3, Sonnet 5 ≈ $0.5, Opus 5 ≈ $1.0. All are affordable at $7.99; the choice is about quality, not survival. Until the test is done, the prompt lab and prototype use Sonnet 5.
+> **How the model for user-facing writing is chosen:** run the golden persona set (§8) through all three models with the same prompts, then have the founders and testers **blind-rate** the notes, and in beta compare the ❤️-rate. **Pick the cheapest model that users can't tell apart from the best one.** Rough cost per premium user per month (§9): Haiku 4.5 ≈ $0.3, Sonnet 5 ≈ $0.5, Opus 5.5 ≈ $0.8. All are affordable at $7.99; the choice is about quality, not survival. Until the test is done, the prompt lab and prototype use Sonnet 5.
 
-**Failover (all steps):** Claude on the Anthropic API → the **same Claude model on Amazon Bedrock or Google Vertex AI (EU region)** → template note. Using the same model keeps the voice and safety behaviour identical, so prompts only need tuning once. A second-vendor model (e.g. OpenAI gpt-5-nano) can be added behind `LLMClient` but is **off by default**; see doc 07 §7 for what turning it on requires.
+**Failover (all steps):** Claude on the Anthropic API → the **same Claude model on Amazon Bedrock or Google Vertex AI (Canada or EU region)** → template note. Using the same model keeps the voice and safety behaviour identical, so prompts only need tuning once. A second-vendor model (e.g. OpenAI gpt-5-nano) can be added behind `LLMClient` but is **off by default**; see doc 07 §7 for what turning it on requires.
 
 **Implementation notes (Claude API):**
 - Use **prompt caching** on the static system prompt and style guide. They're identical for all users and make up about 60% of input tokens.
@@ -87,10 +87,10 @@ Each item carries: `salience` (0–1), `status` (active/resolved/archived), `fir
 ```
 CONTEXT PACK (≈1.5–3k tokens)
 - profile: name, language, tone prefs, AVOID list (hard), pronouns if given
-- now_summary: rolling ~300-word memory summary
+- now_summary: rolling ~250-word memory summary
 - upcoming_dates: next 7 days (+ days until)
 - recent_signals: last 3 check-ins (mood trend), last 5 notes (short, most recent first)
-- relevant_memories: top 8 memory items by (salience × recency × relevance to today's slot/date)
+- relevant_memories: top 8 memory items by (salience × recency × life-area match with today's focus); no embeddings in the MVP (D31)
 - anchors: 1–3 "helps"/identity items for texture
 - recent_outputs: last 14 notes sent (to avoid repetition), with ❤️/"not quite" reactions
 - slot: "morning" | "midday" | "evening" | "before_sleep" + local weekday
@@ -102,6 +102,8 @@ CONTEXT PACK (≈1.5–3k tokens)
 - If a recent win → `win_celebration` (at most 1 per day).
 - Otherwise sample the focus by `focus_weights` × salience, with about 1 in 5 being `quiet_presence` ("Thinking of you. No agenda.") or an anchor-based note (the dog, the garden) so it feels like a friend, not a tracker.
 - **Memory surfacing rate:** at most 1 explicit callback to an older memory (> 7 days) per day. The goal is to *quietly* show memory, not show off.
+- **Entitlement states (doc 09 §2):** `premium` and `welcome_week` users get the full rhythm above. `door_open` users get one `presence` Rustle a week at their favourite slot, key-date notes on the day, and one note back a week on the first note they write; nothing else is composed for them, except safety responses.
+- **Seasons and closed chapters (D22):** when a situation is `resolved` (the exam passed, about a month of support after a breakup has passed and check-ins are calmer, a new relationship started), the chapter is **closed**: it stops being a focus for daily notes after one follow-up, and it isn't mentioned again unless the user brings it up. Closed chapters still feed the **recap**, which is where "how far you've come" is said. When *all* active chapters are closed and the last two weeks of check-ins are ≥ 3/5, the planner proposes the **quiet season** once ("Things sound lighter lately. Want me to write less often for a while?"): 2–3 notes a week, mostly `quiet_presence` and anchors, and the recap becomes the main touchpoint. A new hard signal (a new situation, low check-ins) returns the rhythm to active, without asking.
 
 ---
 
@@ -151,6 +153,9 @@ WHAT YOU NEVER DO
 - Never shame, guilt, pressure, or compare. Never imply they're not improving fast enough.
 - Never be romantic, flirtatious, possessive, or position yourself as a replacement for
   people in their life. Encourage connection with real people only lightly and rarely.
+- Speak as "I" (you are a presence, decision D23), but never claim feelings, needs or pride
+  of your own: "I miss you", "I'm proud of you", "I need you to…" are forbidden. Attention and
+  care are fine: "thinking of you", "I hope tonight is a little softer".
 - Never write about self-harm, suicide methods, weight/calories, or medication doses.
 
 STYLE
@@ -355,7 +360,7 @@ Plus a **deterministic pre-filter** (multilingual keyword lists for suicide, sel
 
 ### 5.8 Output guardrail
 
-**Rules (code):** length limits; banned phrases list (e.g. "as an AI", "according to", "you should", "everything happens for a reason", "stay positive"); avoid-list term match (including synonyms/names); no URLs/phone numbers (except the crisis flow); similarity against the last 14 notes (embedding cosine > 0.9 → regenerate); language check.
+**Rules (code):** length limits; banned phrases list (e.g. "as an AI", "according to", "you should", "everything happens for a reason", "stay positive"); avoid-list term match (including synonyms/names); no URLs/phone numbers (except the crisis flow); similarity against the last 14 notes (normalised trigram or token-set similarity above 0.8 → regenerate; no embeddings in the MVP, D31); language check.
 
 **LLM check (small model, only on flagged or sampled outputs):** "Does this note give advice, make promises, use clinical labels, mention avoid-topics, or sound robotic? yes/no + reason." If it fails → one regeneration → template fallback.
 
@@ -388,7 +393,7 @@ Same as the daily composer, but with `delivery_intent = first`. Extra rule: *"Th
 |---|---|
 | none / low | Normal flow; softer tone for low |
 | elevated | Reply is written with the elevated rules; the app shows a gentle, non-alarming "You don't have to carry this alone" card with localised support lines; daily notes become softer; no "win" or upbeat intents for 72 h |
-| crisis | **No AI-generated reply.** Immediately show a pre-written, human-reviewed crisis screen with local emergency and crisis numbers (e.g. 988 US, 9-8-8 Canada, 116 123 Samaritans UK/IE, 3114 France, 0800 32 123 Belgium, 143 Switzerland, 13 11 14 Australia, 112/911; the full table is in doc 11 §5b), plus "Text a crisis line" options. Scheduled upbeat notes pause for 24–48 h, replaced by pre-written gentle presence notes. Log a minimal `safety_event`. **We do not contact anyone on the user's behalf** (we don't have that capability or consent). |
+| crisis | **No AI-generated reply.** Immediately show a pre-written, human-reviewed crisis screen with local emergency and crisis numbers (e.g. 988 US, 9-8-8 Canada, 116 123 Samaritans UK/IE, 3114 France, 0800 32 123 Belgium, 143 Switzerland, 13 11 14 Australia, 112/911; the full table is in doc 11 §5b), plus "Text a crisis line" options. Scheduled upbeat notes pause for 24 h (the user can extend the pause from the crisis card), replaced by pre-written gentle presence notes. Log a minimal `safety_event`. **We do not contact anyone on the user's behalf** (we don't have that capability or consent). |
 
 The crisis copy is **written and reviewed by humans** (ideally with a clinical advisor) and localised. It's never generated.
 
@@ -403,16 +408,17 @@ The crisis copy is **written and reviewed by humans** (ideally with a clinical a
 
 ## 9. Cost per user (estimate)
 
-Assumptions (premium user, 3 notes/day, 5 notes/week written). The worked example uses Claude Opus 5, the most expensive option; the cheaper tiers are summarised after it:
+Assumptions (premium user, 3 notes/day, 5 notes/week written). The worked example uses Claude Opus 5 pricing as the ceiling; Opus 5.5 and the cheaper tiers are summarised after it:
 - Daily note: ~2.5k input tokens (of which ~1.2k is the cached system prompt) + ~120 output tokens, generated nightly via the Batch API (−50%).
   - ≈ (1.3k × $5 + 1.2k × ~$0.5 cached + 120 × $25) / 1M × 0.5 ≈ **$0.005 per note** → 90/month ≈ **$0.45**
 - Replies: 20/month × (~2.5k in + 100 out) at full price ≈ **$0.30**
 - Extraction + safety on Haiku 4.5: 30/month × ~1.5k tokens ≈ **$0.05**
 - Summaries (weekly, Sonnet 5): ≈ **$0.04**
-- Recap (monthly, Opus 5 high effort, ~15k in / 2k out incl. thinking) ≈ **$0.13**
-- **Total ≈ $1.0/month per active premium user on Opus 5.**
-- With the same volumes, user-facing writing on **Sonnet 5 ≈ $0.5**, on **Haiku 4.5 ≈ $0.3** (a daily note on Haiku with batch + caching ≈ $0.001).
-- Free user (1 note/day, no replies): ≈ **$0.05–0.25/month** depending on the tier.
+- Recap (monthly, Opus-class model at high effort, ~15k in / 2k out incl. thinking) ≈ **$0.13**
+- **Total ≈ $1.0/month per active premium user at Opus 5 pricing (the ceiling).**
+- With the same volumes, user-facing writing on **Opus 5.5 ≈ $0.8**, on **Sonnet 5 ≈ $0.5**, on **Haiku 4.5 ≈ $0.3** (a daily note on Haiku with batch + caching ≈ $0.001).
+- Door-open user (one presence note a week, key-date notes, one note back a week, extraction): ≈ **$0.05–0.12/month**.
+- Welcome week (7 days of full experience without a card, doc 09 §3): ≈ **$0.03–0.10 per install** depending on the model, paid once.
 
 At $7.99/month (≈ $5.60 net after the store fee), AI costs are about 15–18% of net revenue on Opus, 8–10% on Sonnet and ~5% on Haiku. That's healthy in every case, especially with annual plans. If Opus is chosen, watch its thinking-token usage and keep effort `low` for notes.
 

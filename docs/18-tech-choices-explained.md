@@ -5,7 +5,7 @@
 ## The four questions behind every choice
 
 1. **Can one founder build it with Claude?** One language, popular tools, little infrastructure.
-2. **Does it protect intimate data?** Security built in, EU hosting, fine-grained access rules.
+2. **Does it protect intimate data?** Security built in, Canadian hosting (EU region for European users later), fine-grained access rules.
 3. **Is it cheap until it succeeds?** Free or low tiers at the start, costs that grow with users.
 4. **Can we change our mind later?** Open standards, no lock-in where it matters.
 
@@ -41,8 +41,9 @@
 - **Postgres is a proper relational database.** Rustle's heart is *memory*: people, dates, situations, notes and their links. That's structured, connected data, which relational databases handle best.
 - **Anonymous accounts built in.** Our "no sign-up, but never lose your notes" design (doc 07 §5) needs anonymous sign-in that can later be linked to Apple/Google, and Supabase supports exactly that.
 - **Row Level Security (RLS):** security rules *inside the database*, so user A can never read user B's notes, even if the app code has a bug. For intimate data, this is a huge safety net.
-- **pgvector:** lets the database find *similar* memories (by meaning, not just keywords), which is useful for picking the right memories for each note, without adding another service.
-- **EU hosting** (Frankfurt), which matters for GDPR and for French users' trust.
+- **Column encryption built in:** note text is encrypted inside the database with a key kept in Supabase's Vault, so a leaked backup is unreadable, while the app and the AI pipeline still read it normally. It isn't end-to-end encryption (the AI has to read the text to write notes), and we say so honestly.
+- **No "similar memories" search yet:** the earlier plan used pgvector embeddings. They'd send note text to yet another company (Anthropic doesn't offer embeddings), and per-user memory is small enough to rank by importance, recency and life area instead. It can be added later without a third party.
+- **Canadian hosting** (Canada Central) first: Rustle is a Canadian company launching in Canada, it helps with Quebec's privacy law, and it's part of the "made in Canada" story. An **EU region** is added before the European launch so European users' data stays in Europe.
 - **Open source:** if Supabase ever becomes a problem, it's standard Postgres and can be moved elsewhere.
 - **Cheap start:** a free tier for development and ~$25/month in production at the start.
 - **Schema as text files (SQL migrations),** so Claude can read, write and review database changes like code.
@@ -80,7 +81,7 @@
   - **Batch API (50% cheaper):** daily notes don't need an instant answer, so we generate them overnight in bulk at half price.
   - **Prompt caching:** the long "Rustle voice" instructions are the same for everyone, and cached reads cost a fraction of the normal price.
 - **The right model for each job:** a small, fast, cheap model (Haiku) for background checks (safety, extraction). For what users read (notes, replies, warm notes) we **test Haiku, Sonnet and Opus blind** and pick the cheapest one people can't tell apart from the best.
-- **A backup route:** if Anthropic's API is down, the same Claude model is called through Amazon or Google's cloud (EU region), so notes sound exactly the same. If that fails too, a hand-written template note goes out, never an empty notification.
+- **A backup route:** if Anthropic's API is down, the same Claude model is called through Amazon or Google's cloud (Canada or EU region), so notes sound exactly the same. If that fails too, a hand-written template note goes out, never an empty notification.
 - **Your notes aren't used to train models** under the API terms. We state this in our privacy policy.
 
 **How we avoid lock-in:** all AI calls go through one small wrapper (`LLMClient`), so another provider could be added or tested later without rewriting the app. A different company's model is possible but off by default: it would need its own privacy agreement and its own quality tests, because it would sound different.
@@ -95,7 +96,8 @@
 
 **Why**
 - Apple and Google subscriptions are **complex** (trials, renewals, refunds, grace periods, family sharing, receipts). RevenueCat handles all of it for both stores with one SDK.
-- **Paywall experiments built in**, which is exactly what we need for the **hard vs soft paywall test**. You can change prices and paywall designs remotely without releasing a new app version.
+- **Paywall experiments built in**, which is what we need for the paywall experiments in doc 09 §8. You can change prices and paywall designs remotely without releasing a new app version.
+- **Promotional offers and granted entitlements:** the hardship discount and the access codes for beta testers, creators and later partners all run through RevenueCat, so there's one source of truth for who has Premium.
 - **Revenue dashboards** (trial conversion, churn, MRR) out of the box.
 - **Free until $2.5k monthly revenue**, then about 1%.
 
@@ -108,7 +110,7 @@
 ## 6. Notifications: **Expo Notifications (push) + local notifications**
 
 **Why both**
-- **Push** (sent from our server through Apple/Google) delivers the note written overnight, even if the app hasn't been opened.
+- **Push** (sent from our server through Apple/Google) wakes the phone when a note is ready, even if the app hasn't been opened. The push itself carries only an ID: a small native extension on iPhone, and the app on Android, fetch the text from our server and show it. Expo, Apple and Google never see what the note says.
 - **Local backup:** the app also keeps the next 1–2 days of notes on the phone and schedules them itself. This works **offline** and on Android phones that aggressively kill background apps. The notification is Rustle's heartbeat, so it gets two independent paths to arrive.
 
 ## 7. Widgets: **native (SwiftUI on iOS, Jetpack Glance on Android)**
@@ -130,9 +132,11 @@ The landing page, privacy pages and the **warm-note pages that friends open** (n
 
 | Choice | Why |
 |---|---|
-| EU data region | GDPR, French and Quebec trust |
+| Canada data region first, EU region before the European launch | Quebec Law 25 and the "made in Canada" story; GDPR users' data stays in Europe |
 | RLS on every table | A bug in the app can't leak another user's notes |
-| Extra encryption of note text | Protects notes even if a database backup leaked |
+| Extra encryption of note text (pgcrypto + Vault) | Protects notes even if a database backup leaked; not end-to-end, and we say so |
+| Opaque push notifications | Note text never passes through Expo, Apple or Google |
+| App Attest / Play Integrity | Only real installs of the app can trigger the AI, which limits abuse and cost |
 | AI keys only on the server | They can't be extracted from the app |
 | Anonymous account + Keychain / Block Store | No sign-up friction, and notes survive a reinstall (on Android, Block Store is what survives; the phone's regular key store is wiped on uninstall) |
 | No cross-app tracking | No "allow tracking" prompt; nothing to explain to worried users |
@@ -145,7 +149,7 @@ The landing page, privacy pages and the **warm-note pages that friends open** (n
 | Service | Cost at the start |
 |---|---|
 | Supabase | Free in dev · ~$25/month in production |
-| Claude API | Pay per use: ~$0.05–0.25 per free user, ~$0.3–1 per paying user per month (depends on the model test) |
+| Claude API | Pay per use: ~$0.05–0.10 per door-open user, ~$0.3–1 per paying user per month (depends on the model test) |
 | RevenueCat | Free up to $2.5k monthly revenue |
 | PostHog, Sentry, Vercel | Free tiers |
 | Expo (EAS) | Free tier; ~$19–99/month for more builds |

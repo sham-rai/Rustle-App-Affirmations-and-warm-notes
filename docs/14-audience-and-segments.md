@@ -56,7 +56,7 @@ So Rustle has **one product with adaptive tone**, and **several marketing entry 
 
 ### Priority 2: **18–24, exams and first heartbreak** 📣 (growth engine)
 - This group is the most viral: they share cards, send warm notes to friends and make TikToks. They pay less, so use a student discount.
-- Use exam seasons as launch moments: France (partiels in January and May, the bac in June), Quebec (cégep/university finals in December and April), and US/UK finals (April–June).
+- Use exam seasons as launch moments: France (partiels in January and May), Quebec (cégep/university finals in December and April), and US/UK finals (April–June). Not the bac: most candidates are 17, and Rustle is 18+ (doc 11 §5).
 - **Awareness and viral engine.**
 
 ### Priority 3: **45–60, divorce, caregiving, illness, grief** 🌱 (second wave, month 3+)
@@ -74,7 +74,7 @@ The affirmation category is mostly marketed to women, and early users will likel
 | Onboarding | **Don't ask for age bands in the UI** beyond the 18+ gate. Tone comes from step 6 (tone preferences). Add a French-only "tu / vous" question. |
 | AI tone | Tone preferences + recent reactions drive the voice. The golden eval set includes personas across 18–60 (student, 30s burnout, 40s divorce, 58-year-old caregiver). |
 | Design | Dynamic Type, **Simple mode**, high-contrast theme and dictation are in the MVP scope (important for 45–60). |
-| Paywall | Student discount (18–24); **lifetime option and gifting** tested for 45+. |
+| Paywall | Student discount (18–24) and the **chapter pass** for time-bound situations; **gifting** for 45+ (adult children buying for a parent); lifetime deferred (doc 09 §4). |
 | Warm notes | "Send one to your mum/dad/friend" to reach older users. |
 | Marketing | Separate creatives per life moment, not per age: "exams", "heartbreak", "divorce", "burnout/layoff", "caring for a parent". |
 

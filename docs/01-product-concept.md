@@ -93,7 +93,7 @@ Every idea from the brief is assessed below. **Verdict key:** ✅ MVP · 🟡 V1
 |---|---|---|
 | Welcome + 2-min onboarding (open + multiple-choice) | ✅ | This is where the first "wow" happens. The first note must already mention something the user said. |
 | Personalised affirmation on main screen | ✅ | Core output. |
-| Daily notifications, adjustable time & frequency | ✅ | The core delivery channel. 1–3/day on free, up to 5 on premium. |
+| Daily notifications, adjustable time & frequency | ✅ | The core delivery channel. 1–5/day on premium and during the **welcome week**; door-open users get one presence note a week plus key-date notes (doc 09 §2). |
 | Notes board (share any thought) | ✅ | The core input and the memory fuel. |
 | **Reply to notes** | ✅ (as "a note back", not chat) | See §5.1. This is the magic moment. Without it the board is a void. |
 | Check-ins (quick mood + one line) | ✅ | Cheap, structured signal. 2–4 per week, prompted inside a notification. |
@@ -132,6 +132,7 @@ This is the biggest open product question. Recommendation:
   - cuts AI cost roughly 5–10× compared with chat,
   - keeps Rustle out of much of the "AI companion chatbot" regulation (California SB 243, New York's companion law) and makes dependency less likely,
   - makes each reply feel more precious.
+- **Who gets a note back:** premium and welcome-week users on every note; door-open users on the first note of each week (doc 09 §2). Safety responses to elevated or crisis text are never conditional on paying.
 - **A "Just listen" toggle per note** (🤫). The user can post a note and ask for no reply: "I just wanted to put it down." Rustle still remembers it. This respects people who don't want feedback.
 - **Later notes show that it remembered:** "You wrote on Monday that the silence at home is loud. I hope tonight is a little softer."
 
@@ -166,7 +167,7 @@ Privacy: the friend never receives the sender's own notes or memory. The link ex
 ### 5.4 "Look how far you've come"
 
 - **When:** automatically at day 30, then monthly. Also on demand after 30 days.
-- **What:** a 6–10 card, Stories-style recap:
+- **What:** a 6–8 card, Stories-style recap:
   1. "A month ago you told me…" (their own words from onboarding)
   2. Hard things they faced (exam, first weekend alone, rejection email)
   3. Things they did anyway (small wins pulled from notes and check-ins)
@@ -175,6 +176,7 @@ Privacy: the friend never receives the sender's own notes or memory. The link ex
   6. A closing note: what Rustle hopes for them next month
 - **Shareable** as an anonymised card ("This month I survived 3 exams and 1 heartbreak 🌿"). Growth moment #2.
 - **Sensitive:** the user can hide topics from recaps. Never surface the darkest notes without consent. Recaps must never make someone feel they're "not improving fast enough."
+- **One feedback question**, on the last card: *"Did Rustle help this month?"* with three answers (a lot / a little / not really). Not a scale, not a screening tool: it's product feedback, and it gives the only honest signal of whether Rustle helps without drifting toward a medical claim.
 
 ### 5.5 "Everything is remembered, nothing disappears"
 
@@ -183,6 +185,15 @@ Philosophically beautiful, but it needs care:
 - **Forget on request:** "Forget this" on any note or memory item, and "Pause memory" mode.
 - **Hard delete account:** everything is wiped within 30 days (legal requirement). "Nothing disappears" means *we* never lose it, not that the user can't delete it.
 - **Fading:** old context naturally weighs less in generation (a breakup from 18 months ago shouldn't appear in every note), but stays available for recaps.
+
+### 5.6 Seasons: stepping back when things get better ✅ (decided 2026-09-28)
+
+A support product's best outcome is that the person needs it less. Rustle is designed for that, not against it.
+
+- **Chapters close.** When a situation resolves (the exam is passed, about a month of support after a breakup has gone by and check-ins are calmer, a new relationship has started), Rustle stops talking about it. One gentle follow-up, then that thread goes quiet. It isn't brought up again unless the user does.
+- **The recap remembers.** Closed chapters live on in "Look how far you've come": *"In March you wrote that the flat felt too quiet. This month you wrote about the concert."* That's where the reminder of distance travelled belongs, softly, once a month.
+- **The quiet season.** When nothing hard is active and check-ins have been calm for two weeks, Rustle asks once: *"Things sound lighter lately. Want me to write less often for a while?"* Quiet season means 2–3 notes a week, mostly presence and anchors (the dog, the garden), and the monthly recap as the main touchpoint. A new hard moment brings the active rhythm back without asking.
+- **Why it matters:** it's honest (we don't keep someone in the story of their hard time), it's what keeps the app from being muted, and it improves margins on annual plans. The commercial side (a keep-in-touch rhythm rather than a cancelled subscription) is in [09-monetization.md](09-monetization.md).
 
 ---
 
@@ -205,7 +216,7 @@ Emojis are minimal and optional (🌿 at most). There's no toxic positivity: pai
 ## 7. What success looks like
 
 - A user says: **"How did it know?"**, which is our north-star feeling.
-- **North-star metric:** *weekly "felt seen" moments.* That's the number of users who react ❤️ to a note, write a new note or open a notification each week (see [12-metrics-and-analytics.md](12-metrics-and-analytics.md)).
+- **North-star metric:** *weekly "felt seen" moments.* That's the number of users who react ❤️ to a Rustle or a note back, or write a note or check-in after one arrived, each week. Notification opens are attention, not feeling seen, and are tracked separately (see [12-metrics-and-analytics.md](12-metrics-and-analytics.md)).
 - D30 retention above 20% (the category average is roughly 3–8%).
 - At least 15% of monthly active users send a warm note to a friend in their first month.
 

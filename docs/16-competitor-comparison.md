@@ -27,7 +27,7 @@ Legend: ✅ yes · ◐ partly · ❌ no
 
 | App | Monthly | Yearly | Other |
 |---|---|---|---|
-| **Rustle** (proposed) | **$7.99 / €7.99** | **$44.99 / €44.99** (7-day trial) | Student −40%; lifetime and gifts later |
+| **Rustle** (proposed) | **$7.99 / €7.99** (CA$10.99) | **$44.99 / €44.99** (CA$59.99; 7-day trial, or a card-free welcome week) | Hardship offer −50% for 3 months; chapter pass 6 weeks (V1.1); student −40% and gifts later; lifetime deferred |
 | I am | Subscription (verify prices) | (verify) | Lifetime IAP |
 | ThinkUp | $7.99 | $39.99 | $99.99 lifetime |
 | Finch | Free core; Plus $9.99 | $69.99 | Mostly cosmetic premium |

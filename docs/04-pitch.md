@@ -46,7 +46,7 @@
 **8. Competition:** a 2×2 of Personal vs Generic × Push vs Pull. Rustle alone owns *personal + push*.
 
 **9. Business model**
-- Freemium plus a 7-day trial on annual. $7.99/mo or $44.99/yr.
+- Trial-first with a welcome week: a 7-day free trial after the first note, or a card-free welcome week for those who tap "Not now", then one plan with everything ($7.99/mo or $44.99/yr; CA$10.99 / CA$59.99). Non-payers keep their notes, memory and the door open, so the viral loop and the moat keep working. A quiet hardship price for people who just lost a job.
 - AI cost ≈ $0.5–1.0 per paying user per month → 65–85% contribution margin.
 - Later: gifting, B2B2C (universities, outplacement, employers, patient organisations).
 
@@ -59,7 +59,7 @@
 **11. Traction / plan** *(fill in after the concierge test and beta)*
 - Concierge test: X people, Y% felt "seen", Z% wanted to pay.
 - Waitlist: N signups.
-- Roadmap: MVP in ~18 weeks → recap → Android widget → voice → B2B2C.
+- Roadmap: closed beta at ~week 21, public launch at ~week 27 (doc 06 §4) → recap → Android widget → chapter pass → voice → B2B2C.
 
 **12. Team & ask**
 - Founder(s), advisors (clinical psychologist, AI/mobile engineer).
@@ -84,5 +84,6 @@
 > • "Look how far you've come" monthly story
 > • Send a warm note to a friend who's struggling
 > • Your data is yours: see, edit or delete what Rustle remembers
+> • Made in Canada 🍁, with your notes stored in Canada
 >
 > Rustle is an AI-powered self-care companion. It is not therapy or a medical service. If you're in crisis, please contact local emergency services or a crisis line. Rustle always shows you where to find help.

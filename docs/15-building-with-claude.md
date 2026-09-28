@@ -14,48 +14,16 @@
 
 ## 2. One-time setup (week 1 of development)
 
-1. **Accounts:** Apple Developer, Google Play Console, Expo (EAS), Supabase (EU region), Anthropic API (a separate key for the app, not your Claude subscription), RevenueCat, PostHog (EU), Sentry, GitHub, a domain (e.g. `rustle.app`).
+1. **Accounts:** Apple Developer, Google Play Console, Expo (EAS), Supabase (Canada Central region; EU later), Anthropic API (a separate key for the app, not your Claude subscription), RevenueCat, PostHog (EU), Sentry, GitHub, a domain (e.g. `rustle.app`).
 2. **Machine:** a Mac with Xcode, Android Studio, Node LTS, the Supabase CLI and the EAS CLI. Ask Claude Code to check what's installed and walk you through the rest.
 3. **Repo structure:** follow [07-technical-architecture.md §11](07-technical-architecture.md) (`/app`, `/supabase`, `/evals`, `/web`, `/docs`).
 4. **A `CLAUDE.md` at the repo root** (template below). Claude Code reads it automatically at the start of every session. It's your standing instructions.
 5. **Secrets:** put them in `.env.local` files (git-ignored), EAS secrets and Supabase secrets. **Never paste API keys into code or chat.** Ask Claude to add a pre-commit secret scanner (e.g. `gitleaks`).
 6. **Three environments:** `dev`, `staging` and `prod` Supabase projects. Claude works against `dev` only.
 
-### `CLAUDE.md` template
+### `CLAUDE.md`
 
-```markdown
-# Rustle
-
-Mobile app that writes short, personal support notes from what users share, remembers everything,
-and delivers notes by notification/widget. Not therapy, not a chatbot (see docs/01 "no-chat principle").
-Users are 18+. Languages: English + French (tu by default, vous optional).
-
-## Docs (read the relevant one before starting a feature)
-- Product: docs/01-product-concept.md · UX: docs/05-ux-onboarding-and-screens.md
-- Architecture & schema: docs/07-technical-architecture.md
-- AI, memory, prompts, safety levels: docs/08-ai-and-prompts.md
-- Risks, edge cases, legal: docs/11-risks-edge-cases-safety.md
-
-## Stack
-Source of truth: docs/07 §1 (including the rejected list; don't propose rejected options).
-Expo (expo-router, TypeScript strict, TanStack Query, MMKV cache only) · Supabase (Postgres, RLS, anonymous auth,
-pgvector, pg_cron, Edge Functions; no separate server) · Claude API via our LLMClient wrapper only · RevenueCat
-· PostHog (events only) · Sentry (bodies scrubbed) · EAS Build/Submit/Update.
-
-## Rules
-- TypeScript strict; no `any`. Run `npm run typecheck && npm test` before saying a task is done.
-- Every new table has RLS (`user_id = auth.uid()`) in the same migration. Never disable RLS.
-- Never send note text, replies or memory content to analytics or logs.
-- All user-facing strings go through i18n (en.json + fr.json); never hard-code text.
-- All LLM calls go through supabase/functions/_shared/llm/LLMClient.ts with a versioned prompt from supabase/functions/_shared/prompts/.
-- Background jobs must be short, idempotent and resumable (docs/07 §2.1); never wait on a batch inside one invocation.
-- Any change to prompts must pass `npm run eval` (golden persona set) before merge.
-- Safety: crisis-level text never gets an AI-generated reply (docs/08 §7).
-- Small commits with clear messages; one feature per branch.
-
-## Commands
-npm run dev · npm run typecheck · npm test · npm run eval · supabase db reset · eas build --profile development
-```
+The file lives at the repo root (created 2026-09-28, D39) and is the source of truth for standing instructions: the glossary, the stack, the rules (RLS, no content in analytics, i18n, `LLMClient` only, idempotent jobs, evals before merging prompts, safety), the entitlement states and the commands. Edit it there, not here. When a decision in doc 13 changes a rule, change `CLAUDE.md` in the same branch.
 
 ## 3. How to work with Claude Code, session by session
 
@@ -82,21 +50,21 @@ Use these as starting prompts for Claude Code sessions.
 | # | Session goal | Starter prompt (short version) |
 |---|---|---|
 | 1 | Project skeleton | "Set up the monorepo from docs/07 §11: Expo app with expo-router + TypeScript strict, i18n EN/FR, Supabase project config, /evals package, CI with typecheck + tests." |
-| 2 | Database | "Write the Supabase migrations for the data model in docs/07 §3 with RLS on every table, plus seed data for 3 test users." |
-| 3 | Anonymous auth + persistence | "Implement anonymous sign-in with the session persisted in iOS Keychain / Android Block Store (not Keystore alone) so it survives reinstall (docs/07 §5). Add the 'backed up / not backed up' status in settings." |
-| 4 | Consent + 18+ gate | "Build the welcome, age gate (18+) and AI-processing consent screens (docs/05 §2–3, docs/11 §4), EN + FR." |
+| 2 | Database | "Write the Supabase migrations for the data model in docs/07 §3 with RLS on every table, pgcrypto column encryption with a Vault key and decrypting views (docs/07 §8), the `consents` and `entitlement_grants` tables, plus seed data for 3 test users. Add pgTAP tests that user A can't read user B's notes." |
+| 3 | Anonymous auth + persistence | "Implement anonymous sign-in with the session persisted in iOS Keychain / Android Block Store (not Keystore alone) so it survives reinstall (docs/07 §5). Add the 'backed up / not backed up' status in settings, and the offline outbox for notes and check-ins (docs/07 §4.2)." |
+| 4 | Consent + 18+ gate | "Build the welcome, age gate (18+) and consent screens (terms, AI processing, special-category data) that write `consents` rows with version and locale (docs/05 §2–3, docs/11 §4), EN + FR." |
 | 5 | Onboarding UI | "Build the 9-step onboarding from docs/05 §3, storing answers locally until completion." |
 | 6 | LLM client + prompts | "Create supabase/functions/_shared/llm/LLMClient.ts (Claude API, structured outputs, prompt caching, retries, cost logging, failover to the same model on Bedrock/Vertex, then template) and load versioned prompts from supabase/functions/_shared/prompts. Add the Rustle voice system prompt from docs/08 §5.1." |
 | 7 | Safety gate | "Implement the keyword pre-filter + classifier from docs/08 §5.7 and the crisis screen with localised resources (docs/11). Add tests with sample texts in EN and FR." |
-| 8 | First note | "Implement /onboarding/complete: save, safety check, memory extraction, first-note generation with streaming and an 8-second template fallback (docs/07 §4.1)." |
+| 8 | First note | "Implement /onboarding/complete behind App Attest / Play Integrity: save, safety check, memory extraction, first-note generation with streaming and an 8-second template fallback, then the 48 h of seed notes (docs/07 §4.1)." |
 | 9 | Eval harness | "Build `npm run eval`: 40 golden personas (docs/08 §8), rule checks, and an LLM-as-judge rubric, output as a report." |
 | 10 | Notes board + replies | "Build the Notes board (docs/05 §5) and the delayed reply pipeline (docs/07 §4.2, docs/08 §5.3), including the 'just listen' toggle." |
 | 11 | Memory screen | "Build 'What Rustle remembers' with view/edit/delete and pause memory." |
-| 12 | Daily notes | "Implement the nightly per-timezone batch generation with the Message Batches API, the slot planner (docs/08 §3.3), push delivery, local-notification backup and idempotency." |
-| 13 | iOS widget | "Add a SwiftUI WidgetKit extension via expo-apple-targets that shows the latest note from App Group storage (docs/05 §8)." |
-| 14 | Paywall | "Integrate RevenueCat with two paywall variants, hard and soft, assigned 50/50 by PostHog feature flag (docs/09 §1)." |
-| 15 | Share + warm notes | "Build share cards (9:16, 1:1) with the sensitive-content check, and warm notes: 3 drafts → edit → link → Next.js page with OG image." |
-| 16 | Settings, export, delete | "Build settings, JSON export and full account deletion with cascade (docs/07 §8)." |
+| 12 | Daily notes | "Implement the nightly per-timezone batch generation two days ahead with the Message Batches API, the slot planner with the three entitlement states (docs/08 §3.3, docs/09 §2), opaque push delivery, the real-time fallback per slot, local-notification backup and idempotency (docs/07 §4.3)." |
+| 13 | iOS widget + notification extension | "Add a SwiftUI WidgetKit extension and a Notification Service Extension via expo-apple-targets: the widget shows the latest note from App Group storage (docs/05 §8); the extension fetches the note text for an opaque push and respects lock-screen privacy (docs/07 §6). Android: data messages build the notification in-app." |
+| 14 | Paywall | "Integrate RevenueCat: one `premium` entitlement, monthly and annual products with a 7-day trial, the hardship promotional offer, the trial-first paywall after the first note, 'Not now' → welcome week → day-7 paywall → door open, and the access-code redemption Edge Function over `entitlement_grants` (docs/09 §2–3, §9; docs/07 §9). Paywall copy and offerings remote-configurable." |
+| 15 | Share + warm notes | "Build share cards (9:16, 1:1) with the sensitive-content check, and warm notes: 3 drafts → edit → re-moderation → link → noindex Next.js page with OG image and the one-tap thank-you (docs/07 §4.5)." |
+| 16 | Settings, export, delete | "Build settings (including app lock, lock-screen privacy defaults, consents, « Résilier mon abonnement », redeem a code), JSON export and full account deletion with cascade (docs/07 §8)." |
 | 17 | Analytics | "Add the PostHog events from docs/12 §4. Double-check that no content is ever sent." |
 | 18 | Hardening | "Run through every edge case in docs/11 §2 and tell me which are handled, which aren't, and fix the gaps." |
 
@@ -117,6 +85,6 @@ Use these as starting prompts for Claude Code sessions.
 1. **The "almost working" pile-up.** Many half-finished features. → Finish and merge one slice at a time.
 2. **Silent security gaps** (a table without RLS, a service key in the app). → CLAUDE.md rules, `/security-review`, and the human review.
 3. **Prompt drift.** A small prompt edit quietly makes notes worse. → Versioned prompts and `npm run eval` on every change.
-4. **Over-building.** Claude will happily build anything you ask for. → Stick to the MVP list in doc 06; park new ideas in doc 13.
+4. **Over-building.** Claude will happily build anything you ask for. → Stick to the MVP list in doc 06 and the acceptance criteria in doc 21; park new ideas in doc 13.
 5. **Skipping real devices.** Notifications, widgets and purchases behave differently on real phones. → Test on your iPhone every week, and use TestFlight early.
 6. **Losing context between sessions.** → Keep the docs and CLAUDE.md up to date; they're Claude's memory of the project.

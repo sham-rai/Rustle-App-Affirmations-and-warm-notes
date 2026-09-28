@@ -10,11 +10,11 @@
 |---|---|---|---|---|
 | R1 | **Harmful AI output to a vulnerable user** (e.g. an upbeat note after a suicidal note, advice that harms, triggering content) | Medium | Critical | Safety gate on every input; crisis flow with no AI generation; output guardrails; red-teaming; softer mode after elevated signals; human-written crisis copy; incident process (§6) |
 | R2 | **Regulatory: classified as "therapy" or an "AI companion chatbot"** | Medium | High | Positioning as *supportive notes, not therapy*; no chat interface; disclosures; crisis protocols that satisfy NY/CA companion laws anyway; legal review before the US launch (§4) |
-| R3 | **Privacy breach / data leak** of intimate notes | Low–Medium | Critical | Envelope encryption, RLS, minimal staff access, pen test before launch, EU hosting, breach plan |
+| R3 | **Privacy breach / data leak** of intimate notes | Low–Medium | Critical | Column encryption with Vault keys, RLS, opaque push payloads, minimal staff access, pen test before launch, Canadian hosting (EU region before the EU launch), breach plan |
 | R4 | **Big tech copies it** (ChatGPT/Gemini/Apple push "memory" features) | High | Medium | Specialised UX, push-native delivery, emotional brand, speed; build the memory moat early |
 | R5 | **Other AI-affirmation apps** (a crowded App Store) | High | Medium | Depth of memory, quality of voice, warm-note viral loop, community/brand |
 | R6 | **Notification fatigue → muted → churn** | High | High | Quality over quantity, adaptive frequency, date-aware notes, widget, re-engagement caps |
-| R7 | **Low conversion / unit economics** | Medium | High | Hybrid paywall with A/B tests, annual-plan focus, AI cost controls (see doc 09) |
+| R7 | **Low conversion / unit economics** | Medium | High | Trial-first with the welcome week and door-open mode, paywall experiments once there's volume, annual-plan focus, AI cost controls (see doc 09) |
 | R8 | **Memory feels creepy** ("how does it know that?!") | Medium | Medium | Quiet memory (max 1 callback/day), a transparent "What Rustle remembers" screen, "Forget this", onboarding copy that sets expectations |
 | R9 | **Dependency / emotional over-attachment** | Low–Medium | High | No chat, no romance, no "I'm all you need", occasional gentle nudges toward real people; don't optimise time-in-app |
 | R10 | **LLM provider outage / price change / policy change** | Medium | Medium | Provider abstraction, pre-generated notes (a 24–48 h buffer on device), template fallbacks, a second provider tested |
@@ -49,8 +49,8 @@
 - **Third-party information** (details about friends' health etc.): store it minimally (first name + relationship + the essence), and never repeat sensitive third-party details in shareable content.
 - **Multiple languages:** memory is stored in English (normalised). Output follows the user's language, and names are preserved exactly.
 - **Very long notes (5,000+ words):** truncate or summarise for the extractor in chunks; store the full text.
-- **High volume** (someone writing 50 notes a day in distress): replies are capped (at most 1 per 30 min, with batching: "a note back on everything you wrote today"). Watch for distress patterns and show resources.
-- **Grief anniversaries:** a key-date note on the anniversary must be extremely gentle. Allow a "don't send notes on this day" option.
+- **High volume** (someone writing 50 notes a day in distress): replies are capped at one per 30 minutes, batched into one note back attached to the most recent note (doc 07 §4.2). Watch for distress patterns and show resources.
+- **Grief anniversaries and medical dates:** reminders are **opt-in** at the moment the date is captured ("Want me to be with you on that day, or leave it quiet?", `key_dates.remind`). When on, the note must be extremely gentle. A surprise reminder of a death anniversary is the one-star review from someone in pain.
 
 ### Delivery
 - **Timezone change / travel:** reschedule on app open; the server uses the last known timezone.
@@ -59,13 +59,13 @@
 - **Phone off / offline for days:** local pre-scheduled notes cover 48 h. After that, the server doesn't spam a backlog; it resumes fresh.
 - **Duplicate delivery (local + push):** idempotency key per affirmation. The app suppresses local notifications already delivered by push (and vice versa).
 - **A note references a date that got rescheduled:** the user edits the date → notes are regenerated.
-- **Lock-screen exposure** in shared households: a "hide text on lock screen" setting, plus an app lock. Strongly suggest it when the topics include divorce, abuse or health.
+- **Lock-screen exposure** in shared households: "hide text on lock screen" **defaults to on** for divorce or separation, abuse, illness and grief, with a one-line explanation and a switch to reveal; plus an app lock (Face ID / PIN) in the MVP. The people at most risk are the least likely to find a setting.
 
 ### Account & payments
 - See the account edge cases in [07-technical-architecture.md §5](07-technical-architecture.md).
 - **Family sharing:** decide whether to enable Family Sharing for the subscription (probably yes for the annual plan; it's good for the gift framing).
 - **Refund requests:** handled by the stores; reply templates for support.
-- **The user cancels mid-crisis:** never hold data hostage. The free tier continues and all memory remains.
+- **The user cancels mid-crisis:** never hold data hostage. Door-open mode continues and all memory remains.
 - **Deceased user / account of a person who died:** support a family request process for deletion.
 
 ### Share & warm notes
@@ -87,6 +87,7 @@
 7. **Clinical advisor:** recruit a licensed psychologist as an advisor (a paid few hours per month) to review crisis copy, prompts, the safety taxonomy and marketing claims. It's also a trust signal for press and partners.
 8. **Quarterly red-team** plus a review of every `crisis` event classification (was it correct?).
 9. **Transparency:** "Rustle is AI-powered and is not a therapist or a crisis service" appears in onboarding, the About screen and the App Store description. This is required by the EU AI Act Art. 50 from 2 Aug 2026 and by the NY and CA laws.
+10. **Periodic AI reminder as a concrete UI element:** a one-line "Rustle is AI, not a person" caption under the first note back of each calendar month and on the paywall, so the reminder the NY and CA laws expect isn't left to memory.
 
 ---
 
@@ -106,11 +107,14 @@
 - **US state privacy laws** (CCPA/CPRA, and **Washington My Health My Data Act**, which covers consumer health data, requires consent and has a private right of action). Treat notes as consumer health data.
 - **France (CNIL):** GDPR as applied by the CNIL. Health-related data in a wellness app is sensitive data, so you need explicit consent, a DPIA, and a clear privacy policy **in French**.
   - **HDS (Hébergeur de Données de Santé) certification:** required by French law (Code de la santé publique, art. L.1111-8) for hosting health data collected during *prevention, diagnosis, care or medico-social follow-up*. A non-medical wellness app is generally **argued to be outside** HDS scope, but the boundary is blurry, and apps often discover they're in scope once they partner with a health organisation. **Ask the lawyer for an opinion.** If you later do B2B deals with French health or insurance partners, plan to use an HDS-certified host (several EU clouds offer it).
-- **Quebec Law 25** (fully in force since 22 Sept 2024): express, granular consent for sensitive information; a **Privacy Impact Assessment** before launching a new system and before **transferring personal information outside Quebec** (our servers are in the EU and the LLM is US-based, so this applies); a named person responsible for personal information (the founder at first); privacy settings at the highest level by default; transparency about automated processing; the policy published in French.
+- **Quebec Law 25** (fully in force since 22 Sept 2024): express, granular consent for sensitive information; a **Privacy Impact Assessment** before launching a new system and before **transferring personal information outside Quebec** (our servers are in Canada Central, outside Quebec, and the LLM is US-based, so this applies); a named person responsible for personal information (the founder at first); privacy settings at the highest level by default; transparency about automated processing; the policy published in French.
 - **Canada (federal): PIPEDA** for the rest of Canada.
 - **Switzerland: the revised FADP (nLPD, 2023)**, similar to GDPR. **Belgium:** GDPR via the APD/GBA.
 - **Children:** Rustle is **18+**, which avoids COPPA (US, under 13), GDPR Art. 8 parental consent (**under 15 in France**) and Quebec's under-14 rules. We still need reasonable age measures (§5).
 - **AI training:** don't use user notes to train models. Put this clearly in the privacy policy (it's a big trust point).
+- **Consent records:** every consent is a row in `consents` (kind, version, locale, granted and withdrawn timestamps; doc 07 §3): terms, AI processing (Apple's requirement), special-category data (GDPR Art. 9, Law 25), **quality review** (beta testers who let you read their notes and generated notes for quality, separately and explicitly, through a review tool that logs access, never the database), and **marketing use** (a specific note, specifically). Consent copy is separate from ToS acceptance, and re-consent is required when the purpose changes, for example enabling a second AI vendor.
+- **Sub-processors that can receive note text:** Supabase, Anthropic, Vercel (warm-note pages), and AWS or Google only if failover is enabled. RevenueCat, PostHog, Sentry and Expo's push relay receive no content by design (doc 07 §8). **No note content in email, ever.** Anthropic's API retention terms are disclosed, and batch inputs are deleted on our side after processing.
+- **Warm-note pages** are `noindex`, unguessable, expiring, revocable and reportable, show none of the sender's other data, and carry no analytics beyond a page-view count.
 
 ### 4.3 EU AI Act
 - **Art. 50 transparency obligations (from 2 Aug 2026):** users must know they're interacting with AI. Rustle likely counts as a limited-risk system, so the requirements are disclosure plus labelling of AI-generated content (the labelling part from Dec 2026). Emotional-support apps must avoid manipulative techniques (prohibited practices, Art. 5).
@@ -129,7 +133,7 @@
 - **Loi Toubon:** consumer-facing contracts and marketing in France must be available in French.
 
 ### 4.5 Documents needed before launch
-Terms of Service · Privacy Policy · Consent screens (AI processing + special-category data) · Cookie/analytics notice (web) · Subscription terms · Crisis disclaimer · DPIA · Sub-processor list · Incident response plan · Trademark filing (EU + US, and Canada, class 9 & 42 & 44/45). **All consumer documents in English and French** (FR-FR; Quebec review).
+Terms of Service · Privacy Policy · Consent screens (terms, AI processing, special-category data; quality review for beta testers) · Cookie/analytics notice (web) · Subscription terms (including the welcome week, the hardship offer and access codes) · Crisis disclaimer · DPIA (with the 18+ reasoning) · Sub-processor list · Incident response plan · Trademark filing (EU + US, and Canada, class 9 & 42 & 44/45). **All consumer documents in English and French** (FR-FR; Quebec review).
 
 ---
 
@@ -162,9 +166,12 @@ Use [findahelpline.com](https://findahelpline.com) as the fallback for other cou
 ## 6. Incident response (safety or privacy)
 
 1. Detect (user report, a monitoring alert, a social media screenshot).
-2. Triage within 24 h (safety incidents within 4 h): severity, affected users.
-3. Contain: disable the feature via a feature flag, roll back the prompt version, pause generation.
-4. Communicate: to affected users honestly; to regulators within 72 h for a GDPR breach.
-5. Post-mortem: add the case to the eval set and red-team list.
+2. **Automated first response, immediately:** a safety report flags the note, pauses that user's generation and switches them to the pre-written presence notes, and emails the founder. A privacy report locks the affected feature flag.
+3. Triage **within 2 working days** (safety reports **within 1 working day**): severity, affected users. These are promises one person can keep; 4-hour SLAs are a team's promise.
+4. Contain: disable the feature via a feature flag, roll back the prompt version, pause generation.
+5. Communicate: to affected users honestly; to regulators within 72 h for a GDPR breach (this one is the law, so the out-of-office plan below exists for it).
+6. Post-mortem: add the case to the eval set and red-team list.
 
-In-app: a "Report this note" action on every note and reply → reviewed within 48 h.
+In-app: a "Report this note" action on every note and reply → automated response at once, human review within 2 working days.
+
+**Out-of-office plan:** before any break longer than two days, name a backup person (the freelance security reviewer or a trusted peer) with access to the feature flags and the incident runbook, and lower the generation spend limit in the Anthropic console.

@@ -13,11 +13,15 @@ MVP success criteria (closed beta → soft launch):
 | D7 retention | ≥ 30% |
 | D30 retention | ≥ 15% (category average: ~3–7%) |
 | Users writing ≥ 1 board note in week 1 | ≥ 40% |
-| Trial start (of installs) | ≥ 12% |
+| Trial start at the first paywall (of installs) | ≥ 8% |
 | Trial → paid | ≥ 35% |
+| Welcome week → trial or paid at the day-7 paywall | ≥ 10% |
+| Paying by day 14 (all paths, of installs) | ≥ 5% |
 | Qualitative | "How did it know?" in beta interviews |
 
 ## 2. MVP scope
+
+> **Scope confirmed 2026-09-28 (D27):** all items below ship in the MVP, in both languages. The founder builds full-time and is a software engineer. The split into "core / launch" proposed in doc 19 §2 was considered and declined; the build order in doc 15 §4 and the milestones in §4 below remain the sequence.
 
 ### ✅ In (must have)
 1. Welcome, **18+ age gate**, AI/data consent
@@ -26,17 +30,17 @@ MVP success criteria (closed beta → soft launch):
 4. **Today** screen: current note, recent notes, ❤️ / "not quite", check-in card
 5. **Notes board**: create/edit/delete/pin notes, the "just listen" toggle, **Rustle replies** (delayed, one per note)
 6. Memory engine: extraction, summary, key dates, "What Rustle remembers" (view/delete)
-7. Daily note generation (nightly batch + real-time refresh) and delivery (push + local backup)
-8. Delivery settings: times, 1–5 per day, quiet hours, lock-screen privacy
+7. Daily note generation (nightly batch two days ahead + real-time refresh), seed notes for the first 48 h, and delivery (opaque push + iOS Notification Service Extension + local backup)
+8. Delivery settings: times, 1–5 per day, quiet hours, lock-screen privacy (default on for sensitive life areas), **app lock (Face ID / PIN)**
 9. Safety gate + crisis flow + localised resources (US, UK, IE, CA, AU, FR, BE, CH at launch)
 10. **Share card** (Stories/image) with a sensitive-content check
 11. **Send a warm note** (simple: 3 AI drafts → edit → link + web page)
 12. iOS widget (small + medium)
-13. Paywall (RevenueCat): **hard-paywall and soft-paywall variants** for the launch A/B test (doc 09)
+13. Paywall (RevenueCat): **trial-first with the welcome week**, the hardship offer, **door-open mode** rules in the planner, and **access codes** (`entitlement_grants`) for beta testers and creators (doc 09)
 14. 3 themes (paper, dawn, night)
-15. Settings: account, export (JSON), delete account, help
+15. Settings: account, export (JSON), delete account, consent records, « Résilier mon abonnement », help
 16. Analytics (PostHog), crash reporting (Sentry), cost logging
-17. Languages: **English + French** (UI + AI notes; French with tu/vous option and fr-FR/fr-CA vocabulary)
+17. Languages: **English + French** (UI + AI notes; French with tu/vous option, **fr-CA first**, fr-FR vocabulary reviewed before the European launch)
 18. Landing page + privacy/terms pages (EN + FR)
 
 ### 🟡 V1.1–1.3 (weeks 2–12 after launch)
@@ -45,8 +49,10 @@ MVP success criteria (closed beta → soft launch):
 - More themes plus widget styles
 - Tone learning from reactions; adaptive timing
 - Date follow-up notes ("how did it go?")
-- PDF export; app lock (Face ID / PIN)
-- Gift subscriptions
+- PDF export
+- **Chapter pass** (non-renewing 6-week purchase, timed to the first exam season, doc 09 §4)
+- Quiet-season downgrade offer at cancellation (doc 09 §7)
+- Gift subscriptions (needs web checkout, doc 07 §9)
 - Referral rewards (send 3 warm notes → 1 free premium week)
 
 ### 🔵 V2 (months 4–9)
@@ -82,7 +88,7 @@ You'll build Rustle yourself with Claude (Claude Code for the coding, Claude for
 | Code & security review | Senior freelance dev (a few hours, twice) | **Strongly recommended**: the app handles intimate data. Review auth, RLS and encryption before beta and before launch. ~€1–2k |
 | Legal | Privacy/consumer lawyer (hours) | ToS, privacy policy, consent screens, GDPR/Quebec Law 25 review. ~€1.5–4k |
 | Safety | Clinical psychologist advisor (a few hours/month) | Reviews crisis copy, prompts and marketing claims. ~€150–400/month |
-| Translation quality | Native French reviewer (fr-FR + fr-CA) | Review UI copy and a sample of AI notes each week in beta. ~€300–800 |
+| Translation quality | Native French reviewer (fr-CA first, then fr-FR) | Review UI copy and a sample of AI notes each week in beta. ~€300–800 |
 
 **What you need:** a **Mac** (needed for iOS widget development, the simulator and Xcode), an iPhone and ideally a cheap Android phone for testing, an Apple Developer account ($99/yr), a Google Play account ($25 once), a Claude subscription with Claude Code (Pro/Max, ~$20–200/month depending on usage), and an Anthropic API account for the app's AI (billed per use).
 
@@ -124,8 +130,8 @@ Recap (V1.1)                                                   █████�
 | **2. M1 Foundations** | 5–8 | Expo app skeleton, Supabase project, database schema + RLS, anonymous auth + Keychain persistence, i18n (EN/FR), CI, Sentry, PostHog |
 | **3. M2 Onboarding + first note** | 8–11 | 9-step onboarding, consent + 18+ gate, AI pipeline v1 (Edge Functions), the first personalised note, notification permission |
 | **4. M3 Notes, memory, replies** | 11–15 | Notes board, memory extraction + summary, "What Rustle remembers", delayed replies, safety gate + crisis flow |
-| **5. M4 Daily notes, push, widget** | 15–18 | Nightly batch generation, push + local backup, delivery settings, iOS widget |
-| **6. M5 Paywall, sharing, warm notes** | 18–20 | RevenueCat hard-paywall + soft-paywall variants, share cards, warm-note links + web page |
+| **5. M4 Daily notes, push, widget** | 15–18 | Nightly batch generation two days ahead, opaque push + Notification Service Extension + local backup, delivery settings, iOS widget |
+| **6. M5 Paywall, sharing, warm notes** | 18–20 | RevenueCat trial-first paywall, welcome week + door-open rules in the planner, hardship offer, access codes, share cards, warm-note links + web page with the thank-you tap |
 | **7. M6 Safety, legal, French polish** | 20–22 | Red-team, eval suite, legal docs, French copy review, security review by a freelance dev |
 | **8. Closed beta** | 21–25 | TestFlight + Play testing with 100–200 waitlist users; weekly prompt iterations |
 | **9. Store prep & soft launch** | 25–27 | ASO in EN + FR, soft launch in Canada (EN + FR in one market!) and Belgium or Ireland |
@@ -136,7 +142,7 @@ Recap (V1.1)                                                   █████�
 
 | Horizon | Theme | Key bets |
 |---|---|---|
-| **Months 0–3** | *Retention & funnel* | Recap, Android widget, tone/timing learning, paywall experiments, referral loop, fixing top churn reasons |
+| **Months 0–3** | *Retention & funnel* | Recap, Android widget, tone/timing learning, paywall experiments (card-first vs welcome week, 7 vs 14 days), chapter pass, referral loop, fixing top churn reasons, **first B2B2C conversations** (procurement takes 6–12 months, doc 09 §7) |
 | **Months 3–6** | *Growth engine* | Creator programme, student ambassador programme, gifting, next languages (ES, DE, PT-BR, IT), ASO scaling, first paid user acquisition (Apple Search Ads, TikTok Spark Ads) |
 | **Months 6–9** | *Depth* | Voice in/out, breathing moments, Live Activities for key days, Watch, "letters to future me" |
 | **Months 9–18** | *New channels* | B2B2C pilots (2–3 universities, 1 outplacement firm, 1 patient organisation), circles, printed book, web companion |
