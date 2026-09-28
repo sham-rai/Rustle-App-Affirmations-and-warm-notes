@@ -103,6 +103,7 @@ Themes change *paper, card, pastels and one accent*; they never change `ink` con
 | Theme | Paper | Accent | Feel | Notes |
 |---|---|---|---|---|
 | **Paper** (default) | `#F6F1E7` | sage | A note on the fridge | Free |
+| **Pastel paper** (candidate) | `#F2F5EE` mint-cream; card `#FFFEFB`; ink `#2F3A33`; ink-2 `#6A7A70` | sage `#457456` (5.0 : 1 on its paper); warm `#A8503F` as text, pastel coral `#E9A595` for icons and large text only; board pastels butter `#FFF0B3`, blush `#FFD8D0`, sage `#CFEFD9`, sky `#CFE4FA`, lilac `#E4DAF9` | Softer, cooler, a little younger | Kept beside Paper for comparison (2026-09-28). Which of the two is the default is decided in the styling pass; the crisis palette stays the same in both |
 | **Dawn** (Zorya) | `#F8E7DA` → soft peach at the top | dusty rose `#8F4F52` (5.1 : 1 on dawn paper) | Morning, hope after a night | Free at launch as the second theme |
 | **Night** | `#1C1A17` | pale sage | Late, quiet | Free (it's dark mode with texture) |
 | **Garden** | `#EEF1E6` | moss | Growth | Premium |
