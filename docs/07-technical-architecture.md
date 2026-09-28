@@ -131,7 +131,7 @@ key_dates (id, user_id, label text, date date, kind text,   -- exam|appointment|
 -- Memory (the heart of the product)
 memory_items (id uuid pk, user_id,
               kind text,        -- fact|person|situation|feeling|win|struggle|helps|avoid|goal|date|identity
-              content text /* encrypted */,     -- "Sister Anna is having surgery on Oct 3"
+              content text /* encrypted */,     -- "Sister Maya is having surgery on Oct 3"
               salience real,    -- 0..1 importance
               status text,      -- active|resolved|archived|user_deleted
               resolved_at timestamptz null,     -- chapters close here (D22); feeds the "situation resolved" metric
@@ -179,7 +179,7 @@ safety_events (id, user_id, note_id, level, action_taken, created_at)   -- minim
 
 **Why structured memory instead of "just send all the notes to the LLM"**
 - Cost: 6 months of notes can reach 50k+ tokens. A memory summary plus the top-k relevant items is about 1–2k tokens.
-- Quality: a curated "now" state (exam in 3 days, Anna's surgery went well, a breakup 4 months ago that's healing) produces better notes than raw logs.
+- Quality: a curated "now" state (exam in 3 days, Maya's surgery went well, a breakup 4 months ago that's healing) produces better notes than raw logs.
 - Control: the user can see, edit and delete individual memories, which is a trust and GDPR requirement.
 - Raw notes are still kept forever (until the user deletes them) for recaps and re-extraction when models improve.
 

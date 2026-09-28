@@ -117,7 +117,7 @@ Order matters: the first two rows carry visual weight; account and help sit at t
 ## 9. Share cards
 
 - 9:16 (Stories) and 1:1 (post) images rendered on-device from the note plus theme.
-- **Sensitive-content guard:** before sharing, a warning if the note mentions names, health or other personal details ("This note mentions Anna and your surgery. Share anyway?"), plus a one-tap "make it general" rewrite.
+- **Sensitive-content guard:** before sharing, a warning if the note mentions names, health or other personal details ("This note mentions Maya and your surgery. Share anyway?"), plus a one-tap "make it general" rewrite.
 - A small watermark, "rustle.app", as growth attribution.
 
 ## 10. "Send a warm note" flow

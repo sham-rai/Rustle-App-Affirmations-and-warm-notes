@@ -64,7 +64,7 @@ As of September 2026, Claude pricing per 1M tokens (input/output) is roughly: **
 | kind | Example | Used for |
 |---|---|---|
 | `situation` | "Going through a divorce; separated in August" | Core context |
-| `person` | "Anna, older sister, very supportive" | Names make notes personal |
+| `person` | "Maya, older sister, very supportive" | Names make notes personal |
 | `date` | "Final exam: Organic Chemistry, Oct 14" | Timed notes |
 | `feeling` | "Evenings are the loneliest time" | Timing and tone |
 | `struggle` | "Hard to get out of bed on Mondays" | Empathy targets |
@@ -77,8 +77,8 @@ As of September 2026, Claude pricing per 1M tokens (input/output) is roughly: **
 Each item carries: `salience` (0–1), `status` (active/resolved/archived), `first_seen`, `last_seen`, `times_mentioned`, and source note IDs.
 
 ### 3.2 Lifecycle
-- **Create/merge:** the extractor proposes operations: `add`, `update(id)`, `resolve(id)` ("the surgery went well" resolves "Anna's surgery"), `no_op`.
-- **Decay:** salience decays with time unless re-mentioned. A resolved item generates one "I hope Anna is recovering well" follow-up, then goes quiet.
+- **Create/merge:** the extractor proposes operations: `add`, `update(id)`, `resolve(id)` ("the surgery went well" resolves "Maya's surgery"), `no_op`.
+- **Decay:** salience decays with time unless re-mentioned. A resolved item generates one "I hope Maya is recovering well" follow-up, then goes quiet.
 - **Dates:** after the date passes, trigger a *follow-up* note ("How did the exam go? Whatever the result, you did the hard thing.") and ask via check-in.
 - **User control:** everything is visible and editable in "What Rustle remembers". User edits are treated as ground truth (`user_edited=true`, and the extractor can't override them).
 
