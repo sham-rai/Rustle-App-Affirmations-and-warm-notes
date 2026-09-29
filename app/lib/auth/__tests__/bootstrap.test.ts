@@ -39,7 +39,7 @@ function fakeClient(behaviour: {
 }
 
 function tokenStore(platform: 'ios' | 'android' = 'ios') {
-  return createRefreshTokenStore({ platform, secureStore: fakeSecureStore().api, blockStore: fakeBlockStore().api });
+  return createRefreshTokenStore({ projectRef: 'testref', platform, secureStore: fakeSecureStore().api, blockStore: fakeBlockStore().api });
 }
 
 describe('ensureSession', () => {
@@ -85,6 +85,18 @@ describe('ensureSession', () => {
     });
     await expect(ensureSession(client, store)).resolves.toMatchObject({ status: 'ready', restoredFrom: 'new' });
     await expect(store.load()).resolves.toBeNull();
+  });
+
+  it('a 429 or an unknown 4xx keeps the token and reports a server failure instead of orphaning the notes', async () => {
+    const store = tokenStore();
+    await store.save('rt-keep');
+    const { client, calls } = fakeClient({
+      session: null,
+      refresh: () => ({ error: new AuthApiError('Too many requests', 429, 'over_request_rate_limit') }),
+    });
+    await expect(ensureSession(client, store)).resolves.toEqual({ status: 'failed', reason: 'server' });
+    expect(calls.signInAnonymously).toBe(0);
+    await expect(store.load()).resolves.toMatchObject({ token: 'rt-keep' });
   });
 
   it('offline after a reinstall: keeps the token and never creates a second account', async () => {

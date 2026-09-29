@@ -23,7 +23,8 @@
         "google": "Google"
       },
       "title": "Garde tes notes en sécurité",
-      "title_vous": "Gardez vos notes en sécurité"
+      "title_vous": "Gardez vos notes en sécurité",
+      "unavailable": "Rustle n’arrive pas à joindre son serveur pour le moment. Les notes restent sur ce téléphone jusqu’à ce qu’il y parvienne."
     }
   },
   "tabs": {

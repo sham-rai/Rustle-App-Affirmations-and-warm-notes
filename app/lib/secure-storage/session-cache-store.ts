@@ -13,9 +13,12 @@ const CACHE_KEY_OPTIONS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
 };
 
-/** 16 characters, the MMKV maximum: 8 random bytes as hex. Local cache key only. */
+/** 16 characters, the MMKV maximum: 12 random bytes (96 bits) as base64. */
 function newCacheKey(): string {
-  return Array.from(Crypto.getRandomBytes(8), (b) => b.toString(16).padStart(2, '0')).join('');
+  const bytes = Crypto.getRandomBytes(12);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
 
 /**

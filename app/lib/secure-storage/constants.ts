@@ -12,8 +12,24 @@ export const KEYCHAIN_SERVICE = 'app.rustle.session';
  */
 export const KEYCHAIN_ACCESS_GROUP = 'group.app.rustle';
 
-/** Key of the refresh token inside the Keychain service, the Android Keystore and Block Store. */
-export const REFRESH_TOKEN_KEY = 'refresh_token';
+/**
+ * Key of the refresh token inside the Keychain service, the Android Keystore and Block Store,
+ * namespaced by the Supabase project so dev, staging and prod builds under the same App Group
+ * never read (and then invalidate) each other's token.
+ */
+export function refreshTokenKey(projectRef: string): string {
+  return `refresh_token:${projectRef}`;
+}
+
+/** The project ref is the first label of the Supabase URL host; `local` when not configured. */
+export function projectRefFromUrl(url: string | undefined): string {
+  if (!url) return 'local';
+  try {
+    return new URL(url).hostname.split('.')[0] || 'local';
+  } catch {
+    return 'local';
+  }
+}
 
 /** Key of the MMKV encryption key that protects the cached session on disk. */
 export const SESSION_CACHE_KEY_NAME = 'session_cache_key';

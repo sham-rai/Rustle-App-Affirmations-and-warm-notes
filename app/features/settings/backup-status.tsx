@@ -16,6 +16,8 @@ import { getSupabase } from '../../lib/supabase';
 export type BackupStatus =
   | { kind: 'not_connected' }
   | { kind: 'loading' }
+  /** The bootstrap failed (offline, server); the row says so instead of "checking" for ever. */
+  | { kind: 'unavailable' }
   | { kind: 'anonymous'; shortId: string }
   | { kind: 'linked'; shortId: string; provider: string };
 
@@ -29,6 +31,7 @@ export type UserIdentitySummary = Pick<User, 'is_anonymous'> & { identities?: Pi
 /** Pure mapping from the bootstrap state and the user's identities to what the row shows. */
 export function resolveBackupStatus(auth: AuthBootstrapState, user: UserIdentitySummary | null): BackupStatus {
   if (auth.status === 'not_configured') return { kind: 'not_connected' };
+  if (auth.status === 'failed') return { kind: 'unavailable' };
   if (auth.status !== 'ready') return { kind: 'loading' };
   const shortId = shortAccountId(auth.userId);
   const linked = user?.identities?.find((identity) => identity.provider !== 'anonymous');
@@ -44,8 +47,10 @@ export function useBackupStatus(auth: AuthBootstrapState): BackupStatus {
     const run = async (): Promise<void> => {
       let user: UserIdentitySummary | null = null;
       if (auth.status === 'ready') {
+        // The cached session already carries the identities; no network round trip, and no false
+        // "not backed up" for a linked user who happens to be offline.
         const client = getSupabase();
-        user = client ? (await client.auth.getUser()).data.user : null;
+        user = client ? ((await client.auth.getSession()).data.session?.user ?? null) : null;
       }
       if (!cancelled) setStatus(resolveBackupStatus(auth, user));
     };
@@ -87,6 +92,7 @@ export function BackupStatusRow({ auth, onProtect }: BackupStatusRowProps) {
       </Text>
       {status.kind === 'loading' && <Text variant="body">{t('settings.backup.checking')}</Text>}
       {status.kind === 'not_connected' && <Text variant="body">{t('settings.backup.notConnected')}</Text>}
+      {status.kind === 'unavailable' && <Text variant="body">{t('settings.backup.unavailable')}</Text>}
       {status.kind === 'linked' && (
         <Text variant="body">{t('settings.backup.backedUp', { provider: t(providerKey(status.provider)) })}</Text>
       )}

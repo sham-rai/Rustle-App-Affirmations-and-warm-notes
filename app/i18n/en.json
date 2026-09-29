@@ -19,7 +19,8 @@
         "email": "email",
         "google": "Google"
       },
-      "title": "Keep your notes safe"
+      "title": "Keep your notes safe",
+      "unavailable": "Rustle can’t reach its server right now. Your notes stay on this phone until it can."
     }
   },
   "tabs": {

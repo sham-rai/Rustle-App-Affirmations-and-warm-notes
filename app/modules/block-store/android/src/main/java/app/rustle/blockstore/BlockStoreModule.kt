@@ -21,15 +21,23 @@ class BlockStoreModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("RustleBlockStore")
 
+    // Cloud backup (device-to-device restore) is requested only when Block Store confirms it is
+    // end-to-end encrypted, i.e. the device has a screen lock. Without it the entry stays on the
+    // device, which still survives a reinstall (docs/07 §5). A Google account alone must never be
+    // enough to recover someone's session.
     AsyncFunction("store") { key: String, value: String, promise: Promise ->
-      val data = StoreBytesData.Builder()
-        .setKey(key)
-        .setBytes(value.toByteArray(Charsets.UTF_8))
-        .setShouldBackupToCloud(true)
-        .build()
-      client.storeBytes(data)
-        .addOnSuccessListener { promise.resolve(true) }
-        .addOnFailureListener { promise.reject("ERR_BLOCK_STORE_WRITE", it.message, it) }
+      val blockstore = client
+      blockstore.isEndToEndEncryptionAvailable.addOnCompleteListener { check ->
+        val endToEnd = check.isSuccessful && check.result == true
+        val data = StoreBytesData.Builder()
+          .setKey(key)
+          .setBytes(value.toByteArray(Charsets.UTF_8))
+          .setShouldBackupToCloud(endToEnd)
+          .build()
+        blockstore.storeBytes(data)
+          .addOnSuccessListener { promise.resolve(endToEnd) }
+          .addOnFailureListener { promise.reject("ERR_BLOCK_STORE_WRITE", it.message, it) }
+      }
     }
 
     AsyncFunction("retrieve") { key: String, promise: Promise ->

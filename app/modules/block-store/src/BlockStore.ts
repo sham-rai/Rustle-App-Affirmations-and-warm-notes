@@ -12,7 +12,10 @@ interface NativeBlockStore {
 export interface BlockStoreApi {
   /** True only on Android with Google Play services and the native module linked. */
   isAvailable(): boolean;
-  /** Resolves false when Block Store is unavailable; rejects when the platform call fails. */
+  /**
+   * Resolves true when the entry was also backed up to the cloud (end-to-end encrypted, screen lock
+   * present), false when it stayed on the device or Block Store is unavailable; rejects on failure.
+   */
   store(key: string, value: string): Promise<boolean>;
   /** Resolves null when unavailable or when nothing is stored under the key. */
   retrieve(key: string): Promise<string | null>;

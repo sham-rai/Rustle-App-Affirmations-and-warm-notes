@@ -48,7 +48,9 @@ export function getSupabase(): SupabaseClient | null {
 export interface DeleteAnonymousAccountResult {
   /** True when the server confirmed the deletion. False when the function is unreachable or absent. */
   serverDeleted: boolean;
-  /** The local session and the reinstall-proof tokens are always cleared. */
+  /** True when the local session was signed out; false if supabase-js reported an error doing so. */
+  signedOut: boolean;
+  /** The reinstall-proof token copies are always cleared. */
   localCleared: true;
 }
 
@@ -60,14 +62,17 @@ export interface DeleteAnonymousAccountResult {
 export async function deleteAnonymousAccount(): Promise<DeleteAnonymousAccountResult> {
   const supabase = getSupabase();
   let serverDeleted = false;
+  let signedOut = true;
   if (supabase) {
     const { data } = await supabase.auth.getSession();
     if (data.session?.user.is_anonymous) {
       const { error } = await supabase.functions.invoke('account-delete', { region: FUNCTION_REGION });
       serverDeleted = error === null;
     }
-    await supabase.auth.signOut({ scope: 'local' });
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    signedOut = error === null;
   }
+  // The storage adapter never touches the reinstall-proof copies; this is one of the two places that does.
   await getRefreshTokenStore().clear();
-  return { serverDeleted, localCleared: true };
+  return { serverDeleted, signedOut, localCleared: true };
 }

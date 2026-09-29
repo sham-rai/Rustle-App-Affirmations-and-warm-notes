@@ -12,6 +12,15 @@ export type AuthBootstrapResult =
   /** Nothing could be established this time; safe to retry (network, server). */
   | { status: 'failed'; reason: 'offline' | 'server' };
 
+const DEAD_REFRESH_TOKEN_CODES = new Set(['refresh_token_not_found', 'refresh_token_already_used', 'session_not_found']);
+
+/** True only for errors that mean this refresh token can never work again. */
+export function isDeadRefreshToken(error: unknown): boolean {
+  if (!isAuthApiError(error)) return false;
+  if (error.code && DEAD_REFRESH_TOKEN_CODES.has(error.code)) return true;
+  return error.code === undefined && error.status === 400 && /refresh token/i.test(error.message);
+}
+
 /** The auth surface the bootstrap needs; the real client satisfies it. */
 export type AuthClient = Pick<SupabaseClient, 'auth'>;
 
@@ -45,10 +54,11 @@ export async function ensureSession(
     if (refreshed.error && isAuthRetryableFetchError(refreshed.error)) {
       return { status: 'failed', reason: 'offline' };
     }
-    if (refreshed.error && isAuthApiError(refreshed.error)) {
-      // The token is dead (revoked, expired, unknown). Forget it and start a new account.
+    if (refreshed.error && isDeadRefreshToken(refreshed.error)) {
+      // The token itself is dead (revoked, already rotated, unknown). Forget it and start again.
       await refreshTokens.clear();
     } else {
+      // Anything else (429, 5xx, a misconfigured project) keeps the token; a retry may succeed.
       return { status: 'failed', reason: 'server' };
     }
   }

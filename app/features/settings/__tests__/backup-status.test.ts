@@ -11,9 +11,9 @@ describe('backup status', () => {
     expect(resolveBackupStatus({ status: 'not_configured' }, null)).toEqual({ kind: 'not_connected' });
   });
 
-  it('is loading while the bootstrap runs or has failed', () => {
+  it('is loading while the bootstrap runs, and says so when it failed', () => {
     expect(resolveBackupStatus({ status: 'loading' }, null)).toEqual({ kind: 'loading' });
-    expect(resolveBackupStatus({ status: 'failed', reason: 'offline' }, null)).toEqual({ kind: 'loading' });
+    expect(resolveBackupStatus({ status: 'failed', reason: 'offline' }, null)).toEqual({ kind: 'unavailable' });
   });
 
   it('warns an anonymous user that the notes are not backed up', () => {

@@ -2,7 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 import { BlockStore, type BlockStoreApi } from '../../modules/block-store';
-import { KEYCHAIN_ACCESS_GROUP, KEYCHAIN_SERVICE, REFRESH_TOKEN_KEY } from './constants';
+import { KEYCHAIN_ACCESS_GROUP, KEYCHAIN_SERVICE, projectRefFromUrl, refreshTokenKey } from './constants';
 
 /** Where a restored refresh token came from (docs/07 §5 edge cases; reported, never logged with the token). */
 export type RefreshTokenSource = 'keychain' | 'keystore' | 'block_store';
@@ -24,6 +24,8 @@ interface Deps {
   platform: 'ios' | 'android' | 'web' | 'windows' | 'macos';
   secureStore: SecureStoreApi;
   blockStore: BlockStoreApi;
+  /** Supabase project ref; namespaces the stored token (see `refreshTokenKey`). */
+  projectRef: string;
   /** Called with a short reason string when a fallback path was taken. Never receives token material. */
   onWarning?: (reason: string) => void;
 }
@@ -42,6 +44,7 @@ export function createRefreshTokenStore(deps: Deps): RefreshTokenStore {
   const grouped: SecureStore.SecureStoreOptions =
     deps.platform === 'ios' ? { ...base, accessGroup: KEYCHAIN_ACCESS_GROUP } : base;
   const isAndroid = deps.platform === 'android';
+  const KEY = refreshTokenKey(deps.projectRef);
 
   // If the access-group entitlement is missing from a build, the grouped write fails. Rather than
   // lose the session we fall back to the app's default group once and say so.
@@ -49,12 +52,12 @@ export function createRefreshTokenStore(deps: Deps): RefreshTokenStore {
 
   async function writeSecure(token: string): Promise<void> {
     try {
-      await deps.secureStore.setItemAsync(REFRESH_TOKEN_KEY, token, options);
+      await deps.secureStore.setItemAsync(KEY, token, options);
     } catch (error) {
       if (options === grouped && deps.platform === 'ios') {
         deps.onWarning?.('keychain_access_group_unavailable');
         options = base;
-        await deps.secureStore.setItemAsync(REFRESH_TOKEN_KEY, token, options);
+        await deps.secureStore.setItemAsync(KEY, token, options);
         return;
       }
       throw error;
@@ -63,7 +66,7 @@ export function createRefreshTokenStore(deps: Deps): RefreshTokenStore {
 
   async function readSecure(): Promise<string | null> {
     try {
-      const value = await deps.secureStore.getItemAsync(REFRESH_TOKEN_KEY, options);
+      const value = await deps.secureStore.getItemAsync(KEY, options);
       if (value !== null) return value;
     } catch {
       deps.onWarning?.('secure_store_read_failed');
@@ -71,7 +74,7 @@ export function createRefreshTokenStore(deps: Deps): RefreshTokenStore {
     if (options !== base) {
       // A build without the entitlement may have written to the default group earlier.
       try {
-        return await deps.secureStore.getItemAsync(REFRESH_TOKEN_KEY, base);
+        return await deps.secureStore.getItemAsync(KEY, base);
       } catch {
         return null;
       }
@@ -84,7 +87,7 @@ export function createRefreshTokenStore(deps: Deps): RefreshTokenStore {
       await writeSecure(token);
       if (isAndroid) {
         try {
-          await deps.blockStore.store(REFRESH_TOKEN_KEY, token);
+          await deps.blockStore.store(KEY, token);
         } catch {
           deps.onWarning?.('block_store_write_failed');
         }
@@ -96,7 +99,7 @@ export function createRefreshTokenStore(deps: Deps): RefreshTokenStore {
       if (secure) return { token: secure, source: deps.platform === 'ios' ? 'keychain' : 'keystore' };
       if (isAndroid) {
         try {
-          const fromBlockStore = await deps.blockStore.retrieve(REFRESH_TOKEN_KEY);
+          const fromBlockStore = await deps.blockStore.retrieve(KEY);
           if (fromBlockStore) return { token: fromBlockStore, source: 'block_store' };
         } catch {
           deps.onWarning?.('block_store_read_failed');
@@ -107,9 +110,9 @@ export function createRefreshTokenStore(deps: Deps): RefreshTokenStore {
 
     async clear() {
       await Promise.allSettled([
-        deps.secureStore.deleteItemAsync(REFRESH_TOKEN_KEY, options),
-        deps.secureStore.deleteItemAsync(REFRESH_TOKEN_KEY, base),
-        isAndroid ? deps.blockStore.remove(REFRESH_TOKEN_KEY) : Promise.resolve(false),
+        deps.secureStore.deleteItemAsync(KEY, options),
+        deps.secureStore.deleteItemAsync(KEY, base),
+        isAndroid ? deps.blockStore.remove(KEY) : Promise.resolve(false),
       ]);
     },
   };
@@ -123,6 +126,7 @@ export function getRefreshTokenStore(): RefreshTokenStore {
     platform: Platform.OS,
     secureStore: SecureStore,
     blockStore: BlockStore,
+    projectRef: projectRefFromUrl(process.env.EXPO_PUBLIC_SUPABASE_URL),
   });
   return defaultStore;
 }
