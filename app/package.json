@@ -12,6 +12,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@expo-google-fonts/instrument-sans": "^0.4.2",
+    "@expo-google-fonts/literata": "^0.4.3",
     "@rustle/shared": "*",
     "@shopify/react-native-skia": "2.6.2",
     "@supabase/supabase-js": "^2.117.2",
@@ -25,8 +27,10 @@
     "expo-router": "~57.0.24",
     "expo-secure-store": "~57.0.4",
     "expo-splash-screen": "~57.0.9",
+    "i18next": "^26.4.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-i18next": "^17.0.15",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-mmkv": "^4.3.2",

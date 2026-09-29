@@ -14,11 +14,14 @@
     "dev": "npm run start --workspace app",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present && npm run check:strings && npm run check:contrast",
+    "check:strings": "tsx scripts/check-strings.ts",
+    "check:contrast": "tsx scripts/check-contrast.ts",
     "eval": "npm run eval --workspace evals",
     "prepare": "husky"
   },
   "devDependencies": {
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "tsx": "^4.23.15"
   }
 }
