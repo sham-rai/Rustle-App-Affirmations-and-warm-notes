@@ -1,0 +1,28 @@
+{
+  "common": {
+    "back": "Retour",
+    "begin": "Commencer",
+    "done": "Terminé",
+    "errorSaved": "Quelque chose n’a pas fonctionné. Ta note est enregistrée ; je réessaie dans un instant.",
+    "errorSaved_vous": "Quelque chose n’a pas fonctionné. Votre note est enregistrée ; je réessaie dans un instant.",
+    "notNow": "Pas maintenant"
+  },
+  "tabs": {
+    "notes": {
+      "empty": "C’est ton espace. Mets-y n’importe quoi : une peur, une victoire, une pensée en passant. Je m’en souviendrai.",
+      "empty_vous": "C’est votre espace. Mettez-y n’importe quoi : une peur, une victoire, une pensée en passant. Je m’en souviendrai.",
+      "title": "Notes"
+    },
+    "today": {
+      "empty": "Quand Rustle te laissera une note, tu la trouveras ici.",
+      "empty_vous": "Quand Rustle vous laissera une note, vous la trouverez ici.",
+      "title": "Aujourd’hui"
+    },
+    "you": {
+      "empty": "Ici, tu verras ce dont Rustle se souvient et tu choisiras comment les notes te parviennent.",
+      "empty_vous": "Ici, vous verrez ce dont Rustle se souvient et vous choisirez comment les notes vous parviennent.",
+      "title": "Toi",
+      "title_vous": "Vous"
+    }
+  }
+}
