@@ -6,6 +6,22 @@
     "errorSaved": "Something went wrong. Your note is saved; I’ll try again in a moment.",
     "notNow": "Not now"
   },
+  "settings": {
+    "backup": {
+      "accountId": "Account {{id}}",
+      "backedUp": "Your notes are backed up ({{provider}}).",
+      "checking": "Checking your backup status.",
+      "notBackedUp": "Not backed up. If you delete the app you may lose your notes.",
+      "notConnected": "Rustle is not connected to its server on this build. Notes stay on this phone.",
+      "protect": "Protect them",
+      "provider": {
+        "apple": "Apple ID",
+        "email": "email",
+        "google": "Google"
+      },
+      "title": "Keep your notes safe"
+    }
+  },
   "tabs": {
     "notes": {
       "empty": "This is your space. Put anything here: a fear, a win, a random thought. I’ll remember.",

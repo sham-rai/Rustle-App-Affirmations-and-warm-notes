@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,7 +9,7 @@ import { Text } from './Text';
 export type TabName = 'today' | 'notes' | 'you';
 
 /** A tab with nothing in it yet: its title and one line of empty-state copy (M1-04). */
-export function EmptyTab({ tab }: { tab: TabName }) {
+export function EmptyTab({ tab, children }: { tab: TabName; children?: ReactNode }) {
   const { t } = useT();
   const { colors, space } = useTheme();
   const insets = useSafeAreaInsets();
@@ -27,6 +28,7 @@ export function EmptyTab({ tab }: { tab: TabName }) {
       <Text variant="body" color="ink2">
         {t(`tabs.${tab}.empty`)}
       </Text>
+      {children}
     </ScrollView>
   );
 }

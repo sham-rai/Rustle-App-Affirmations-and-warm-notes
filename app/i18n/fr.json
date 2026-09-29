@@ -7,6 +7,25 @@
     "errorSaved_vous": "Quelque chose n’a pas fonctionné. Votre note est enregistrée ; je réessaie dans un instant.",
     "notNow": "Pas maintenant"
   },
+  "settings": {
+    "backup": {
+      "accountId": "Compte {{id}}",
+      "backedUp": "Tes notes sont sauvegardées ({{provider}}).",
+      "backedUp_vous": "Vos notes sont sauvegardées ({{provider}}).",
+      "checking": "Vérification de l’état de la sauvegarde.",
+      "notBackedUp": "Pas de sauvegarde. Si tu supprimes l’application, tu pourrais perdre tes notes.",
+      "notBackedUp_vous": "Pas de sauvegarde. Si vous supprimez l’application, vous pourriez perdre vos notes.",
+      "notConnected": "Rustle n’est pas relié à son serveur dans cette version. Les notes restent sur ce téléphone.",
+      "protect": "Les protéger",
+      "provider": {
+        "apple": "identifiant Apple",
+        "email": "courriel",
+        "google": "Google"
+      },
+      "title": "Garde tes notes en sécurité",
+      "title_vous": "Gardez vos notes en sécurité"
+    }
+  },
   "tabs": {
     "notes": {
       "empty": "C’est ton espace. Mets-y n’importe quoi : une peur, une victoire, une pensée en passant. Je m’en souviendrai.",

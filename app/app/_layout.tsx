@@ -8,8 +8,10 @@ import { fontFamily, fontSources } from '../components/Text';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { useTheme } from '../hooks/useTheme';
 import { i18n, useDeviceLanguage } from '../i18n';
+import { AuthProvider } from '../lib/auth/AuthProvider';
 
-// Keep the splash up until the fonts are ready (M1-04). Onboarding and auth come later.
+// Keep the splash up until the fonts are ready (M1-04). The anonymous account is created or
+// restored by AuthProvider (M1-03); onboarding comes later.
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -28,10 +30,12 @@ export default function RootLayout() {
     <I18nextProvider i18n={i18n}>
       <ThemeProvider>
         <TokenNavigationTheme>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
+          <AuthProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </AuthProvider>
         </TokenNavigationTheme>
       </ThemeProvider>
     </I18nextProvider>
