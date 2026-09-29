@@ -8,8 +8,8 @@ expo-env.d.ts
 web-build/
 
 # generated native folders (EAS generates them; never commit)
-ios/
-android/
+/app/ios/
+/app/android/
 
 # env files: everything except the documented example
 .env*
