@@ -1,4 +1,3 @@
-/// <reference types="node" />
 // docs/20 §10, docs/21 §17.1: no "!" and never the word "affirmation" in UI strings.
 // Run with `npm run check:strings` (tsx). Exits 1 on any violation.
 
@@ -7,9 +6,10 @@ import fr from '../app/i18n/fr.json';
 
 export type StringViolation = { file: string; key: string; rule: 'exclamation' | 'affirmation'; value: string };
 
-type StringTree = { readonly [key: string]: string | StringTree };
+export type StringTree = { readonly [key: string]: string | StringTree };
 
-function* leaves(tree: StringTree, prefix = ''): Generator<[string, string]> {
+/** Every leaf of a string file as [dot.path, value]. */
+export function* leaves(tree: StringTree, prefix = ''): Generator<[string, string]> {
   for (const [key, value] of Object.entries(tree)) {
     const path = prefix ? `${prefix}.${key}` : key;
     if (typeof value === 'string') yield [path, value];

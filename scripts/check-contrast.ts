@@ -1,4 +1,3 @@
-/// <reference types="node" />
 // docs/20 §15, docs/21 §14.2: WCAG contrast for the text pairs of docs/20 §3.1–3.2, computed
 // from packages/shared/tokens.ts. Fails below 4.5 : 1. Run with `npm run check:contrast` (tsx).
 
