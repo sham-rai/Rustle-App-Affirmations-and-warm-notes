@@ -1,0 +1,20 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'app.rustle'
+version = '0.1.0'
+
+android {
+  namespace "app.rustle.blockstore"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+}
+
+dependencies {
+  // Google Block Store: persists small secrets across reinstalls and device restores (docs/07 §5).
+  implementation "com.google.android.gms:play-services-auth-blockstore:16.4.0"
+}

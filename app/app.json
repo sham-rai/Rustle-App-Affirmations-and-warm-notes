@@ -9,7 +9,12 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "app.rustle",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.app.rustle"
+        ]
+      }
     },
     "android": {
       "package": "app.rustle",
