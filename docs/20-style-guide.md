@@ -328,7 +328,7 @@ Give this to the designer as the starting point and to Claude Code as `packages/
     "noteSky":    { "light": "#D5E1EA", "dark": "#A3B2BF" },
     "noteLilac":  { "light": "#E1D9EA", "dark": "#B3A9C0" }
   },
-  "type": {
+  "typography": {
     "serif": "Literata",
     "sans": "Instrument Sans",
     "scale": {
@@ -343,7 +343,7 @@ Give this to the designer as the starting point and to Claude Code as `packages/
 }
 ```
 
-Dark values for `sageDeep` and the dark pastels are proposals; the designer should verify each against `ink` (dark) at ≥ 4.5 : 1 before use as text backgrounds.
+The group is named `typography`, not `type`, because `type` is a TypeScript import modifier and a footgun for every importer (M1-01 review, 2026-09-29). Dark values for `sageDeep` and the dark pastels are proposals; the designer should verify each against `ink` (dark) at ≥ 4.5 : 1 before use as text backgrounds.
 
 ---
 
