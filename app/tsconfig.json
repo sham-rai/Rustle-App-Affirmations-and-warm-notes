@@ -1,0 +1,15 @@
+{
+  "extends": ["expo/tsconfig.base", "../tsconfig.base.json"],
+  "compilerOptions": {
+    "strict": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["jest"],
+    "paths": {
+      "@rustle/shared": ["../packages/shared/index.ts"],
+      "@rustle/shared/*": ["../packages/shared/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules"]
+}
