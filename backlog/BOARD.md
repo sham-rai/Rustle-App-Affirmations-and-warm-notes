@@ -27,6 +27,15 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 | M2-04 | Today with the first Rustle as hero, Notes board skeleton | ready | subagent · opus | M1-04, M1-08, M2-03 | |
 | M2-05 | First paywall, welcome week, door-open state, code redemption | ready | lead · fable | M1-02, M2-03 | |
 
+## Suggested order (docs/22 §9, revised 2026-09-29)
+
+| Week | Run together |
+|---|---|
+| 1 | M1-01 → M1-04 + M1-03 |
+| 2 | M2-01 + M1-09 + M1-02 → M2-02 |
+| 3 | M1-06 + M1-07 (lead) · M1-08 + M1-05 (subagents) |
+| 4 | M2-03 (lead) → M2-04 + M2-05 · M1-10 closes M1 |
+
 ## Blocked
 none
 

@@ -25,6 +25,7 @@ Create the repo layout from docs/07 §11 so every later ticket has a place to la
 ## Risks and notes
 - expo-apple-targets and native folders should be scaffolded but empty; don't fight Xcode here
 - packages/shared must be pure ESM with no Node built-ins so Deno can import it
+- Install the native dependencies the early tickets need in this one build, so week one needs a single development build: @shopify/react-native-skia and expo-splash-screen (M2-01), expo-secure-store (M1-03), react-native-mmkv (M1-08). RevenueCat and the widget targets come later with their own build.
 
 ## Questions for the PO
 - none yet

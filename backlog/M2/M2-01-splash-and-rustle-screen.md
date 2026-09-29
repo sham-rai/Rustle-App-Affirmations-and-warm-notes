@@ -23,7 +23,7 @@ A cold start shows the company splash for two seconds, fades into the Rustle scr
 - Age gate and consent (M1-09); onboarding (M2-02); the company wordmark (type only until the legal name exists)
 
 ## Risks and notes
-- Add @shopify/react-native-skia and expo-splash-screen in this ticket; a new development build is needed after it
+- @shopify/react-native-skia and expo-splash-screen are installed by M1-01, so this ticket needs no new native build
 - Draw all leaves in one Skia Picture per frame, not one component per leaf
 - Reduce-motion: tree still, fades only
 - Company name is a placeholder string in en.json/fr.json: DreamTeam Co.
