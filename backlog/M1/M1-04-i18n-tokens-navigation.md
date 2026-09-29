@@ -24,6 +24,8 @@ Switching the phone to French makes every string French, colours come only from 
 ## Risks and notes
 - Design at French length from the start (15–25% longer)
 - Lint rules: no hex literals in components; no '!' and no 'affirmation' in string files; the CI contrast script on the token file
+- The life-area chip strings belong to M2-02, not this ticket; only tab labels, the empty-tab copy and shared UI strings go into en.json/fr.json here.
+- The doc review of 2026-09-29 found nothing that blocks this ticket.
 
 ## Questions for the PO
 - none yet
