@@ -2,7 +2,7 @@
 id: M1-03
 title: Anonymous sign-in, Keychain / Block Store persistence, backup status
 milestone: M1
-state: ready
+state: in progress
 executor: lead
 model: fable
 owner_files: [app/lib/supabase.ts, app/lib/secure-storage/**, app/lib/auth/**, app/features/settings/backup-status.tsx, app/modules/block-store/**, app/.env.example, app/app.json (plugins entry only)]
