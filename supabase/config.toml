@@ -1,0 +1,50 @@
+# Supabase CLI configuration for local development.
+# Remote projects: rustle-dev (created in M1-02), then staging and prod. Canada (Central) region.
+project_id = "rustle-dev"
+
+# TODO(M1-02): pin Edge Functions to Canada Central. There is no region key in this file;
+# create the projects in ca-central-1 and invoke functions with the `x-region: ca-central-1` header.
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+[db.seed]
+enabled = false
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "rustle://"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+enable_anonymous_sign_ins = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+deno_version = 2
+
+[analytics]
+enabled = false
