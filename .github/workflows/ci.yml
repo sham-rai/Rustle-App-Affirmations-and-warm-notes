@@ -26,6 +26,10 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - name: UI strings (no "!", no "affirmation")
+        run: npm run check:strings
+      - name: Token contrast (WCAG AA)
+        run: npm run check:contrast
       - run: npm test
 
   deno:
