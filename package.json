@@ -14,7 +14,7 @@
     "dev": "npm run start --workspace app",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspace app",
+    "lint": "npm run lint --workspaces --if-present",
     "eval": "npm run eval --workspace evals",
     "prepare": "husky"
   },
