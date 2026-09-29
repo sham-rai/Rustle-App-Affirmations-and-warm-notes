@@ -3,7 +3,7 @@
 ## 1. Information architecture
 
 ```
-Welcome ─► Onboarding (≈2 min) ─► First note (the "wow") ─► Notification permission ─► Paywall (trial, or "Not now" → welcome week) ─► Home
+Company splash (2 s) ─► Rustle screen (tree, wordmark, tagline, Begin) ─► Age gate + consent ─► Onboarding (5 screens, ≈90 s) ─► First note (the "wow") ─► Notification permission ─► Paywall (trial, or "Not now" → welcome week) ─► Home
                                                                                                           │
                 ┌──────────────────────────────── Bottom tab bar (3 tabs) ────────────────────────────────┤
                 │                                   │                                                     │
@@ -16,38 +16,41 @@ Keep it to **three tabs**. Put "Send a warm note" as a floating action on Today 
 
 ---
 
-## 2. Intro and welcome
+## 2. Splash, intro and welcome (one sequence, decided 2026-09-29, D42)
 
-**Intro screen (every cold start, decided 2026-09-28):** the wordmark *rustle* and the folded-note mark on paper, with **a tree at the edge of the screen** behind them: trunk and branches in soft ink, a canopy of small leaves in sage, all at low opacity so the text stays the hero. The leaves **sway in slow, overlapping gusts and flutter on their own**, the branches move a little more toward the tips, and now and then a single leaf lets go and drifts down. Nothing is sharp or fast; it should feel like a still afternoon. The wordmark fades up over 1.6 s. It lasts about two seconds, then moves to Welcome (first launch) or Today (returning users); a tap skips it. No sound (the optional paper-rustle notification sound stays separate), no bounce, no logo animation. With reduce-motion on, the tree holds still and the wordmark fades only. On a warm start (app already in memory) it is skipped. The live reference is on the style board (doc 20 §6).
+Three beats on a cold start, no screen changes except the first fade. Skipped on a warm start (app already in memory); returning users go from the Rustle screen straight to Today after the tagline beat.
 
-**Welcome screen (first launch, after the intro):**
-- The leaves keep drifting, slower and fewer, behind the content.
-- Headline: **"Notes that know what you're going through."**
+**1. Company splash (~2 s).** Paper background, the company name set small and centred in the interface sans: **DreamTeam Co.** *(placeholder: the company isn't registered yet; replace with the legal name and wordmark once it exists, in this doc, the board, the About screen and the store listing.)* No animation except a fade out at the end. This is also what the native splash shows while fonts and the session load, so the hand-off is invisible.
+
+**2. The Rustle screen.** Fades in from the splash. **A tree at the edge of the screen**: trunk and branches in soft ink, a canopy of small leaves in sage, all at low opacity so the text stays the hero. The leaves **sway in slow, overlapping gusts and flutter on their own**, the branches move a little more toward the tips, and now and then a single leaf lets go and drifts down. Nothing is sharp or fast; it should feel like a still afternoon. **The wordmark *rustle* and the folded-note mark are there from the first frame**, centred. No sound (the optional paper-rustle notification sound stays separate), no bounce, no logo animation. With reduce-motion on, the tree holds still.
+
+**3. After one second, the rest of the screen arrives** (a single 400 ms fade-up, all together):
+- Headline: **"Notes that know what you're going through."** ("Notes", not "Voice": voice suggests audio and someone speaking, which is the chatbot association the positioning avoids.)
 - Sub: *"Tell me a little. I'll remember, and leave you something kind when you need it."*
 - Buttons: **Begin** · small "I already have an account" (sign-in for reinstall/restore).
-- Footer: "Not a medical service. If you're in crisis, [get help now]."
+- Footer: "Not a medical service. If you're in crisis, [get help now]." plus the one-line AI disclosure.
+
+**Begin** → the 18+ gate and consent screens (doc 11 §4–5), then onboarding. The tree stays behind the age gate and consent, quieter; it is gone from the onboarding screens so the questions have the room. The live reference is on the style board (doc 20 §6).
 
 ---
 
-## 3. Onboarding: ~2 minutes, 9 steps
+## 3. Onboarding: five screens, about 90 seconds (decided 2026-09-29, D43)
 
-Goal: collect **enough** for a first note that is **clearly personal**, and set expectations. Aim for about 60% tap answers and 40% optional typing. Show a soft progress bar. Every open question can be skipped.
+Goal: collect **enough** for a first note that is **clearly personal**, and set expectations, in five screens. Nine was judged too long for a first contact; the two questions that protect trust (what not to hear, the key date) are kept by pairing them with a neighbour. Aim for about 60% tap answers and 40% optional typing. Show a soft progress line. Every open question can be skipped. More questions can be added later in production or beta if the first note needs them; the earlier nine-step list is kept below as the pool to draw from.
 
 | # | Screen | Type | Purpose / Stored as |
 |---|---|---|---|
-| 1 | **"What should I call you?"** | Text (optional) | `profile.display_name` |
-| 2 | **"What's going on in your life right now?"** (pick up to 3) — Exams/studies · A breakup · Divorce/separation · Health or illness · Caring for someone · Lost my job / work stress · Grief · Moving / big change · Loneliness · Just a hard time · Something else | Multi-select chips | `memory.life_areas[]` |
-| 3 | **"Tell me a bit more, in your own words."** Placeholder changes based on step 2 (for example "My exam is on… and I'm worried about…") | Free text (skippable), 🎤 dictation | First **note** + memory extraction |
-| 4 | **"Is there a date coming up that matters?"** (exam, court date, appointment, anniversary). For anniversary and medical kinds, a second line asks: *"Want me to be with you on that day, or leave it quiet?"* (opt-in, `key_dates.remind`) | Date + label, "Add another" | `key_dates[]` (drives timed notes) |
-| 5 | **"How are you feeling most days lately?"** | Five abstract marks with labels (heavy · low · okay · lighter · good; doc 20 §7.4), not faces | First `checkin` |
-| 6 | **"What kind of words help you most?"** — Gentle & soft · Calm & grounded · Encouraging & strong · Honest & real · A little humour | Single/multi select | `prefs.tone` |
-| 7 | **"What do you NOT want to hear?"** — Advice · Religious/spiritual phrases · "Stay positive" talk · Mentions of my ex · Nothing, all fine | Multi-select + text | `prefs.avoid[]` (hard constraints, very important for trust) |
-| 8 | **"Something that makes you, you?"** — a strength, a person you love, something you enjoy (optional) | Free text | `memory.anchors[]` (grounding details for notes) |
-| 9 | **"When should I leave notes?"** — Morning / Midday / Evening / Before sleep (pick one or more). Frequency isn't asked here: it defaults to two a day and lives in delivery settings as a premium control, so door-open users are never asked a question they can't act on | Time chips | `delivery_prefs.slots` |
+| 1 | **"What's going on in your life right now?"** (pick up to 3) — Exams/studies · A breakup · Divorce/separation · Health or illness · Caring for someone · Lost my job / work stress · Grief · Moving / big change · Loneliness · Just a hard time · Something else | Multi-select chips | `notes.life_areas[]`, `profiles.focus_weights` |
+| 2 | **"Tell me a bit more, in your own words."** Placeholder changes with screen 1 ("My exam is on… and I'm worried about…"). Below the text, one optional line: **"Is there a date coming up that matters?"** (label + date; for anniversary and medical kinds a second line asks *"Want me to be with you on that day, or leave it quiet?"*, opt-in `key_dates.remind`) | Free text (skippable), 🎤 dictation, + optional date | First **note** + memory extraction; `key_dates[]` |
+| 3 | **"How are you feeling most days lately?"** | Five abstract marks with labels (heavy · low · okay · lighter · good; doc 20 §7.4), not faces | First `checkin` |
+| 4 | **"How should I talk to you?"** Two chip groups on one screen: *Words that help* — Gentle & soft · Calm & grounded · Encouraging & strong · Honest & real · A little humour; *Words you'd rather not hear* — Advice · Religious/spiritual phrases · "Stay positive" talk · Mentions of my ex · Nothing, all fine (+ a short text field). French users also see the tu / vous choice here, with a one-line example of each | Multi-select chips ×2 | `profiles.tone`, `profiles.avoid[]` (hard constraints, very important for trust) |
+| 5 | **"What should I call you? And when should I leave notes?"** Optional name, then Morning / Midday / Evening / Before sleep (pick one or more). Frequency isn't asked: it defaults to two a day and lives in delivery settings as a premium control | Text (optional) + time chips | `profiles.display_name`, `delivery_prefs.slots` |
 
-Micro-copy between steps reflects back what the user said ("Thank you for trusting me with that."). **Validate, don't interrogate.**
+Micro-copy between screens reflects back what the user said ("Thank you for trusting me with that."). **Validate, don't interrogate.**
 
-**Variant to test** (doc 12 §6): steps 1–4 → first note → "does this feel right?" → steps 6–9 framed as "make it yours" → notification permission. The first note is then written in the neutral gentle register and tone/avoid shape the second note onward. Fewer steps before the wow may lift completion; the test decides.
+**Kept in reserve (from the nine-step version), to add if the first note needs them:** "Something that makes you, you?" (anchors: a strength, a person, something they enjoy; currently the extractor picks these up from screen 2 and later notes); a separate screen for the key date with "Add another"; the name as its own first screen.
+
+**Variant to test** (doc 12 §6): screens 1–3 → first note → "does this feel right?" → screens 4–5 framed as "make it yours" → notification permission. The first note is then written in the neutral gentle register and tone/avoid shape the second note onward.
 
 **Language:** English and French at launch, with **Canadian French (fr-CA) as the primary French variant** (D25); France-French wording is reviewed before the European launch. Detect the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French UI). Notes are written in whatever language the user writes in. French notes default to **"tu"**, the warm, informal register that friends use; a setting lets the user switch to "vous" (some users aged 45+ may prefer it, and it's asked about in onboarding step 6 for French users).
 
@@ -56,7 +59,7 @@ Micro-copy between steps reflects back what the user said ("Thank you for trusti
 ### The first note (the "wow" moment)
 
 - A 2–4 second "writing your first note…" animation (paper and pen). The real LLM call happens here, with a pre-generated fallback ready.
-- The note is displayed large, in the chosen theme. It **must reference something specific** from steps 2–4 and 8 (for example *"Mia, three weeks until your finals, and you're already here, taking care of yourself. That's the kind of person who makes it through. 🌿"*).
+- The note is displayed large, in the chosen theme. It **must reference something specific** from screens 1–2 (for example *"Mia, three weeks until your finals, and you're already here, taking care of yourself. That's the kind of person who makes it through. 🌿"*).
 - Below it: ❤️ "This feels right" / ↻ "Not quite" (feedback for tone calibration).
 - Then: **"Want me to leave notes like this at 8:00 and 21:00?"** → system notification permission prompt. *Asking after the value moment roughly doubles opt-in rates compared with asking on launch.*
 
@@ -98,6 +101,7 @@ Order matters: the first two rows carry visual weight; account and help sit at t
 - **Focus areas:** life areas with weights ("more about my recovery, less about work").
 - **Tone:** re-pick tone and avoid-list.
 - **Themes & widget:** themes, fonts, widget styles.
+- **About:** shows the company name (DreamTeam Co., placeholder until registration) beside "Made in Ontario, Canada".
 - **Account & data:** sign in / link account, backup status, export (JSON + PDF), delete account, privacy, consents, subscription (with a clear « Résilier mon abonnement » entry that deep-links to the store), redeem a code.
 - **Help:** crisis resources (localised), FAQ, contact.
 - **About:** "Made in Ontario, Canada 🍁 · Your notes are stored in Canada", the AI disclosure ("Rustle is AI, not a therapist or a crisis service"), version, licences.

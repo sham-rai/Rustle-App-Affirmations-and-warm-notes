@@ -1,0 +1,39 @@
+---
+id: M2-01
+title: Company splash and the Rustle screen with the Skia tree
+milestone: M2
+state: ready
+executor: subagent
+model: opus
+owner_files: [app/app/(onboarding)/splash.tsx, app/app/(onboarding)/rustle.tsx, app/features/intro/**, app/assets/fonts/**]
+depends_on: [M1-01, M1-04]
+pr:
+---
+
+## Goal
+A cold start shows the company splash for two seconds, fades into the Rustle screen with the tree moving softly behind the wordmark, and after one second the headline, Begin and footer appear; warm starts skip it; returning users go to Today.
+
+## Spec
+- docs/05 §2 (the sequence, D42)
+- docs/20 §2 (wordmark, mark), §6 (motion), §3 (tokens)
+- docs/21 §1 criteria 0–1
+- The style board's intro example is the source of truth for the tree maths (canvas → Skia port)
+
+## Out of scope
+- Age gate and consent (M1-09); onboarding (M2-02); the company wordmark (type only until the legal name exists)
+
+## Risks and notes
+- Add @shopify/react-native-skia and expo-splash-screen in this ticket; a new development build is needed after it
+- Draw all leaves in one Skia Picture per frame, not one component per leaf
+- Reduce-motion: tree still, fades only
+- Company name is a placeholder string in en.json/fr.json: DreamTeam Co.
+
+## Questions for the PO
+- none yet
+
+## Report (filled by the executor)
+- Summary:
+- Files touched:
+- Commands run and results:
+- Criteria met / not verified:
+- Deviations and why:

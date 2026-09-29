@@ -98,8 +98,8 @@ Names follow the glossary prefixes (doc 00): `delivery_*` for what Rustle sends,
 ## 6. Experiments backlog (first ones)
 
 1. Paywall: welcome week as the default (current) vs card-first with a thin door-open mode (doc 09 §8); needs ~1,000 installs per arm.
-2. Onboarding: nine steps before the first note vs four steps → first note → "make it yours" (doc 05 §3).
-3. Notification permission timing: after the first note vs after onboarding step 9.
+2. Onboarding: five screens before the first note vs three screens → first note → "make it yours" (doc 05 §3).
+3. Notification permission timing: after the first note vs after onboarding screen 5.
 4. Door-open presence note: weekly vs twice a week.
 5. Reply delay: 5 min vs 30 min vs "natural" (random 5–60).
 6. Name in notification title vs no title.

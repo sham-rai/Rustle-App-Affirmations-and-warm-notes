@@ -20,7 +20,7 @@ The welcome screen, a neutral date-of-birth gate that blocks under-18s kindly wi
 - docs/21 §1 criteria 1–4
 
 ## Out of scope
-- Onboarding steps 1–9 (M2); the youth helpline numbers are copied from docs/11 §5 and marked 'verify at build'
+- The company splash, the Rustle screen and onboarding screens 1–5 (M2); the youth helpline numbers are copied from docs/11 §5 and marked 'verify at build'
 
 ## Risks and notes
 - Consent copy is separate from ToS acceptance; declining AI processing ends onboarding kindly

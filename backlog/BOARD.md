@@ -17,6 +17,16 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 | M1-09 | Consent screens, 18+ gate, `consents` rows | ready | subagent · opus | M1-02, M1-04 | |
 | M1-10 | Device checklist v1 and the first status note | ready | lead · fable | all | |
 
+## M2 · Splash, Rustle screen, onboarding, first note, Today
+
+| ID | Ticket | State | Executor · model | Depends on | PR |
+|---|---|---|---|---|---|
+| M2-01 | Company splash and the Rustle screen with the Skia tree | ready | subagent · opus | M1-01, M1-04 | |
+| M2-02 | Onboarding: five screens, answers held locally | ready | subagent · opus | M1-04, M1-09 | |
+| M2-03 | Onboarding complete, first note screen, seed notes, permission | ready | lead · fable | M1-02, M1-06, M1-07, M2-02 | |
+| M2-04 | Today with the first Rustle as hero, Notes board skeleton | ready | subagent · opus | M1-04, M1-08, M2-03 | |
+| M2-05 | First paywall, welcome week, door-open state, code redemption | ready | lead · fable | M1-02, M2-03 | |
+
 ## Blocked
 none
 

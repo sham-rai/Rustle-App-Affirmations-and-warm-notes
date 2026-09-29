@@ -46,7 +46,7 @@
 **Goal:** prove that personal notes make people feel seen, *before* investing months.
 
 ### Steps
-1. **Write the 9 onboarding questions** (from doc 05) as a Tally or Typeform form, in EN and FR. *Claude drafts, you edit.*
+1. **Write the 5 onboarding questions** (from doc 05 §3) as a Tally or Typeform form, in EN and FR. *Claude drafts, you edit.*
 2. **Recruit 20–30 people** across your segments: at least 8 French speakers, 6 aged 45+, and a mix of breakup, exams, burnout and caregiving situations. Sources: friends of friends, Reddit, Instagram stories, Facebook groups. *Claude writes the recruiting posts.*
 3. **Concierge service for 2 weeks:** every morning and evening, send each person a note via WhatsApp/Telegram. Draft each note with Claude (paste the person's answers and recent messages into a chat using the Rustle voice prompt from doc 08 §5.1), **edit it yourself**, then send it. People can reply with any thought, which is your "notes board".
 4. **Measure:** reply and reaction rate, "did this feel written for you?" (1–5) after a few days, "would you pay €5–8/month?", and what they'd miss if it stopped.
@@ -94,7 +94,7 @@ Plan (Claude, plan mode) → you approve → build (Claude) → run on phone (yo
 | 4 | i18n (EN/FR), theme tokens from the design, navigation skeleton (Today / Notes / You) | Switch the phone to French and everything is French |
 | 5 | CI (typecheck, tests, lint), Sentry, PostHog with a first event | A failing test blocks the merge |
 | 6–7 | `LLMClient` + Rustle voice prompt + a call from a test screen | A real note appears on the phone |
-| 8–10 | Consent + 18+ gate + the first 3 onboarding steps | A full run on a device in EN and FR |
+| 8–10 | Splash + Rustle screen + consent + 18+ gate + the first 2 onboarding screens | A full run on a device in EN and FR |
 
 After M1, continue with M2 → M6 in order (doc 06 §4). **Never start the next milestone with red tests.**
 

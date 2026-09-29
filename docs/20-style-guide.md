@@ -168,7 +168,7 @@ Two families: a **warm serif for anything Rustle writes** (notes, replies, recap
 
 | Moment | Motion | Duration |
 |---|---|---|
-| Intro (cold start) | Wordmark and mark fade up in front of a tree at the edge of the screen: soft ink branches, sage leaves swaying in slow gusts, one letting go now and then; ~2 s, tap to skip; reduce-motion → tree still (doc 05 §2) | 1.6 s fade, 2 s total |
+| Cold start | Company splash on paper (~2 s) fades into the Rustle screen: wordmark and mark present from the first frame in front of a tree at the edge of the screen (soft ink branches, sage leaves swaying in slow gusts, one letting go now and then); after 1 s the headline, Begin and footer fade up together; reduce-motion → tree still (doc 05 §2, D42) | 2 s splash · 1 s hold · 400 ms fade-up |
 | App open (warm) | Paper settles; hero note fades up 8 pt | 400 ms, ease-out |
 | First note being written | A pen line draws across a card, then the note appears line by line | 2–4 s (covers the real generation), can be skipped |
 | A reply arrives | The reply note slides in and *sticks* onto the user's note with a small settle | 500 ms |
@@ -349,9 +349,9 @@ Dark values for `sageDeep` and the dark pastels are proposals; the designer shou
 
 ## 14. Designer brief (what to ask for, in order)
 
-1. **Wordmark and folded-note mark**, in one colour, tested at 16 px and as an app icon on light and dark wallpapers. Plus the **intro screen**: the leaf shapes and their motion (doc 05 §2); a live reference exists on the style board.
+1. **Wordmark and folded-note mark**, in one colour, tested at 16 px and as an app icon on light and dark wallpapers. Plus the **Rustle screen**: the leaf shapes and their motion (doc 05 §2); a live reference exists on the style board. The company splash is type only until the legal name and wordmark exist.
 2. **Paper and Night themes** as full token sets, with the texture asset.
-3. **Eight key screens** at phone width, in English *and* French, at default and at one accessibility text size: Welcome · onboarding step 2 (chips) · first note · Today · Notes board with a reply · New note sheet · What Rustle remembers · Paywall (soft). Plus the **crisis screen**.
+3. **Eight key screens** at phone width, in English *and* French, at default and at one accessibility text size: the Rustle screen · onboarding screen 1 (chips) · first note · Today · Notes board with a reply · New note sheet · What Rustle remembers · Paywall (soft). Plus the **crisis screen**.
 4. **Notification and small/medium widget** mockups on a real lock screen and home screen.
 5. **Share card** templates (9:16, 1:1) and the **warm-note web card**.
 6. **Motion notes** for the first-note animation and the reply "stick".

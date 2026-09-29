@@ -35,6 +35,8 @@ The word **"affirmation" never appears in the product.** It lives only in App St
 | **Warm-note page** | The web page a friend opens (no install), `rustle.app/n/{id}`. | `/web` |
 | **Safety level** | The classifier's result for any user text: `none`, `low`, `elevated`, `crisis`. | `notes.safety_level`, `safety_events` |
 | **Crisis flow** | Human-written, localised resources shown for `crisis`; no AI generation. | crisis screen |
+| **Rustle screen** | The screen after the company splash: tree, wordmark, then headline and Begin. Not called "welcome" or "intro" in code: `(onboarding)/rustle`. | `(onboarding)/rustle` |
+| **Company splash** | ~2 s of the company name on paper on a cold start. DreamTeam Co. is a placeholder until registration. | `(onboarding)/splash` |
 | **Seed notes** | The first 48 h of Rustles generated at onboarding so the user isn't empty until the nightly batch (`deliveries.kind = 'seed'`). | onboarding-complete |
 | **Delivery** | One Rustle scheduled for one slot, sent by an opaque push (an ID, never text; the text is fetched on-device) with a local-notification backup and an idempotency key. | `deliveries` |
 | **Welcome week** | The 7 days of full experience, with no card, after "Not now" at the first paywall. Once per account. | `users.welcome_week_ends_at` |

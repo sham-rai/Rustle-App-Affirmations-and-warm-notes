@@ -11,18 +11,19 @@
 5. Sentry receives a test crash with request bodies scrubbed; PostHog receives `app_opened` with no content properties; both run in their EU/Canada-appropriate regions.
 6. `packages/shared` exports zod schemas, the glossary constants and the design tokens, and is imported by both the Expo app and a Deno Edge Function without a build step.
 
-## 1. Welcome, 18+ gate, consent (doc 05 §2–3, doc 11 §4–5)
-1. The welcome screen shows the headline, "Begin", "I already have an account" and the crisis footer link, in EN and FR from the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French).
+## 1. Splash, Rustle screen, 18+ gate, consent (doc 05 §2–3, doc 11 §4–5)
+0. Cold start shows the company splash (DreamTeam Co., placeholder) for about 2 s on paper, then fades into the Rustle screen; the native splash uses the same paper colour so no flash is visible; a warm start skips both.
+1. The Rustle screen shows the tree (Skia, from the tree module; still under reduce-motion), the wordmark and mark from the first frame, and after 1 s the headline, sub, "Begin", "I already have an account" and the crisis footer with the AI disclosure, in EN and FR from the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French). Returning users go to Today after the 1 s beat.
 2. A neutral date-of-birth picker precedes onboarding; under 18 shows the youth-resources screen with localised helplines and blocks retry for that install (local flag); 18+ writes `users.age_confirmed_at`.
 3. Consent screens for terms, AI processing and special-category data are separate from each other and from the ToS acceptance; each writes a `consents` row with kind, version, locale and timestamp; declining AI processing ends onboarding with a kind message and no account data beyond the anonymous user.
 4. The AI disclosure sentence ("Rustle is AI, not a therapist or a crisis service") is visible on the consent screen and in About.
 
 ## 2. Onboarding and the first note (doc 05 §3, doc 07 §4.1, doc 08 §5.10)
-1. Nine steps as specified; every open question is skippable; the progress line has no step numbers; chips are laid out at French length without truncation.
-2. Step 4 asks the opt-in question for anniversary and medical dates and stores `key_dates.remind`; step 5 uses the five labelled marks; step 9 asks only *when* (slots), and `delivery_prefs.per_day` defaults to 2.
+1. Five screens as specified in doc 05 §3; every open question is skippable; the progress line has no step numbers; chips are laid out at French length without truncation; the whole flow takes under 90 s when every open field is skipped.
+2. Screen 2 stores the free text as the first note and the optional date as a `key_dates` row, asking the opt-in question for anniversary and medical kinds (`key_dates.remind`); screen 3 uses the five labelled marks; screen 4 stores tone and avoid list and, for French users, tu/vous; screen 5 stores the optional name and the slots, and `delivery_prefs.per_day` defaults to 2.
 3. `POST /onboarding/complete` requires a valid App Attest / Play Integrity assertion, is rate-limited per device and IP, and stores profile, consents, first note, key dates and check-in in one transaction.
 4. The first Rustle streams and appears within 5 s in the happy path; at 8 s without a result the personalised template shows, and the regenerated note replaces it silently later; the screen never shows two notes.
-5. The first Rustle references at least one specific thing from steps 2–4 or 8 (eval check on the golden personas > 95%); when every open question was skipped it still references the chosen life areas.
+5. The first Rustle references at least one specific thing from screens 1–2 (eval check on the golden personas > 95%); when every open question was skipped it still references the chosen life areas.
 6. Onboarding text classified `crisis` shows the crisis screen before anything else; `elevated` or `crisis` suppresses the paywall for that session and marks the first Rustle as soft.
 7. The same call writes 48 h of seed Rustles (`kind='seed'`, two a day at the chosen slots), which the app pre-fetches and schedules locally.
 8. ❤️ / "Not quite" on the first Rustle writes `deliveries.reaction` and, for "Not quite", a one-tap `reaction_reason`.

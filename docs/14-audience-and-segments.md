@@ -71,7 +71,7 @@ The affirmation category is mostly marketed to women, and early users will likel
 
 | Area | Change |
 |---|---|
-| Onboarding | **Don't ask for age bands in the UI** beyond the 18+ gate. Tone comes from step 6 (tone preferences). Add a French-only "tu / vous" question. |
+| Onboarding | **Don't ask for age bands in the UI** beyond the 18+ gate. Tone comes from onboarding screen 4 (tone preferences). Add a French-only "tu / vous" question. |
 | AI tone | Tone preferences + recent reactions drive the voice. The golden eval set includes personas across 18–60 (student, 30s burnout, 40s divorce, 58-year-old caregiver). |
 | Design | Dynamic Type, **Simple mode**, high-contrast theme and dictation are in the MVP scope (important for 45–60). |
 | Paywall | Student discount (18–24) and the **chapter pass** for time-bound situations; **gifting** for 45+ (adult children buying for a parent); lifetime deferred (doc 09 §4). |

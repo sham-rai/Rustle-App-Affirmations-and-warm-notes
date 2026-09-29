@@ -12,7 +12,7 @@
 | 02 | [Market & Competitors](02-market-and-competitors.md) | Market size, 20+ competitors, positioning map, SWOT, differentiation, market entry |
 | 03 | [Naming](03-naming.md) | Rustle vs Nautila vs Zorya vs Celeste vs Oberih: scorecard, conflicts, recommendation, taglines |
 | 04 | [Pitch](04-pitch.md) | Elevator pitch, 12-slide deck outline, App Store description |
-| 05 | [UX: Onboarding & Screens](05-ux-onboarding-and-screens.md) | Information architecture, 9-step onboarding, screens, notifications, widgets, share, accessibility, design direction |
+| 05 | [UX: Onboarding & Screens](05-ux-onboarding-and-screens.md) | Information architecture, splash and Rustle screen, 5-screen onboarding, screens, notifications, widgets, share, accessibility, design direction |
 | 06 | [MVP & Roadmap](06-mvp-and-roadmap.md) | MVP scope, V1.x/V2/V3, building with Claude, timeline, decision gates |
 | 07 | [Technical Architecture](07-technical-architecture.md) | Stack, architecture, database schema, flows, **accounts (anonymous-first)**, notifications, security, paywall implementation, repo layout |
 | 08 | [AI, Memory & Prompts](08-ai-and-prompts.md) | Model strategy, memory engine, context assembly, **full prompt templates**, safety classifier, guardrails, evals, cost per user |

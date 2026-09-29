@@ -25,7 +25,7 @@ MVP success criteria (closed beta → soft launch):
 
 ### ✅ In (must have)
 1. Welcome, **18+ age gate**, AI/data consent
-2. 9-step onboarding + first personalised note (with fallback)
+2. Company splash + Rustle screen (tree), 5-screen onboarding + first personalised note (with fallback)
 3. Anonymous account + Keychain/Block Store persistence + optional Sign in with Apple/Google linking
 4. **Today** screen: current note, recent notes, ❤️ / "not quite", check-in card
 5. **Notes board**: create/edit/delete/pin notes, the "just listen" toggle, **Rustle replies** (delayed, one per note)
@@ -128,7 +128,7 @@ Recap (V1.1)                                                   █████�
 | **0. Discovery & concierge test** | 1–3 | 15–20 interviews (18–60, EN + FR), 20–30 people receiving hand-sent notes via WhatsApp/Telegram, final name + trademark search, waitlist landing page |
 | **1. Design** | 2–7 | Brand, design system, key screens in Figma (freelancer + you + Claude) |
 | **2. M1 Foundations** | 5–8 | Expo app skeleton, Supabase project, database schema + RLS, anonymous auth + Keychain persistence, i18n (EN/FR), CI, Sentry, PostHog |
-| **3. M2 Onboarding + first note** | 8–11 | 9-step onboarding, consent + 18+ gate, AI pipeline v1 (Edge Functions), the first personalised note, notification permission |
+| **3. M2 Onboarding + first note** | 8–11 | Splash and Rustle screen, 5-screen onboarding, consent + 18+ gate, AI pipeline v1 (Edge Functions), the first personalised note, notification permission |
 | **4. M3 Notes, memory, replies** | 11–15 | Notes board, memory extraction + summary, "What Rustle remembers", delayed replies, safety gate + crisis flow |
 | **5. M4 Daily notes, push, widget** | 15–18 | Nightly batch generation two days ahead, opaque push + Notification Service Extension + local backup, delivery settings, iOS widget |
 | **6. M5 Paywall, sharing, warm notes** | 18–20 | RevenueCat trial-first paywall, welcome week + door-open rules in the planner, hardship offer, access codes, share cards, warm-note links + web page with the thank-you tap |
