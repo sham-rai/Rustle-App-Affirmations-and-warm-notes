@@ -47,7 +47,37 @@ Create the repo layout from docs/07 §11 so every later ticket has a place to la
 
 ## Report (filled by the executor)
 - Summary:
-- Files touched:
+  - npm workspaces root (`app`, `packages/shared`, `evals`) with `dev`, `typecheck`, `test`, `lint`, `eval`; Node 24 in `.nvmrc`; shared strict `tsconfig.base.json`.
+  - Expo SDK 57 app (RN 0.86.3, React 19.2.3, TS 6.0 strict, expo-router): `app.json` with name Rustle, slug/scheme `rustle`, `app.rustle` on both platforms, `userInterfaceStyle: automatic`, the five plugins. Placeholder `app/app/_layout.tsx` shows only "Rustle". No `ios/`/`android/`, no prebuild.
+  - `packages/shared` (pure ESM, `.ts` specifiers, no Node built-ins, no build step): `tokens.ts` (doc 20 §13 verbatim, `as const`), `glossary.ts` (`TABLES`, `EVENT_PREFIXES`), `enums.ts` (typed empty placeholders, TODO M1-02). App reaches it through a tsconfig path alias plus a Jest `moduleNameMapper`; Deno through `supabase/functions/deno.json`.
+  - `supabase/config.toml` for `rustle-dev` (anonymous sign-ins on, region TODO), Deno smoke file, `evals` stub printing "no prompts yet", one-line `scripts/` and `web/` READMEs.
+  - CI (`ci.yml`: npm ci, typecheck, lint, test, gitleaks on full history) and `eval.yml` (path-filtered on prompts/evals, key only through env). Husky pre-commit runs `gitleaks protect --staged` or prints one line and exits 0.
+- Files touched: `package.json`, `package-lock.json`, `tsconfig.base.json`, `.gitignore`, `.nvmrc`, `.husky/pre-commit`, `app/{package.json,app.json,tsconfig.json,eslint.config.js,jest.config.js,.env.example,app/_layout.tsx,__tests__/root-layout.test.tsx,__tests__/shared-import.test.ts,assets/*.png}`, `packages/shared/{package.json,tsconfig.json,index.ts,tokens.ts,glossary.ts,enums.ts,jest.config.cjs,jest.transform.cjs,__tests__/tokens.test.ts,__tests__/glossary.test.ts}`, `evals/{package.json,run.mjs}`, `supabase/config.toml`, `supabase/functions/deno.json`, `supabase/functions/_shared/shared-smoke.ts`, `scripts/README.md`, `web/README.md`, `.github/workflows/{ci.yml,eval.yml}`, and this report.
 - Commands run and results:
+  - `npm run typecheck`: exit 0 (app and shared).
+  - `npm test`: exit 0. app 2 suites / 2 tests, shared 2 suites / 22 tests, evals `--passWithNoTests`. Jest printed "A worker process has failed to exit gracefully" for the app run (tests still pass; the machine was under heavy Homebrew load, the app run took 269 s).
+  - `npm run lint`: exit 0. `npm run eval`: exit 0, prints "no prompts yet".
+  - `npx expo-doctor` (in `app`): 21/21 checks passed.
+  - `npm ci --dry-run --ignore-scripts`: exit 0 (lockfile in sync). A real fresh `npm ci` was not re-run after the last install because of machine load; CI will be the first proof.
+  - `supabase status` (CLI 2.118.0): config loads (fails later only on "docker: command not found"); a deliberately broken copy fails with `CliConfigParseError`, so the parse check is real.
+  - `deno check`: not run, `deno` not on PATH. `gitleaks`: not on PATH; the hook printed its skip line on every commit.
+  - Grep: no hex literals outside `packages/shared/tokens.ts`; no occurrence of the forbidden word.
 - Criteria met / not verified:
+  - Criterion 1: layout, `CLAUDE.md`, root scripts and CI exist and pass locally. Not verified: CI actually running on GitHub and blocking merge (needs a push and a branch-protection rule on `main`, which is a PO setting).
+  - Criterion 2 (partial by design): pre-commit secret scanner installed; no secrets in files. Supabase projects and EAS profiles are out of scope (M1-02 / later). gitleaks itself unverified locally.
+  - Criterion 6: the app imports `@rustle/shared` without a build step (typecheck plus `app/__tests__/shared-import.test.ts`). Deno half unverified: `deno` missing, so `deno check supabase/functions/_shared/shared-smoke.ts` has not been run. Zod schemas: none yet (see open questions).
 - Deviations and why:
+  - Extra dependencies outside the allowlist, all required by allowlisted packages and installed with `npx expo install` so versions match SDK 57: `expo-linking`, `expo-constants`, `react-native-safe-area-context`, `react-native-screens` (expo-router peers), `react-native-reanimated` + `react-native-worklets` + `react-native-gesture-handler` (required peers of expo-router and Skia), `react-native-nitro-modules` (required by react-native-mmkv 4), `react-dom` (required peer of expo-router's web parts). Without declaring them npm auto-installed mismatched versions (React 19.3 duplicate, worklets 0.13), which expo-doctor flagged.
+  - Test-only dev deps: `@testing-library/react-native@^13.3.3` and `react-test-renderer@19.2.3` for the "root layout renders" test. v14 (what expo install picks) needs React 19.3 and conflicts with SDK 57's React 19.2.3.
+  - `packages/shared` tests use plain Jest with a 20-line transformer (`jest.transform.cjs`) built on the allowlisted `typescript`, instead of adding Babel or ts-jest.
+  - `expo-dev-client` is installed but has no plugin entry (it needs none). `expo-font` etc. are in plugins as the ticket lists. `typedRoutes` experiment on (template default for router). The template's hex `backgroundColor` on the Android adaptive icon was dropped (no hex in `app/`); the template `favicon.png` is kept for the web target.
+  - Zod is `^3.25.76` (what `expo install` resolved); it ships the v4 API under `zod/v4`.
+  - CI uses the pinned gitleaks binary (v8.21.2) rather than `gitleaks-action`, which needs a paid licence on organisation repos.
+  - Added `supabase/.temp/` and `supabase/.branches/` to `.gitignore` after the CLI wrote local state.
+  - `npx husky` set `core.hooksPath=.husky/_` in the shared `.git/config`, so it also applies to the main checkout (where `.husky/` does not exist yet, so hooks there simply do not run until this merges).
+- Edge Functions region: `config.toml` has no region key (confirmed against the Supabase "regional invocation" guide). The project region set at creation pins the database only; by default each function runs in the region closest to the caller. Execution is pinned per invocation: `x-region: ca-central-1` header, `forceFunctionRegion=ca-central-1` query parameter where headers cannot be set, or `region: FunctionRegion.CaCentral1` in supabase-js `functions.invoke`; the response header `x-sb-edge-region` confirms it. So M1-02 must create projects in ca-central-1 and every caller (the app client, pg_cron/pg_net dispatchers) must send the region, ideally with a server-side check of `x-sb-edge-region` in tests. One-line TODO left in `supabase/config.toml`.
+- Open questions for the lead:
+  - Criterion 6 names zod schemas; none exist yet because the first real schemas depend on the M1-02 enums. Add a trivial one here, or leave to M1-02? (Deno would then need a `zod` entry in the import map.)
+  - Approve the peer and test deps above, or amend the allowlist in the ticket.
+  - Branch protection on `main` requiring the CI checks is needed for "a failure blocks merge"; that is a PO setting on GitHub.
+  - Run `deno check supabase/functions/_shared/shared-smoke.ts` and `gitleaks detect` once Homebrew finishes.
