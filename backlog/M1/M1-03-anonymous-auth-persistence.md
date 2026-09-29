@@ -5,7 +5,7 @@ milestone: M1
 state: in progress
 executor: lead
 model: fable
-owner_files: [app/lib/supabase.ts, app/lib/secure-storage/**, app/lib/auth/**, app/features/settings/backup-status.tsx, app/modules/block-store/**, app/.env.example, app/app.json (plugins entry only)]
+owner_files: [app/lib/supabase.ts, app/lib/secure-storage/**, app/lib/auth/**, app/features/settings/**, app/modules/block-store/**, app/.env.example, app/app.json (plugins and ios.entitlements only), app/package.json (expo-crypto only), app/app/_layout.tsx (auth bootstrap wiring only, after M1-04), app/app/(tabs)/you.tsx (backup status row only, after M1-04)]
 depends_on: [M1-01]
 pr:
 ---
@@ -22,8 +22,11 @@ A first launch creates an anonymous account with no form, and a delete-and-reins
 - Sign in with Apple / Google linking UI and merge (M2); the recovery key UI beyond generation
 
 ## Decisions already taken (PO and lead, 2026-09-29)
-- Bundle identifier `app.rustle`. Keychain service name `app.rustle.session`; shared access group `$(TeamIdentifierPrefix)app.rustle.shared` in one constant (`app/lib/secure-storage/constants.ts`); the entitlement itself waits for the extension's build (M4).
+- Bundle identifier `app.rustle`. Keychain service name `app.rustle.session`. The shared keychain access group is the App Group `group.app.rustle` (an App Group name works as a keychain access group with no team-ID prefix, and the widget needs the same App Group for its storage), in one constant (`app/lib/secure-storage/constants.ts`). The App Group entitlement is declared in `app.json` from this ticket, so no Keychain migration is ever needed; EAS syncs the capability.
 - No Supabase dev project exists yet: the client reads `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` from `app/.env.local`; with either missing the app shows the backup-status screen in a "not connected" state instead of crashing. Unit tests mock the Supabase client. The reinstall test on a device is the PO's, once the project exists.
+- `expo-crypto` is added in this ticket (native, so it rides the same first development build): random bytes for the MMKV cache key and the recovery key, SHA-256 for the recovery-key hash.
+- The cached session lives in an MMKV file encrypted with a key held in the Keychain / Keystore; only the refresh token goes to the reinstall-proof stores (Keychain access group on iOS, Block Store on Android), written in the same call that caches the session so the copies never drift across a token rotation.
+- Android Auto Backup of an encrypted token (docs/07 §5) is deferred: without a key that survives the uninstall it adds nothing over Block Store. Logged in docs/13 §D.
 - The backup-status screen ships its strings as a `settings.backup.*` block appended to `en.json` / `fr.json` after M1-04 merges; the screen is written last in this ticket for that reason.
 
 ## Risks and notes
