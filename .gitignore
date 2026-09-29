@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+expo-env.d.ts
+.metro-health-check*
+web-build/
+
+# generated native folders (EAS generates them; never commit)
+ios/
+android/
+
+# env files: everything except the documented example
+.env*
+!.env.example
+
+# build output and reports
+dist/
+coverage/
+*.tsbuildinfo
+
+# logs
+*.log
+
+# signing material
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# macOS
+.DS_Store

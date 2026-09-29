@@ -1,0 +1,24 @@
+{
+  "name": "rustle",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "app",
+    "packages/shared",
+    "evals"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "npm run start --workspace app",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspace app",
+    "eval": "npm run eval --workspace evals",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
