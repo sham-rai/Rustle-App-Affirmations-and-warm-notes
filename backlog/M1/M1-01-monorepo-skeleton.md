@@ -2,7 +2,7 @@
 id: M1-01
 title: Monorepo skeleton, CI, packages/shared
 milestone: M1
-state: in progress
+state: PR open (PO)
 executor: subagent
 model: opus
 owner_files: [package.json, package-lock.json, tsconfig*.json, .gitignore, .nvmrc, .husky/**, .gitleaks.toml, app/**, packages/shared/**, .github/workflows/**, supabase/config.toml, supabase/functions/_shared/shared-smoke.ts, supabase/functions/deno.json, evals/**, scripts/README.md, web/README.md]
@@ -28,7 +28,7 @@ Create the repo layout from docs/07 §11 so every later ticket has a place to la
 - Package manager: npm workspaces (`app`, `packages/shared`, `evals`); Node LTS pinned in `.nvmrc`; one root `npm run typecheck`, `npm test`, `npm run lint`, `npm run eval`.
 - Expo SDK: the current stable SDK, TypeScript strict, expo-router, development builds (never Expo Go).
 - Tests: Jest (`jest-expo` preset) for the app, plain Jest for `packages/shared` and `evals`; a single root `npm test` runs all workspaces.
-- Dependencies allowed in this ticket, nothing else: `expo-router`, `expo-dev-client`, `expo-splash-screen`, `expo-secure-store`, `expo-localization`, `expo-font`, `@shopify/react-native-skia`, `react-native-mmkv`, `@tanstack/react-query`, `@supabase/supabase-js`, `zod`, `husky`, `jest`, `jest-expo`, `@types/jest`, `typescript`, `eslint` with `eslint-config-expo`.
+- Dependencies allowed in this ticket, nothing else: `expo-router`, `expo-dev-client`, `expo-splash-screen`, `expo-secure-store`, `expo-localization`, `expo-font`, `@shopify/react-native-skia`, `react-native-mmkv`, `@tanstack/react-query`, `@supabase/supabase-js`, `zod`, `husky`, `jest`, `jest-expo`, `@types/jest`, `typescript`, `eslint` with `eslint-config-expo`, plus their peer requirements as `npx expo install` resolves them (approved in review: expo-linking, expo-constants, react-native-safe-area-context, react-native-screens, react-native-reanimated, react-native-worklets, react-native-gesture-handler, react-native-nitro-modules, react-dom, @testing-library/react-native, react-test-renderer).
 - Supabase: no dev project exists yet. `supabase/config.toml` is written for a project named `rustle-dev`; `app/.env.example` documents `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; `.env*` files are git-ignored except `.env.example`.
 
 ## Risks and notes
