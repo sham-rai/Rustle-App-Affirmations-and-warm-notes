@@ -5,7 +5,7 @@ milestone: M1
 state: ready
 executor: lead
 model: fable
-owner_files: [app/lib/supabase.ts, app/lib/secure-storage/**, app/features/settings/backup-status.tsx, app/modules/block-store/**]
+owner_files: [app/lib/supabase.ts, app/lib/secure-storage/**, app/lib/auth/**, app/features/settings/backup-status.tsx, app/modules/block-store/**, app/.env.example, app/app.json (plugins entry only)]
 depends_on: [M1-01]
 pr:
 ---
@@ -21,6 +21,11 @@ A first launch creates an anonymous account with no form, and a delete-and-reins
 ## Out of scope
 - Sign in with Apple / Google linking UI and merge (M2); the recovery key UI beyond generation
 
+## Decisions already taken (PO and lead, 2026-09-29)
+- Bundle identifier `app.rustle`. Keychain service name `app.rustle.session`; shared access group `$(TeamIdentifierPrefix)app.rustle.shared` in one constant (`app/lib/secure-storage/constants.ts`); the entitlement itself waits for the extension's build (M4).
+- No Supabase dev project exists yet: the client reads `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` from `app/.env.local`; with either missing the app shows the backup-status screen in a "not connected" state instead of crashing. Unit tests mock the Supabase client. The reinstall test on a device is the PO's, once the project exists.
+- The backup-status screen ships its strings as a `settings.backup.*` block appended to `en.json` / `fr.json` after M1-04 merges; the screen is written last in this ticket for that reason.
+
 ## Risks and notes
 - iOS Keychain persistence is observed behaviour: test on the current iOS major and note the version in the report
 - Android Block Store has no Expo module: a small native module or config plugin; prototype on two different Android phones (the PO does this)
@@ -31,7 +36,7 @@ A first launch creates an anonymous account with no form, and a delete-and-reins
 - The doc review of 2026-09-29 found nothing else that blocks this ticket.
 
 ## Questions for the PO
-- none yet
+- none open
 
 ## Report (filled by the executor)
 - Summary:

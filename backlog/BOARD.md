@@ -6,7 +6,7 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 
 | ID | Ticket | State | Executor · model | Depends on | PR |
 |---|---|---|---|---|---|
-| M1-01 | Monorepo skeleton, CI, `packages/shared` | ready | subagent · opus | — | |
+| M1-01 | Monorepo skeleton, CI, `packages/shared` | in progress | subagent · opus | — | |
 | M1-02 | Migration 1: schema, RLS, pgcrypto + Vault + views, pgTAP | ready | lead · fable | M1-01 | |
 | M1-03 | Anonymous sign-in, Keychain / Block Store persistence, backup status | ready | lead · fable | M1-01 | |
 | M1-04 | i18n EN/FR, design tokens, ThemeProvider, tab skeleton | ready | subagent · opus | M1-01 | |
