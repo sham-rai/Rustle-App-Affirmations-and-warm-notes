@@ -1,4 +1,5 @@
-// Design tokens, transcribed verbatim from docs/20-style-guide.md §13.
+// Design tokens, transcribed verbatim from docs/20-style-guide.md §13
+// (the JSON key `type` is exported as `typography`: `type` is a TypeScript import modifier).
 // This is the only place in the repo where colour literals may live.
 // Change docs/20 §13 first, then this file.
 
@@ -21,7 +22,7 @@ export const color = {
   noteLilac: { light: '#E1D9EA', dark: '#B3A9C0' },
 } as const;
 
-export const type = {
+export const typography = {
   serif: 'Literata',
   sans: 'Instrument Sans',
   scale: {
@@ -50,12 +51,12 @@ export const motion = {
   ease: 'cubic-bezier(0.2, 0, 0, 1)',
 } as const;
 
-export const tokens = { color, type, space, radius, shadow, motion } as const;
+export const tokens = { color, typography, space, radius, shadow, motion } as const;
 
 export type Tokens = typeof tokens;
 export type ColorName = keyof typeof color;
 export type ColorScheme = keyof (typeof color)[ColorName];
-export type TypeScaleName = keyof typeof type.scale;
+export type TypeScaleName = keyof typeof typography.scale;
 /** [fontSize, lineHeight] in points. */
-export type TypeScaleEntry = (typeof type.scale)[TypeScaleName];
+export type TypeScaleEntry = (typeof typography.scale)[TypeScaleName];
 export type RadiusName = keyof typeof radius;

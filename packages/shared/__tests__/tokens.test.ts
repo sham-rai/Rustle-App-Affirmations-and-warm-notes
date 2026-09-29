@@ -1,11 +1,11 @@
-import { color, motion, radius, shadow, space, tokens, type } from '../tokens.ts';
+import { color, motion, radius, shadow, space, tokens, typography } from '../tokens.ts';
 
 const HEX = /^#[0-9A-F]{6}$/;
 
 describe('design tokens (docs/20 §13)', () => {
   it('has the documented top-level groups', () => {
     expect(Object.keys(tokens).sort()).toEqual(
-      ['color', 'motion', 'radius', 'shadow', 'space', 'type'].sort(),
+      ['color', 'motion', 'radius', 'shadow', 'space', 'typography'].sort(),
     );
   });
 
@@ -37,9 +37,9 @@ describe('design tokens (docs/20 §13)', () => {
   });
 
   it('has a [size, lineHeight] pair for every type-scale entry', () => {
-    expect(type.serif).toBe('Literata');
-    expect(type.sans).toBe('Instrument Sans');
-    for (const [size, lineHeight] of Object.values(type.scale)) {
+    expect(typography.serif).toBe('Literata');
+    expect(typography.sans).toBe('Instrument Sans');
+    for (const [size, lineHeight] of Object.values(typography.scale)) {
       expect(lineHeight).toBeGreaterThan(size);
     }
   });
