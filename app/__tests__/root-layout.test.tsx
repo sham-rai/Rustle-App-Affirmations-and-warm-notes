@@ -2,8 +2,8 @@ import { renderRouter, screen } from 'expo-router/testing-library';
 import * as SplashScreen from 'expo-splash-screen';
 
 import RootLayout from '../app/_layout';
+import Index from '../app/index';
 import TabLayout from '../app/(tabs)/_layout';
-import TabsIndex from '../app/(tabs)/index';
 import NotesScreen from '../app/(tabs)/notes';
 import TodayScreen from '../app/(tabs)/today';
 import YouScreen from '../app/(tabs)/you';
@@ -23,8 +23,8 @@ jest.mock('../i18n/preferences');
 
 const routes = {
   _layout: RootLayout,
+  index: Index,
   '(tabs)/_layout': TabLayout,
-  '(tabs)/index': TabsIndex,
   '(tabs)/today': TodayScreen,
   '(tabs)/notes': NotesScreen,
   '(tabs)/you': YouScreen,
@@ -40,7 +40,7 @@ describe('RootLayout and the tabs, on a French device', () => {
     expect(screen.getByText('Notes')).toBeOnTheScreen();
     expect(screen.getByText('Toi')).toBeOnTheScreen();
     expect(screen.getByText('Quand Rustle te laissera une note, tu la trouveras ici.')).toBeOnTheScreen();
-    // The hidden index route adds no fourth tab.
+    // Exactly three tabs: the "/" redirect lives in the root Stack, not in the tab bar.
     expect(screen.queryByText('index')).toBeNull();
   });
 
