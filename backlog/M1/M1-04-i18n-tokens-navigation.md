@@ -2,7 +2,7 @@
 id: M1-04
 title: i18n EN/FR, design tokens, ThemeProvider, tab skeleton
 milestone: M1
-state: in progress
+state: PR open (PO)
 executor: subagent
 model: opus
 owner_files: [app/i18n/**, app/components/ThemeProvider.tsx, app/components/Text.tsx, app/app/_layout.tsx, app/app/(tabs)/**, app/hooks/useTheme.ts, packages/shared/tokens.ts, scripts/check-contrast.ts, scripts/check-strings.ts, app/.eslintrc.* or app/eslint.config.*, .github/workflows/ci.yml (lint steps only), package.json (scripts and the JS deps named below only)]
