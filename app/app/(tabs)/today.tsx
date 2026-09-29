@@ -1,31 +1,5 @@
-import { ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { EmptyTab } from '../../components/EmptyTab';
 
-import { Text } from '../../components/Text';
-import { useTheme } from '../../hooks/useTheme';
-import { useT } from '../../i18n/useT';
-
-// Empty for now: the title and one line of empty-state copy (M1-04).
 export default function TodayScreen() {
-  const { t } = useT();
-  const { colors, space } = useTheme();
-  const insets = useSafeAreaInsets();
-
-  return (
-    <ScrollView
-      style={{ backgroundColor: colors.paper }}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + space[5], paddingHorizontal: space[4], gap: space[2] }]}
-    >
-      <Text variant="title" accessibilityRole="header">
-        {t('tabs.today.title')}
-      </Text>
-      <Text variant="body" color="ink2">
-        {t('tabs.today.empty')}
-      </Text>
-    </ScrollView>
-  );
+  return <EmptyTab tab="today" />;
 }
-
-const styles = StyleSheet.create({
-  content: { flexGrow: 1 },
-});
