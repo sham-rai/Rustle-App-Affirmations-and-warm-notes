@@ -1,0 +1,34 @@
+name: Eval
+
+# Prompt regression suite (docs/08 §8). Runs only when prompts or the evals change,
+# because it calls the Claude API.
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/_shared/prompts/**'
+      - 'evals/**'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/_shared/prompts/**'
+      - 'evals/**'
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    name: npm run eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # The key is passed only through the environment; never echo it or pass it on a command line.
+      - run: npm run eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
