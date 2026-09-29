@@ -4,7 +4,7 @@
 > Conventions: "Rustle" = a delivery; "note" = what the user writes; "note back" = a reply (doc 00). Entitlement states: `premium`, `welcome_week`, `door_open` (doc 09 §2).
 
 ## 0. Foundations (doc 15 §4 sessions 1–2, 5; doc 07 §10–11)
-1. Monorepo with `/app`, `/supabase`, `/packages/shared`, `/evals`, `/web`, `/scripts`, `CLAUDE.md`; `npm run typecheck`, `npm test`, `npm run eval` run in CI on every PR and a failure blocks merge.
+1. Monorepo with `/app`, `/supabase`, `/packages/shared`, `/evals`, `/web`, `/scripts`, `CLAUDE.md`; `npm run typecheck`, `npm run lint` and `npm test` run in CI on every PR and a failure blocks merge; `npm run eval` runs in CI on every PR that changes `supabase/functions/_shared/prompts/**` or `evals/**` (it calls the Claude API) and a failure blocks merge.
 2. Three Supabase projects (dev, staging, prod) with matching EAS profiles; secrets only in EAS/Supabase secrets; a pre-commit secret scanner is installed.
 3. Migration 1 creates every table in doc 07 §3 with RLS in the same migration; pgTAP tests prove user A cannot read, update or delete user B's rows in any table.
 4. Encrypted columns (`notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards`) are unreadable in a raw `SELECT` and readable through the decrypting views under RLS; the key lives in Vault.
