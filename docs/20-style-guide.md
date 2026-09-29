@@ -95,7 +95,7 @@ Warm charcoal, never pure black; text is warm off-white, never pure white. Ratio
 | `warm` | `#D99A80` | 7.4 : 1 on paper |
 | `remove` | `#D9846F` | large/icon use; verify per component |
 | `calm` | `#8FBFC4` | crisis surface accent; charcoal text on it |
-| pastels | desaturate and darken each by ~35% (e.g. butter → `#C9B77A`, ink on it 8.7 : 1) | — |
+| pastels | desaturate and darken each by ~35% (e.g. butter → `#C9B77A`; the light `ink` on it 7.5 : 1, checked by `scripts/check-contrast.ts`) | — |
 
 ### 3.3 Themes on top (premium)
 Themes change *paper, card, pastels and one accent*; they never change `ink` contrast rules or the crisis palette.
