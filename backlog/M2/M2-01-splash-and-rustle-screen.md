@@ -11,7 +11,7 @@ pr:
 ---
 
 ## Goal
-A cold start shows the company splash for two seconds, fades into the Rustle screen with the tree moving softly behind the wordmark, and after one second the headline, Begin and footer appear; warm starts skip it; returning users go to Today.
+The first launch, and a launch after sign-out, shows the company splash for two seconds, fades into the Rustle screen with the tree moving softly behind the wordmark, and after one second the headline, Begin and footer appear. A launch with an existing session shows only the native splash and lands on Today, or on the Rustle a push or deep link names; the sequence never replays (D46).
 
 ## Spec
 - docs/05 §2 (the sequence, D42)

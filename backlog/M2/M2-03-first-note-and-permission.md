@@ -25,6 +25,10 @@ Tapping done on screen 5 calls /onboarding/complete behind App Attest, runs the 
 - Crisis text in onboarding → crisis screen first, no first-note generation
 - The three-state client machine: streaming → shown, or streaming → fallback → replaced; never two notes
 - Until M1-06 lands, a dev stub returns a canned note so M2-02 can be walked end to end
+- The first note is composed from the raw answers while the extractor runs in parallel; it never waits on extraction (docs/07 §4.1, D46). Stream with `expo/fetch` on the client
+- Seed notes are a `seed_notes` job enqueued at the end of the request, one per chosen slot for 48 h; the app polls until they exist
+- The endpoint verifies the three required `consents` rows exist (written by M1-09) and rejects otherwise
+- The permission pre-prompt names the chosen slots' times
 
 ## Questions for the PO
 - none yet

@@ -24,7 +24,8 @@ After the first note and the permission prompt, the trial-first paywall appears 
 
 ## Risks and notes
 - RevenueCat needs the products created in App Store Connect and Play Console first (PO)
-- Never shown in an elevated/crisis session
+- Never shown in an elevated/crisis session: the welcome week then starts silently (`welcome_week_ends_at` set without a tap) and the day-7 paywall is the first one seen (docs/09 §3, D46)
+- Scope in M2 (D46): the paywall screen, the RevenueCat products, `welcome_week_ends_at`, the entitlement-state reader as a pure function with unit tests, and code redemption. The planner consumes the state in M4; there is nothing to gate before then
 
 ## Questions for the PO
 - none yet

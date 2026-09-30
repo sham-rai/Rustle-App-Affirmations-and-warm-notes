@@ -24,6 +24,7 @@ A note or check-in written with no connection appears immediately, is queued, an
 ## Risks and notes
 - Idempotency key per queued write so a retry never duplicates a note
 - Log board_note_created.offline = true
+- MMKV is encrypted with a random key held in secure storage (docs/07 §8, D46); losing the key on an Android uninstall is fine because the cache is re-fetchable
 
 ## Questions for the PO
 - none yet

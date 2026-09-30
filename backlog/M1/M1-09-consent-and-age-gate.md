@@ -5,16 +5,16 @@ milestone: M1
 state: ready
 executor: subagent
 model: opus
-owner_files: [app/app/(onboarding)/welcome.tsx, app/app/(onboarding)/age.tsx, app/app/(onboarding)/consent/**, app/features/consent/**, app/i18n/en.json, app/i18n/fr.json]
+owner_files: [app/app/(onboarding)/age.tsx, app/app/(onboarding)/consent/**, app/features/consent/**, app/i18n/en.json, app/i18n/fr.json]
 depends_on: [M1-02, M1-04]
 pr:
 ---
 
 ## Goal
-The welcome screen, a neutral date-of-birth gate that blocks under-18s kindly with youth resources, and three separate consent screens that each write a versioned `consents` row, in EN and FR.
+A neutral date-of-birth gate that blocks under-18s kindly with youth resources, and three separate consent screens that each write a versioned `consents` row, in EN and FR. The screen before the gate is the Rustle screen (M2-01, D42); there is no separate welcome screen.
 
 ## Spec
-- docs/05 §2 (welcome), §3 (age gate)
+- docs/05 §3 (age gate)
 - docs/11 §4.2 (consents), §4.4 (Apple AI consent), §5 (minors)
 - docs/20 §7.5 (buttons), §10 (microcopy)
 - docs/21 §1 criteria 1–4
@@ -26,6 +26,9 @@ The welcome screen, a neutral date-of-birth gate that blocks under-18s kindly wi
 - Consent copy is separate from ToS acceptance; declining AI processing ends onboarding kindly
 - Under-18 block stores a local flag so there's no instant retry
 - This ticket owns en.json and fr.json while it runs
+- Store only `users.age_confirmed_at`; the picked date is discarded (D46)
+- Under 18, and a declined AI-processing consent, call `deleteAnonymousAccount()` from M1-03 before the block or goodbye screen
+- The consent rows are written here, client-side through PostgREST under RLS; `/onboarding/complete` (M2-03) verifies they exist (docs/21 §1.3, §2.3)
 
 ## Questions for the PO
 - none yet

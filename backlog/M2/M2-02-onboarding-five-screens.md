@@ -24,6 +24,8 @@ The five onboarding screens from docs/05 §3, with chips at French length, the f
 - Own en.json/fr.json while running; French copy written natively, reviewed later
 - No step numbers; a thin progress line
 - Dictation via the system keyboard only
+- Screen 1 chips map one to one onto `LIFE_AREAS` from `packages/shared/enums.ts` (filled by M1-02); never a local list
+- Screen 5 stores slots as `{slot, time}` with the default times morning 08:00 · midday 12:30 · evening 18:30 · before sleep 21:30; there is no per-day setting (D46)
 
 ## Questions for the PO
 - none yet
