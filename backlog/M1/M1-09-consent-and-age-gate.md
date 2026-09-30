@@ -27,7 +27,7 @@ A neutral date-of-birth gate that blocks under-18s kindly with youth resources, 
 - Under-18 block stores a local flag so there's no instant retry
 - This ticket owns en.json and fr.json while it runs
 - Store only `users.age_confirmed_at`; the picked date is discarded (D46)
-- Under 18, and a declined AI-processing consent, call `deleteAnonymousAccount()` from M1-03 before the block or goodbye screen
+- Under 18, and a declined AI-processing consent, call `deleteAnonymousAccount()` from M1-03 before the block or goodbye screen (its server side is the `delete_own_account()` RPC from migration 1, D47; no Edge Function is needed)
 - The consent rows are written here, client-side through PostgREST under RLS; `/onboarding/complete` (M2-03) verifies they exist (docs/21 §1.3, §2.3)
 
 ## Questions for the PO
