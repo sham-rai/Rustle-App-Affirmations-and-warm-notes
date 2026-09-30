@@ -95,8 +95,10 @@ describe('the Rustle screen (docs/21 §1.1)', () => {
       screen.getByText('Tell me a little. I’ll remember, and leave you something kind when you need it.'),
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Begin' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'I already have an account' })).toBeOnTheScreen();
-    expect(screen.getByText('get help now')).toBeOnTheScreen();
+    expect(screen.getByText('Not a medical service.')).toBeOnTheScreen();
+    // No dead controls: the account link and the crisis link arrive with their screens.
+    expect(screen.queryByText('I already have an account')).toBeNull();
+    expect(screen.queryByText(/get help now/)).toBeNull();
     expect(screen.getByText('Rustle is AI, not a therapist or a crisis service.')).toBeOnTheScreen();
   });
 

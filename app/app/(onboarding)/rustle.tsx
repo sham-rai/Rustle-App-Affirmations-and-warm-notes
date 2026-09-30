@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fontFamily, Text } from '../../components/Text';
 import { FoldedNoteMark } from '../../features/intro/FoldedNoteMark';
 import { markIntroSeen } from '../../features/intro/intro-seen';
-import { splitLink } from '../../features/intro/link-text';
 import {
   CONTENT_DELAY_MS,
   CONTENT_FADE_MS,
@@ -21,7 +20,6 @@ import { useT } from '../../i18n/useT';
 
 const WORDMARK_SIZE = 44;
 const WORDMARK_TRACKING = 1.5;
-const MIN_TOUCH = 44;
 const PRIMARY_HEIGHT = 52;
 
 /**
@@ -67,15 +65,10 @@ export default function RustleScreen() {
     // TODO(M1-09): Begin leads to the 18+ gate and consent; until they exist it opens Today.
     router.replace('/today');
   };
-  const onHaveAccount = () => {
-    // TODO(M2 account linking): sign in to restore an existing account.
-  };
-
-  const crisis = splitLink(t('intro.crisis'));
 
   return (
     <Animated.View style={[styles.screen, { backgroundColor: colors.paper, opacity: stage }]}>
-      <Tree intensity="full" />
+      <Tree intensity="full" reduceMotion={reduceMotion} />
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
@@ -127,28 +120,14 @@ export default function RustleScreen() {
                 {t('common.begin')}
               </Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={onHaveAccount} style={styles.secondary}>
-              <Text variant="label" color="sage" style={styles.centred}>
-                {t('intro.haveAccount')}
-              </Text>
-            </Pressable>
+            {/* TODO(M2 account linking): "I already have an account" (intro.haveAccount) goes here. */}
           </View>
 
           <View style={{ gap: space[1] }}>
+            {/* TODO(M1-09): the crisis line with its "get help now" link (intro.crisis, split with
+                features/intro/link-text) replaces this sentence once the crisis resources exist. */}
             <Text variant="label" color="ink2" style={styles.centred}>
-              {crisis.before}
-              {/* TODO(M1-09): open the crisis resources screen; it does not exist yet. */}
-              <Text
-                variant="label"
-                color="ink2"
-                accessibilityRole="link"
-                accessibilityState={{ disabled: true }}
-                accessibilityHint={t('intro.crisisPending')}
-                style={styles.link}
-              >
-                {crisis.link}
-              </Text>
-              {crisis.after}
+              {t('intro.notMedical')}
             </Text>
             <Text variant="label" color="ink2" style={styles.centred}>
               {t('intro.aiDisclosure')}
@@ -168,6 +147,4 @@ const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: 480, alignSelf: 'center' },
   centred: { textAlign: 'center' },
   primary: { minHeight: PRIMARY_HEIGHT, alignItems: 'center', justifyContent: 'center' },
-  secondary: { minHeight: MIN_TOUCH, alignItems: 'center', justifyContent: 'center' },
-  link: { textDecorationLine: 'underline' },
 });
