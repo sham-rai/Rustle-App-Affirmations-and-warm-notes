@@ -36,7 +36,8 @@ Expo (expo-router, TypeScript strict, TanStack Query, MMKV cache + offline outbo
 
 ## Rules
 - TypeScript strict; no `any`. Run `npm run typecheck && npm test` before saying a task is done.
-- Every new table has RLS (`user_id = auth.uid()`) in the same migration. Never disable RLS. Encrypted columns are read through the decrypting views.
+- Every new table has RLS in the same migration: `user_id = auth.uid()` where a row belongs to a user; deny-all where it doesn't (`entitlement_grants`), reached only through Edge Functions or `SECURITY DEFINER` RPCs (the `warm_notes` public page). Never disable RLS. Encrypted columns are read and written through the decrypting views.
+- Life areas and delivery intents are the `LIFE_AREAS` and `DELIVERY_INTENTS` enums in `packages/shared/enums.ts`; never redefine them. Length limits per output kind are the table in docs/08 §5.8.
 - Never send note text, replies, memory content or recap text to analytics, logs, Sentry, email or push payloads. Pushes carry a delivery ID and a generic alert; text is fetched on-device.
 - All user-facing strings go through i18n (`en.json` + `fr.json`); never hard-code text. Design at French length. A "vous" user is never "tu"-ed, including in errors.
 - All LLM calls go through `LLMClient` with a versioned prompt from `supabase/functions/_shared/prompts/`. Log model, prompt_version, tokens, cost and `cache_read_input_tokens` for every call.

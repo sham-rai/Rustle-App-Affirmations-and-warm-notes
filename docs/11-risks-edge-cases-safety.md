@@ -57,7 +57,7 @@
 - **DST transitions:** schedule in the local zone with IANA rules.
 - **Notification permission denied:** the widget and in-app Today still work. Ask again gently after a valuable moment (at most twice, and never nag).
 - **Phone off / offline for days:** local pre-scheduled notes cover 48 h. After that, the server doesn't spam a backlog; it resumes fresh.
-- **Duplicate delivery (local + push):** idempotency key per affirmation. The app suppresses local notifications already delivered by push (and vice versa).
+- **Duplicate delivery (local + push):** the delivery ID is the notification identifier on every path, so a late push replaces its local twin instead of duplicating it and the extension cancels the pending local when the push arrives first (doc 07 §4.3).
 - **A note references a date that got rescheduled:** the user edits the date → notes are regenerated.
 - **Lock-screen exposure** in shared households: "hide text on lock screen" **defaults to on** for `divorce`, `health` and `grief`, and switches on when the classifier flags an abuse disclosure in any text, with a one-line explanation and a switch to reveal; plus an app lock (Face ID / PIN) in the MVP. The people at most risk are the least likely to find a setting.
 
@@ -113,7 +113,7 @@
 - **Children:** Rustle is **18+**, which avoids COPPA (US, under 13), GDPR Art. 8 parental consent (**under 15 in France**) and Quebec's under-14 rules. We still need reasonable age measures (§5).
 - **AI training:** don't use user notes to train models. Put this clearly in the privacy policy (it's a big trust point).
 - **Consent records:** every consent is a row in `consents` (kind, version, locale, granted and withdrawn timestamps; doc 07 §3): terms, AI processing (Apple's requirement), special-category data (GDPR Art. 9, Law 25), **quality review** (beta testers who let you read their notes and generated notes for quality, separately and explicitly, through a review tool that logs access, never the database), and **marketing use** (a specific note, specifically). Consent copy is separate from ToS acceptance, and re-consent is required when the purpose changes, for example enabling a second AI vendor.
-- **Sub-processors that can receive note text:** Supabase, Anthropic, Vercel (warm-note pages), and AWS or Google only if failover is enabled. RevenueCat, PostHog, Sentry and Expo's push relay receive no content by design (doc 07 §8). **No note content in email, ever.** Anthropic's API retention terms are disclosed, and batch inputs are deleted on our side after processing.
+- **Sub-processors that can receive note text:** Supabase, Anthropic, Vercel (warm-note pages), and AWS or Google only if failover is enabled. RevenueCat, PostHog, Sentry and Expo's push relay receive no content by design (doc 07 §8). PostHog does receive coarse category values (life areas from the chips, the check-in mark) and no safety levels; the special-category consent names usage analytics with coarse categories, and the lawyer confirms the wording (D46). **No note content in email, ever.** Anthropic's API retention terms are disclosed, and batch inputs are deleted on our side after processing.
 - **Warm-note pages** are `noindex`, unguessable, expiring, revocable and reportable, show none of the sender's other data, and carry no analytics beyond a page-view count.
 
 ### 4.3 EU AI Act
@@ -143,7 +143,7 @@ Rustle is for adults 18–60+. See [16-competitor-comparison.md §3](16-competit
 
 **Implementation**
 1. App Store rating **18+** (Apple's 2025 age-rating system); Google Play target audience 18+ with a mature rating.
-2. A **neutral date-of-birth gate** before onboarding. Under 18 → a kind block screen with **youth helplines** (e.g. Fil Santé Jeunes 0 800 235 236 in France, Kids Help Phone 1-800-668-6868 in Canada, Childline 0800 1111 in the UK; verify each at build time) and no instant retry.
+2. A **neutral date-of-birth gate** before onboarding. Only `users.age_confirmed_at` is stored; the picked date is discarded, and a blocked minor's anonymous account is deleted (D46). Under 18 → a kind block screen with **youth helplines** (e.g. Fil Santé Jeunes 0 800 235 236 in France, Kids Help Phone 1-800-668-6868 in Canada, Childline 0800 1111 in the UK; verify each at build time) and no instant retry.
 3. The safety classifier's `minor_indicators` flag → a gentle age re-confirmation; repeated signals → limit the account and show youth resources.
 4. Use platform age signals (Apple Declared Age Range API, Google Play age signals) where available.
 5. Record the reasoning in the DPIA (a proportionate approach for a non-chat, non-romantic adult wellness app).

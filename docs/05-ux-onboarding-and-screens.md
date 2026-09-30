@@ -18,7 +18,7 @@ Keep it to **three tabs**. Put "Send a warm note" as a floating action on Today 
 
 ## 2. Splash, intro and welcome (one sequence, decided 2026-09-29, D42)
 
-Three beats on a cold start, no screen changes except the first fade. Skipped on a warm start (app already in memory); returning users go from the Rustle screen straight to Today after the tagline beat.
+Three beats on the **first launch** and after a sign-out, no screen changes except the first fade. A launch with an existing session shows only the native splash and lands on Today, or on the Rustle a push or deep link points at (doc 21 §4.4); it never replays the sequence (D46).
 
 **1. Company splash (~2 s).** Paper background, the company name set small and centred in the interface sans: **DreamTeam Co.** *(placeholder: the company isn't registered yet; replace with the legal name and wordmark once it exists, in this doc, the board, the About screen and the store listing.)* No animation except a fade out at the end. This is also what the native splash shows while fonts and the session load, so the hand-off is invisible.
 
@@ -44,7 +44,7 @@ Goal: collect **enough** for a first note that is **clearly personal**, and set 
 | 2 | **"Tell me a bit more, in your own words."** Placeholder changes with screen 1 ("My exam is on… and I'm worried about…"). Below the text, one optional line: **"Is there a date coming up that matters?"** (label + date; for anniversary and medical kinds a second line asks *"Want me to be with you on that day, or leave it quiet?"*, opt-in `key_dates.remind`) | Free text (skippable), 🎤 dictation, + optional date | First **note** + memory extraction; `key_dates[]` |
 | 3 | **"How are you feeling most days lately?"** | Five abstract marks with labels (heavy · low · okay · lighter · good; doc 20 §7.4), not faces | First `checkin` |
 | 4 | **"How should I talk to you?"** Two chip groups on one screen: *Words that help* — Gentle & soft · Calm & grounded · Encouraging & strong · Honest & real · A little humour; *Words you'd rather not hear* — Advice · Religious/spiritual phrases · "Stay positive" talk · Mentions of my ex · Nothing, all fine (+ a short text field). French users also see the tu / vous choice here, with a one-line example of each | Multi-select chips ×2 | `profiles.tone`, `profiles.avoid[]` (hard constraints, very important for trust) |
-| 5 | **"What should I call you? And when should I leave notes?"** Optional name, then Morning / Midday / Evening / Before sleep (pick one or more). Frequency isn't asked: it defaults to two a day and lives in delivery settings as a premium control | Text (optional) + time chips | `profiles.display_name`, `delivery_prefs.slots` |
+| 5 | **"What should I call you? And when should I leave notes?"** Optional name, then Morning / Midday / Evening / Before sleep (pick one or more). Frequency isn't asked separately: it is one Rustle per chosen slot, up to four a day, with default times morning 08:00 · midday 12:30 · evening 18:30 · before sleep 21:30, editable in delivery settings where the slot picker is a premium control (D46) | Text (optional) + time chips | `profiles.display_name`, `delivery_prefs.slots` |
 
 Micro-copy between screens reflects back what the user said ("Thank you for trusting me with that."). **Validate, don't interrogate.**
 
@@ -61,7 +61,7 @@ Micro-copy between screens reflects back what the user said ("Thank you for trus
 - A 2–4 second "writing your first note…" animation (paper and pen). The real LLM call happens here, with a pre-generated fallback ready.
 - The note is displayed large, in the chosen theme. It **must reference something specific** from screens 1–2 (for example *"Mia, three weeks until your finals, and you're already here, taking care of yourself. That's the kind of person who makes it through. 🌿"*).
 - Below it: ❤️ "This feels right" / ↻ "Not quite" (feedback for tone calibration).
-- Then: **"Want me to leave notes like this at 8:00 and 21:00?"** → system notification permission prompt. *Asking after the value moment roughly doubles opt-in rates compared with asking on launch.*
+- Then: **"Want me to leave notes like this at 8:00 and 21:30?"** (the times of the chosen slots) → system notification permission prompt. *Asking after the value moment roughly doubles opt-in rates compared with asking on launch.*
 
 ### Paywall
 
@@ -97,7 +97,7 @@ Order matters: the first two rows carry visual weight; account and help sit at t
 
 - **What Rustle remembers:** a readable list of memory items grouped by People · Dates · Situations · Things that help · Things to avoid. Each can be edited or deleted. Toggle: "Pause memory".
 - **Your journey:** the monthly recap entry point, and "Look how far you've come" (unlocked at day 30, shown as a countdown before that).
-- **Notes delivery:** times, frequency (premium; shown disabled with one line in door-open), quiet hours, "adapt to me" (AI adjusts timing), weekend mode, quiet season on/off.
+- **Notes delivery:** slots and their times (premium; shown disabled with one line in door-open), quiet hours, "adapt to me" (AI adjusts timing), weekend mode, quiet season on/off.
 - **Focus areas:** life areas with weights ("more about my recovery, less about work").
 - **Tone:** re-pick tone and avoid-list.
 - **Themes & widget:** themes, fonts, widget styles.
@@ -119,6 +119,7 @@ Order matters: the first two rows carry visual weight; account and help sit at t
 - **Android (Glance):** 2×2 and 4×2 versions.
 - Tap → opens Today.
 - Widget themes match the app theme (premium).
+- App lock on implies the privacy state on the widget (the folded-note mark and "A note is waiting"), regardless of the lock-screen setting; the settings screen says so (D46).
 
 ## 9. Share cards
 

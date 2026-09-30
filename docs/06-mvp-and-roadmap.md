@@ -31,7 +31,7 @@ MVP success criteria (closed beta → soft launch):
 5. **Notes board**: create/edit/delete/pin notes, the "just listen" toggle, **Rustle replies** (delayed, one per note)
 6. Memory engine: extraction, summary, key dates, "What Rustle remembers" (view/delete)
 7. Daily note generation (nightly batch two days ahead + real-time refresh), seed notes for the first 48 h, and delivery (opaque push + iOS Notification Service Extension + local backup)
-8. Delivery settings: times, 1–5 per day, quiet hours, lock-screen privacy (default on for sensitive life areas), **app lock (Face ID / PIN)**
+8. Delivery settings: slots and their times (up to four a day), quiet hours, lock-screen privacy (default on for sensitive life areas), **app lock (Face ID / PIN)**
 9. Safety gate + crisis flow + localised resources (US, UK, IE, CA, AU, FR, BE, CH at launch)
 10. **Share card** (Stories/image) with a sensitive-content check
 11. **Send a warm note** (simple: 3 AI drafts → edit → link + web page)

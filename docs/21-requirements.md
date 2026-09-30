@@ -6,28 +6,28 @@
 ## 0. Foundations (doc 15 §4 sessions 1–2, 5; doc 07 §10–11)
 1. Monorepo with `/app`, `/supabase`, `/packages/shared`, `/evals`, `/web`, `/scripts`, `CLAUDE.md`; `npm run typecheck`, `npm run lint` and `npm test` run in CI on every PR and a failure blocks merge; `npm run eval` runs in CI on every PR that changes `supabase/functions/_shared/prompts/**` or `evals/**` (it calls the Claude API) and a failure blocks merge.
 2. Three Supabase projects (dev, staging, prod) with matching EAS profiles; secrets only in EAS/Supabase secrets; a pre-commit secret scanner is installed.
-3. Migration 1 creates every table in doc 07 §3 with RLS in the same migration; pgTAP tests prove user A cannot read, update or delete user B's rows in any table.
-4. Encrypted columns (`notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards`) are unreadable in a raw `SELECT` and readable through the decrypting views under RLS; the key lives in Vault.
+3. Migration 1 creates every table in doc 07 §3 with RLS in the same migration; tables without a `user_id` (`entitlement_grants`) get deny-all policies and are reached only through Edge Functions or `SECURITY DEFINER` RPCs (doc 07 §8); pgTAP tests prove user A cannot read, update or delete user B's rows in any table.
+4. Encrypted columns (`notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards`) are unreadable in a raw `SELECT` and readable and writable through the decrypting views under RLS (`security_invoker` views with `INSTEAD OF` triggers, doc 07 §8); the key lives in Vault and pgTAP proves `authenticated` cannot read it.
 5. Sentry receives a test crash with request bodies scrubbed; PostHog receives `app_opened` with no content properties; both run in their EU/Canada-appropriate regions.
 6. `packages/shared` exports zod schemas, the glossary constants and the design tokens, and is imported by both the Expo app and a Deno Edge Function without a build step.
 
 ## 1. Splash, Rustle screen, 18+ gate, consent (doc 05 §2–3, doc 11 §4–5)
-0. Cold start shows the company splash (DreamTeam Co., placeholder) for about 2 s on paper, then fades into the Rustle screen; the native splash uses the same paper colour so no flash is visible; a warm start skips both.
-1. The Rustle screen shows the tree (Skia, from the tree module; still under reduce-motion), the wordmark and mark from the first frame, and after 1 s the headline, sub, "Begin", "I already have an account" and the crisis footer with the AI disclosure, in EN and FR from the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French). Returning users go to Today after the 1 s beat.
-2. A neutral date-of-birth picker precedes onboarding; under 18 shows the youth-resources screen with localised helplines and blocks retry for that install (local flag); 18+ writes `users.age_confirmed_at`.
-3. Consent screens for terms, AI processing and special-category data are separate from each other and from the ToS acceptance; each writes a `consents` row with kind, version, locale and timestamp; declining AI processing ends onboarding with a kind message and no account data beyond the anonymous user.
+0. The first launch, and a launch after sign-out, shows the company splash (DreamTeam Co., placeholder) for about 2 s on paper, then fades into the Rustle screen; the native splash uses the same paper colour so no flash is visible. A launch with an existing session shows only the native splash and lands on Today, or on the Rustle a push or deep link names (§4.4).
+1. The Rustle screen shows the tree (Skia, from the tree module; still under reduce-motion), the wordmark and mark from the first frame, and after 1 s the headline, sub, "Begin", "I already have an account" and the crisis footer with the AI disclosure, in EN and FR from the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French).
+2. A neutral date-of-birth picker precedes onboarding; under 18 deletes the anonymous account, then shows the youth-resources screen with localised helplines and blocks retry for that install (local flag); 18+ writes `users.age_confirmed_at` only, and the picked date is never stored.
+3. Consent screens for terms, AI processing and special-category data are separate from each other and from the ToS acceptance; each writes a `consents` row with kind, version, locale and timestamp; declining AI processing ends onboarding with a kind message and deletes the anonymous account.
 4. The AI disclosure sentence ("Rustle is AI, not a therapist or a crisis service") is visible on the consent screen and in About.
 
 ## 2. Onboarding and the first note (doc 05 §3, doc 07 §4.1, doc 08 §5.10)
 1. Five screens as specified in doc 05 §3; every open question is skippable; the progress line has no step numbers; chips are laid out at French length without truncation; the whole flow takes under 90 s when every open field is skipped.
-2. Screen 2 stores the free text as the first note and the optional date as a `key_dates` row, asking the opt-in question for anniversary and medical kinds (`key_dates.remind`); screen 3 uses the five labelled marks; screen 4 stores tone and avoid list and, for French users, tu/vous; screen 5 stores the optional name and the slots, and `delivery_prefs.per_day` defaults to 2.
+2. Screen 2 stores the free text as the first note and the optional date as a `key_dates` row, asking the opt-in question for anniversary and medical kinds (`key_dates.remind`); screen 3 uses the five labelled marks; screen 4 stores tone and avoid list and, for French users, tu/vous; screen 5 stores the optional name and the slots with their default times (morning 08:00, midday 12:30, evening 18:30, before sleep 21:30); frequency is one Rustle per chosen slot, at most four a day, and there is no separate per-day setting.
 3. `POST /onboarding/complete` requires a valid App Attest / Play Integrity assertion, is rate-limited per device and IP, verifies that the terms, AI-processing and special-category `consents` rows exist (written by the consent screens, §1.3) and rejects otherwise, then stores profile, first note, key dates and check-in in one transaction.
-4. The first Rustle streams and appears within 5 s in the happy path; at 8 s without a result the personalised template shows, and the regenerated note replaces it silently later; the screen never shows two notes.
+4. The first Rustle is composed from the raw answers while the extractor runs in parallel, streams and appears within 5 s in the happy path; at 8 s without a result the personalised template shows, and the regenerated note replaces it silently later; the screen never shows two notes.
 5. The first Rustle references at least one specific thing from screens 1–2 (eval check on the golden personas > 95%); when every open question was skipped it still references the chosen life areas.
 6. Onboarding text classified `crisis` shows the crisis screen before anything else; `elevated` or `crisis` suppresses the paywall for that session and marks the first Rustle as soft.
-7. The same call writes 48 h of seed Rustles (`kind='seed'`, two a day at the chosen slots), which the app pre-fetches and schedules locally.
+7. The call enqueues a job that writes 48 h of seed Rustles (`kind='seed'`, one per chosen slot); the app polls until they exist, pre-fetches them and schedules them locally.
 8. ❤️ / "Not quite" on the first Rustle writes `deliveries.reaction` and, for "Not quite", a one-tap `reaction_reason`.
-9. The notification permission prompt appears only after the first Rustle and its reaction, with the pre-prompt line naming the chosen slots.
+9. The notification permission prompt appears only after the first Rustle and its reaction, with the pre-prompt line naming the chosen slots' times.
 
 ## 3. Anonymous account, persistence, linking (doc 07 §5)
 1. First launch creates an anonymous Supabase user with no form; all data syncs server-side from the first write.
@@ -65,14 +65,14 @@
 2. The planner picks an intent per slot by the rotation rules, at most one explicit older-memory callback a day, about one in five `quiet_presence`, no upbeat intents for 72 h after an `elevated` signal, and honours `rhythm = 'quiet'` (2–3 a week).
 3. Door-open users get one `quiet_presence` Rustle a week at their favourite slot plus key-date notes on the day; nothing else is composed for them.
 4. A slot with no delivered Rustle 30 minutes before its time gets a real-time composition, then the template; no slot is ever empty and no push is ever blank.
-5. The push carries only `delivery_id` and the generic alert; the iOS Notification Service Extension fetches the text (from the App Group cache or the API) and rewrites the notification, leaving the generic line when lock-screen privacy is on or the fetch fails; Android data messages build the notification in-app.
-6. The app pre-fetches 48 h of Rustles and schedules local notifications; a Rustle delivered by push suppresses its local twin and vice versa (idempotency key); the manual checklist covers timezone change, DST and a phone offline for two days.
+5. The push carries only `delivery_id` and the generic alert; the iOS Notification Service Extension fetches the text (from the App Group cache or the API) and rewrites the notification, leaving the generic line when lock-screen privacy is on or the fetch fails; local notifications carry only the generic line when privacy is on; Android data messages build the notification in-app.
+6. The app pre-fetches 48 h of Rustles and schedules local notifications at slot + 3 min; the delivery ID is the notification identifier on every path (iOS collapse ID, Android notification ID) so a late push replaces its local twin, and the extension removes the pending local request when the push arrives first; the manual checklist covers timezone change, DST and a phone offline for two days.
 7. After a significant change, today's undelivered local notifications are cancelled and the remaining slots regenerated.
 8. Fatigue rule: five unopened in a row halves frequency to a floor of one every two days; any ❤️, note or check-in restores the setting; 14 days inactive → 1 per 3 days; 30 days → one "I'm here if you need me" and stop. The 30-day stop applies to door-open users too, while key dates with `remind` on still fire.
 9. The output guardrail rejects banned phrases, advice, avoid-list terms, URLs or numbers outside the crisis flow, wrong language, and > 0.8 similarity to the last 14 Rustles; one regeneration, then the template.
 
 ## 8. Delivery settings, lock-screen privacy, app lock (doc 05 §6–7, doc 07 §6, doc 11 §2)
-1. Slots, quiet hours, "adapt to me" and quiet season are editable by everyone; frequency (1–5) is editable in `premium` and `welcome_week` and shown disabled with one line in `door_open`.
+1. Slots, quiet hours, "adapt to me" and quiet season are editable by everyone; the slot picker (one Rustle per slot, up to four) is editable in `premium` and `welcome_week` and shown disabled with one line in `door_open`.
 2. Lock-screen privacy defaults to on when life areas include `divorce`, `health` or `grief`, or when the classifier flags an abuse disclosure on any text, with an explanation and a switch; off otherwise; the extension and the local notifications respect it.
 3. App lock (Face ID / Touch ID / PIN) protects every screen after 30 s in the background and is offered once after onboarding for the same sensitive life areas.
 4. Grief and medical dates with `remind = false` never produce a Rustle; with `remind = true`, the date-day Rustle passes the extra-gentle eval rubric.
@@ -98,7 +98,7 @@
 5. The install CTA deep-links with referral attribution and logs `warm_note_install`.
 
 ## 12. iOS widget and notification extension (doc 05 §8, doc 20 §8.2, doc 07 §6)
-1. Small, medium and lock-screen widgets show the latest Rustle from App Group storage; privacy on shows the folded-note mark and "A note is waiting".
+1. Small, medium and lock-screen widgets show the latest Rustle from App Group storage; privacy on, or app lock on, shows the folded-note mark and "A note is waiting".
 2. The widget refreshes within a minute of a new delivery (`reloadTimelines`); tapping opens Today.
 3. The Notification Service Extension ships in the same build, via `expo-apple-targets`, and passes criterion 7.5.
 4. Free widget style is Paper; other styles are `premium`.

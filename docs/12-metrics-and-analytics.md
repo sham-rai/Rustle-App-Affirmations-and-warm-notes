@@ -78,13 +78,12 @@ Benchmarks from research: typical wellness apps D30 ≈ 3–7%, best health apps
 | `trial_started` / `subscription_started` / `_cancelled` | product, price, placement, offer (none/hardship/student) |
 | `entitlement_granted` | kind (beta/creator/student/gift/partner/hardship/support) |
 | `account_linked` | provider, notes_count_at_link |
-| `safety_level_detected` | level (no content) |
 | `crisis_screen_shown` / `resource_tapped` | country |
 | `note_reported` | kind (safety/quality/other) |
 | `widget_added` | size |
 | `recap_viewed` / `recap_shared` / `recap_helped` | cards_viewed · answer (a_lot/a_little/not_really) |
 
-Names follow the glossary prefixes (doc 00): `delivery_*` for what Rustle sends, `board_note_*` for what the user writes, `reply_*` for notes back, `warm_note_*` for notes to friends.
+PostHog receives coarse category values (`life_areas` from the chips, the 1–5 check-in mark, the warm-note situation chip) and no safety levels; the special-category consent names usage analytics with coarse categories, pending the lawyer's confirmation (doc 11 §4.2, D46). Names follow the glossary prefixes (doc 00): `delivery_*` for what Rustle sends, `board_note_*` for what the user writes, `reply_*` for notes back, `warm_note_*` for notes to friends.
 
 ## 5. Dashboards
 
@@ -93,7 +92,7 @@ Names follow the glossary prefixes (doc 00): `delivery_*` for what Rustle sends,
 3. **Quality:** ❤️ rate by prompt version and model; "not quite" reasons; guardrail rewrite rate; fallback rate.
 4. **Monetization:** RevenueCat charts plus paywall variant comparisons.
 5. **Cost:** LLM spend per day, per step, per user; tokens per note; cache hit rate.
-6. **Safety:** counts of elevated/crisis events, weekly manual review of a sample, time to resolve reports.
+6. **Safety:** counts of elevated/crisis events read from `safety_events` in the database (safety levels are never sent to PostHog, D46), weekly manual review of a sample, time to resolve reports.
 
 ## 6. Experiments backlog (first ones)
 

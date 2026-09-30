@@ -236,7 +236,7 @@ A single line of copy in the serif, a small folded-note mark, nothing else. ("Th
 - Never a badge count on the app icon.
 
 ### 8.2 Widgets
-- **Small**: paper, the latest note in `note-small`, no chrome. If privacy is on: the folded-note mark and "A note is waiting".
+- **Small**: paper, the latest note in `note-small`, no chrome. If privacy is on, or app lock is on: the folded-note mark and "A note is waiting".
 - **Medium**: note plus a caption ("this morning") and, if there's a key date in 7 days, a single soft line ("Thursday: the interview").
 - **Large**: note, next key date, and "days you showed up for yourself" as a row of leaf marks, no numbers.
 - **Lock screen** (iOS): one line, ink on the system material.

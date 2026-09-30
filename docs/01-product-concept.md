@@ -48,7 +48,7 @@ Each rotation makes the product better **for that user specifically**. That's th
 |---|---|---|
 | **Listen** | 2-minute onboarding, 30-second check-ins, a Notes board for any thought at any time | Low effort to share, no blank-page pressure, no conversation to keep up |
 | **Remember** | "Rustle knew my exam was today." Nothing is ever lost | A structured memory engine (facts, threads, dates, people, wins), not just chat history |
-| **Return** | 1–5 warm, specific notes a day, timed to your life | Personal and timely: it mentions the actual thing, on the actual day |
+| **Return** | One to four warm, specific notes a day, timed to your life | Personal and timely: it mentions the actual thing, on the actual day |
 | **Reflect** | Monthly "Look how far you've come" story | Your own growth told back to you, using your own words |
 
 ### Design principles (use these to settle product arguments)
@@ -93,7 +93,7 @@ Every idea from the brief is assessed below. **Verdict key:** ✅ MVP · 🟡 V1
 |---|---|---|
 | Welcome + 2-min onboarding (open + multiple-choice) | ✅ | This is where the first "wow" happens. The first note must already mention something the user said. |
 | Personalised affirmation on main screen | ✅ | Core output. |
-| Daily notifications, adjustable time & frequency | ✅ | The core delivery channel. 1–5/day on premium and during the **welcome week**; door-open users get one presence note a week plus key-date notes (doc 09 §2). |
+| Daily notifications, adjustable time & frequency | ✅ | The core delivery channel. One Rustle per chosen slot, up to four a day, on premium and during the **welcome week**; door-open users get one presence note a week plus key-date notes (doc 09 §2). |
 | Notes board (share any thought) | ✅ | The core input and the memory fuel. |
 | **Reply to notes** | ✅ (as "a note back", not chat) | See §5.1. This is the magic moment. Without it the board is a void. |
 | Check-ins (quick mood + one line) | ✅ | Cheap, structured signal. 2–4 per week, prompted inside a notification. |

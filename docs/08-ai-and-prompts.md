@@ -48,7 +48,7 @@ As of September 2026, Claude pricing per 1M tokens (input/output) is roughly: **
 **Failover (all steps):** Claude on the Anthropic API → the **same Claude model on Amazon Bedrock or Google Vertex AI (Canada or EU region)** → template note. Using the same model keeps the voice and safety behaviour identical, so prompts only need tuning once. A second-vendor model (e.g. OpenAI gpt-5-nano) can be added behind `LLMClient` but is **off by default**; see doc 07 §7 for what turning it on requires.
 
 **Implementation notes (Claude API):**
-- Use **prompt caching** on the static system prompt and style guide. They're identical for all users and make up about 60% of input tokens.
+- Use **prompt caching** on the static system prompt and style guide. They're identical for all users and make up about 60% of input tokens. At M1-06, check the minimum cacheable prefix length per candidate model and keep the shared prompt above it for all three (the example pairs in §4 do most of that work); batch requests don't guarantee cache hits, so measure the hit rate on staging before trusting §9 (D46).
 - Use the **Message Batches API** for nightly note generation (50% discount, not latency sensitive).
 - Use **structured outputs** (`output_config.format` with a JSON schema) for extraction, safety and recaps.
 - Handle `stop_reason == "refusal"` and errors → fall back to a template note, never an empty push.
@@ -112,7 +112,7 @@ CONTEXT PACK (≈1.5–3k tokens)
 
 1. **System prompt = identity + values + hard rules + style.** It's static and cached.
 2. **User turn = context pack (XML-tagged) + task.** Everything user-generated is clearly delimited as *data*, not instructions (to resist prompt injection: "ignore previous instructions and…").
-3. **Show, don't just tell:** include 6–10 short good/bad example pairs in the style guide.
+3. **Show, don't just tell:** include 6–10 short good/bad example pairs in the style guide. They also push the cached prefix past the minimum cacheable length of every candidate model (§2).
 4. **Hard constraints are explicit and listed:** the avoid list, no advice, no medical claims, length.
 5. **Ask for structured output** (JSON with `text` + `memory_refs` + `intent`) so we can log which memories were used and validate.
 6. **One job per prompt.** Don't make the note composer also do safety and extraction.

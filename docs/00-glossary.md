@@ -29,7 +29,7 @@ The word **"affirmation" never appears in the product.** It lives only in App St
 | **Focus areas** | The user's life areas with user-adjustable weights. Replaces "categories". | `profiles.focus_weights`, `notes.life_areas` |
 | **Slot** | A delivery time the user chose (morning, midday, evening, before sleep). | `delivery_prefs.slots` |
 | **Intent** | Why a given Rustle exists: `daily`, `date_eve`, `date_day`, `follow_up`, `quiet_presence`, `win_celebration`, `first`, `seed`, `reengage`. Defined once as `DELIVERY_INTENTS` in `packages/shared/enums.ts` (D46). The door-open weekly note is a `quiet_presence` on a weekly cadence, not a separate intent. | `deliveries.kind`, planner |
-| **Season** | The rhythm Rustle is in for this person: **active** (the hard period; 1–5 Rustles a day) or **quiet** (the situation resolved; a few a week, mostly presence and anchors). See doc 01 §5.6. | `delivery_prefs.rhythm` |
+| **Season** | The rhythm Rustle is in for this person: **active** (the hard period; one Rustle per chosen slot, up to four a day) or **quiet** (the situation resolved; a few a week, mostly presence and anchors). See doc 01 §5.6. | `delivery_prefs.rhythm` |
 | **Chapter** | A resolved situation (the breakup, the exam term). Closed chapters stop driving daily Rustles but stay in recaps as "how far you've come". | `memory_items.status = resolved` |
 | **Recap** | The monthly "Look how far you've come" story (6–8 cards). | `recaps` |
 | **Share card** | A 9:16 or 1:1 image of a Rustle for Stories or posts, with the sensitive-content guard. | share feature |

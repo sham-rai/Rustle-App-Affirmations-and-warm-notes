@@ -28,7 +28,7 @@
 | | **Door open** | **Welcome week** | **Trial / Premium** |
 |---|---|---|---|
 | Onboarding, first note, seed notes for the first 48 h | ✅ (everyone sees the wow before any paywall) | ✅ | ✅ |
-| **Daily Rustles** | ❌ (one **presence note a week**, at their favourite slot) | ✅ 1–5 a day, custom times | ✅ 1–5 a day, custom times, quiet hours, seasons |
+| **Daily Rustles** | ❌ (one **presence note a week**, at their favourite slot) | ✅ one per chosen slot, up to four a day, custom times | ✅ one per chosen slot, up to four a day, custom times, quiet hours, seasons |
 | **Key-date notes** (the exam day, the appointment) | ✅ the day itself, one note | ✅ eve + day + follow-up | ✅ eve + day + follow-up |
 | Board: write unlimited, everything remembered | ✅ | ✅ | ✅ |
 | **Note back** (replies) | **One a week**, on the first note written (safety responses to elevated/crisis text always, for everyone) | ✅ every note | ✅ every note (fair use), faster |
@@ -63,7 +63,7 @@
 2. The eve of a key date: *"Tomorrow's the interview. Want me with you every day this week?"*
 3. The day-30 recap preview → *"See your whole month."*
 4. The themes and widget gallery.
-5. The notes-per-day control, shown disabled with a one-line explanation.
+5. The slot picker, shown disabled with a one-line explanation.
 
 **Rules:** no dark patterns, prices and the first-charge date always visible, "cancel anytime in Settings" explained in the user's language, a day-5 trial reminder notification, a clear « Résilier mon abonnement » entry in Settings for France (doc 11 §4.4b), no guilt copy, no countdown timers, no "most people choose", no crossed-out fake prices.
 
@@ -103,7 +103,7 @@ Prices include VAT in the EU, so net revenue is lower there. In lower-income mar
 
 **Hardship offer:** at half price, net revenue per month is still ~$3.40 (monthly) against ~$1.00 AI cost. Watch its share of new subscriptions; above 25% something else is wrong with the price.
 
-**Annual plans with heavy users on Opus are the thin margin.** Levers: the note cap (5/day), the model blind test (doc 08 §2, including Opus 5.5), prompt caching, the Batch API, and the **seasons model** (doc 01 §5.6), which naturally lowers volume for users whose situation has resolved.
+**Annual plans with heavy users on Opus are the thin margin.** Levers: the note cap (four a day), the model blind test (doc 08 §2, including Opus 5.5), prompt caching, the Batch API, and the **seasons model** (doc 01 §5.6), which naturally lowers volume for users whose situation has resolved.
 
 ## 6. Revenue scenarios (month 12 after launch)
 
