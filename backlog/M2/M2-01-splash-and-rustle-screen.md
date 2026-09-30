@@ -2,7 +2,7 @@
 id: M2-01
 title: Company splash and the Rustle screen with the Skia tree
 milestone: M2
-state: ready
+state: in progress
 executor: subagent
 model: opus
 owner_files: [app/app/(onboarding)/splash.tsx, app/app/(onboarding)/rustle.tsx, app/features/intro/**, app/assets/fonts/**]
