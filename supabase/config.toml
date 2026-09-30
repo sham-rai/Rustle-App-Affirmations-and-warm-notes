@@ -2,8 +2,11 @@
 # Remote projects: rustle-dev (created in M1-02), then staging and prod. Canada (Central) region.
 project_id = "rustle-dev"
 
-# TODO(M1-02): pin Edge Functions to Canada Central. There is no region key in this file;
-# create the projects in ca-central-1 and invoke functions with the `x-region: ca-central-1` header.
+# Region (docs/07 §8, D46): every remote project is created in Canada (Central), ca-central-1.
+# There is no region key in this file; the app pins every Edge Function call with the
+# `x-region: ca-central-1` header (FUNCTION_REGION in app/lib/supabase.ts) so decrypted text is
+# processed in-region. Migrations: `supabase db reset` locally, `supabase db push` to a project.
+# Tests: `npm run test:db` (pgTAP, supabase/tests/*.sql; needs Docker).
 
 [api]
 enabled = true
