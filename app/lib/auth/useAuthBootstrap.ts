@@ -22,7 +22,7 @@ export function useAuthBootstrap(): AuthBootstrapState {
   const run = useCallback(async (): Promise<void> => {
     inFlight.current ??= ensureSession(getSupabase(), getRefreshTokenStore())
       // A thrown error (a Keystore that cannot encrypt, a bug) must never leave the app on "loading".
-      .catch((): AuthBootstrapResult => ({ status: 'failed', reason: 'server' }))
+      .catch((): AuthBootstrapResult => ({ status: 'failed', reason: 'server', hasStoredToken: false }))
       .finally(() => {
         inFlight.current = null;
       });

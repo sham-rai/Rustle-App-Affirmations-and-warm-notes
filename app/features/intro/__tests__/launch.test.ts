@@ -28,9 +28,20 @@ describe('launchRoute (docs/21 §1.0)', () => {
   });
 
   it('shows the intro on a first launch offline, and skips it with no account system', () => {
-    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'offline' } })).toBe(INTRO_ROUTE);
+    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'offline', hasStoredToken: false } })).toBe(
+      INTRO_ROUTE,
+    );
     expect(launchRoute({ ...base, accountsConfigured: false, auth: { status: 'loading' } })).toBe(HOME_ROUTE);
     expect(launchRoute({ ...base, auth: { status: 'not_configured' } })).toBe(HOME_ROUTE);
+  });
+
+  it('never replays the intro for a reinstall whose stored token could not be refreshed yet', () => {
+    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'offline', hasStoredToken: true } })).toBe(
+      HOME_ROUTE,
+    );
+    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'server', hasStoredToken: true } })).toBe(
+      HOME_ROUTE,
+    );
   });
 
   it('counts a restored session as seen', () => {

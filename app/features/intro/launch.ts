@@ -20,8 +20,10 @@ export type LaunchInput = {
  * - The session is still being established → null: keep the native splash up and wait.
  * - A session that was restored (cache, Keychain, Keystore, Block Store) → Today.
  * - A freshly created anonymous account → the intro.
- * - No account could be established (a first launch offline) → the intro: a restored session
- *   would have come from the local cache, which works offline.
+ * - No account could be established but a refresh token is stored (a reinstall opened offline
+ *   or during a server error: Keychain / Block Store survive, MMKV does not) → Today; the app runs
+ *   in its cached or empty state until the refresh succeeds.
+ * - No account and no stored token (a true first launch offline) → the intro.
  */
 export function launchRoute({ auth, introSeen, accountsConfigured }: LaunchInput): LaunchRoute | null {
   if (introSeen || !accountsConfigured) return HOME_ROUTE;
@@ -33,7 +35,7 @@ export function launchRoute({ auth, introSeen, accountsConfigured }: LaunchInput
     case 'ready':
       return auth.restoredFrom === 'new' ? INTRO_ROUTE : HOME_ROUTE;
     case 'failed':
-      return INTRO_ROUTE;
+      return auth.hasStoredToken === true ? HOME_ROUTE : INTRO_ROUTE;
   }
 }
 
