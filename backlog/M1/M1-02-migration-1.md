@@ -2,7 +2,7 @@
 id: M1-02
 title: Migration 1: schema, RLS, pgcrypto + Vault + views, pgTAP
 milestone: M1
-state: ready
+state: in progress
 executor: lead
 model: fable
 owner_files: [supabase/migrations/**, supabase/tests/**, packages/shared/schema/**, packages/shared/enums.ts, supabase/config.toml]
