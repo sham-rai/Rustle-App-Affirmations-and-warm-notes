@@ -6,10 +6,10 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 
 | ID | Ticket | State | Executor · model | Depends on | PR |
 |---|---|---|---|---|---|
-| M1-01 | Monorepo skeleton, CI, `packages/shared` | PR open (PO) | subagent · opus | — | feat/M1-01-monorepo-skeleton |
+| M1-01 | Monorepo skeleton, CI, `packages/shared` | done | subagent · opus | — | merged 2026-09-30 |
 | M1-02 | Migration 1: schema, RLS, pgcrypto + Vault + views, pgTAP | ready | lead · fable | M1-01 | |
-| M1-03 | Anonymous sign-in, Keychain / Block Store persistence, backup status | PR open (PO) | lead · fable | M1-01 | feat/M1-03-anonymous-auth-persistence |
-| M1-04 | i18n EN/FR, design tokens, ThemeProvider, tab skeleton | PR open (PO) | subagent · opus | M1-01 | feat/M1-04-i18n-tokens-navigation |
+| M1-03 | Anonymous sign-in, Keychain / Block Store persistence, backup status | done | lead · fable | M1-01 | merged 2026-09-30 |
+| M1-04 | i18n EN/FR, design tokens, ThemeProvider, tab skeleton | done | subagent · opus | M1-01 | merged 2026-09-30 |
 | M1-05 | Sentry, PostHog, first events, cost-logging table | ready | subagent · sonnet | M1-01, M1-02 | |
 | M1-06 | LLMClient: Messages, Batches, caching, structured output, cost logging, failover hooks | ready | lead · fable | M1-01 | |
 | M1-07 | Rustle voice prompt v1 + test screen showing a real note | ready | lead drafts · subagent wires (opus) | M1-06 | |

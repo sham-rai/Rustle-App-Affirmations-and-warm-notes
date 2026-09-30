@@ -2,12 +2,12 @@
 id: M1-01
 title: Monorepo skeleton, CI, packages/shared
 milestone: M1
-state: PR open (PO)
+state: done
 executor: subagent
 model: opus
 owner_files: [package.json, package-lock.json, tsconfig*.json, .gitignore, .nvmrc, .husky/**, .gitleaks.toml, app/**, packages/shared/**, .github/workflows/**, supabase/config.toml, supabase/functions/_shared/shared-smoke.ts, supabase/functions/deno.json, evals/**, scripts/README.md, web/README.md]
 depends_on: []
-pr:
+pr: merged to main 2026-09-30 (fast-forward, see docs/13 §D)
 ---
 
 ## Goal
