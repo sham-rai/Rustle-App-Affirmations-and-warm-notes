@@ -1,13 +1,20 @@
 -- docs/21 §0.3: user A cannot read, update or delete user B's rows in any table.
 begin;
-select no_plan();
 create extension if not exists pgtap with schema extensions;
+select no_plan();
 
 -- Act as a signed-in user (the way PostgREST does: role + JWT claims), or as the anon role.
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', uid::text, true);
+  perform set_config('role', 'authenticated', true);
+end $$;
+
+create function pg_temp.login_nobody() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+  perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('role', 'authenticated', true);
 end $$;
 
@@ -40,12 +47,13 @@ insert into public.notes (id, body) values ('10000000-0000-4000-8000-00000000000
 insert into public.checkins (id, mood) values ('10000000-0000-4000-8000-000000000003', 3);
 insert into public.key_dates (id, label, date) values ('10000000-0000-4000-8000-000000000004', 'exam', '2026-10-15');
 insert into public.memory_items (id, kind, content) values ('10000000-0000-4000-8000-000000000005', 'fact', 'A private memory');
-insert into public.memory_summary (summary) values ('A private summary');
-insert into public.deliveries (id, body, kind, scheduled_for) values ('10000000-0000-4000-8000-000000000006', 'A private Rustle', 'daily', now());
-insert into public.replies (id, note_id, body) values ('10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002', 'A private note back');
-insert into public.recaps (id, period_start, period_end, cards) values ('10000000-0000-4000-8000-000000000008', '2026-09-01', '2026-09-30', '[{"t":"card"}]');
 insert into public.push_tokens (id, token, platform) values ('10000000-0000-4000-8000-000000000009', 'tok-a', 'ios');
 select pg_temp.logout();
+-- The server (service role; postgres stands in) writes the outputs and the subscription.
+insert into public.memory_summary (user_id, summary) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A private summary');
+insert into public.deliveries (id, user_id, body, kind, scheduled_for) values ('10000000-0000-4000-8000-000000000006', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A private Rustle', 'daily', now());
+insert into public.replies (id, user_id, note_id, body) values ('10000000-0000-4000-8000-000000000007', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '10000000-0000-4000-8000-000000000002', 'A private note back');
+insert into public.recaps (id, user_id, period_start, period_end, cards) values ('10000000-0000-4000-8000-000000000008', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-09-01', '2026-09-30', '[{"t":"card"}]');
 insert into public.subscriptions (user_id, status) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'active');
 insert into public.warm_notes (id, sender_user_id, situation, body) values ('warmnote-slug-a', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'A warm note');
 
@@ -100,7 +108,7 @@ with u as (update public.profiles set display_name = 'x' where user_id = 'aaaaaa
   select is((select count(*)::int from u), 0, 'B cannot update A profile');
 with u as (update public.delivery_prefs set adaptive = false where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A delivery_prefs');
-with u as (update public.notes set body = 'x' where id = '10000000-0000-4000-8000-000000000002' returning 1)
+with u as (update public.notes set pinned = true where id = '10000000-0000-4000-8000-000000000002' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A notes');
 with u as (update public.checkins set mood = 1 where id = '10000000-0000-4000-8000-000000000003' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A checkins');
@@ -108,11 +116,11 @@ with u as (update public.key_dates set label = 'x' where id = '10000000-0000-400
   select is((select count(*)::int from u), 0, 'B cannot update A key_dates');
 with u as (update public.memory_items set content = 'x' where id = '10000000-0000-4000-8000-000000000005' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A memory_items');
-with u as (update public.memory_summary set summary = 'x' where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' returning 1)
-  select is((select count(*)::int from u), 0, 'B cannot update A memory_summary');
-with u as (update public.deliveries set body = 'x' where id = '10000000-0000-4000-8000-000000000006' returning 1)
+with u as (delete from public.memory_summary where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' returning 1)
+  select is((select count(*)::int from u), 0, 'B cannot delete A memory_summary (no update exists for users)');
+with u as (update public.deliveries set reaction = 'heart' where id = '10000000-0000-4000-8000-000000000006' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A deliveries');
-with u as (update public.replies set body = 'x' where id = '10000000-0000-4000-8000-000000000007' returning 1)
+with u as (update public.replies set reaction = 'heart' where id = '10000000-0000-4000-8000-000000000007' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A replies');
 with u as (update public.recaps set shared = true where id = '10000000-0000-4000-8000-000000000008' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A recaps');
@@ -135,8 +143,6 @@ with d as (delete from public.key_dates where id = '10000000-0000-4000-8000-0000
   select is((select count(*)::int from d), 0, 'B cannot delete A key_dates');
 with d as (delete from public.memory_items where id = '10000000-0000-4000-8000-000000000005' returning 1)
   select is((select count(*)::int from d), 0, 'B cannot delete A memory_items');
-with d as (delete from public.memory_summary where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' returning 1)
-  select is((select count(*)::int from d), 0, 'B cannot delete A memory_summary');
 with d as (delete from public.deliveries where id = '10000000-0000-4000-8000-000000000006' returning 1)
   select is((select count(*)::int from d), 0, 'B cannot delete A deliveries');
 with d as (delete from public.replies where id = '10000000-0000-4000-8000-000000000007' returning 1)

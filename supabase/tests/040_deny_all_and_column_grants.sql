@@ -1,13 +1,20 @@
 -- Tables without a user-facing policy are unreachable for users; column grants limit the rest.
 begin;
-select no_plan();
 create extension if not exists pgtap with schema extensions;
+select no_plan();
 
 -- Act as a signed-in user (the way PostgREST does: role + JWT claims), or as the anon role.
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', uid::text, true);
+  perform set_config('role', 'authenticated', true);
+end $$;
+
+create function pg_temp.login_nobody() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+  perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('role', 'authenticated', true);
 end $$;
 
@@ -71,6 +78,19 @@ select lives_ok($$insert into public.notes (id, body, mood, life_areas) values (
 select throws_ok($$insert into public.notes (body, safety_level) values ('x', 'none')$$, '42501', null, 'the user cannot set safety_level on insert');
 select throws_ok($$update public.notes set safety_level = 'none' where id = '40000000-0000-4000-8000-000000000001'$$, '42501', null, 'the user cannot change safety_level');
 select lives_ok($$update public.notes set body = 'edited', pinned = true where id = '40000000-0000-4000-8000-000000000001'$$, 'the user edits their own note');
+
+-- Server-written outputs: the user may react, open, rate and delete; never create or rewrite.
+select throws_ok($$insert into public.deliveries (body, kind, scheduled_for) values ('forged', 'daily', now())$$, '42501', null, 'the user cannot create a delivery');
+select throws_ok($$insert into public.replies (note_id, body) values ('40000000-0000-4000-8000-000000000001', 'forged')$$, '42501', null, 'the user cannot create a reply');
+select throws_ok($$insert into public.recaps (period_start, period_end, cards) values ('2026-09-01', '2026-09-30', '[]')$$, '42501', null, 'the user cannot create a recap');
+select throws_ok($$insert into public.memory_summary (summary) values ('forged')$$, '42501', null, 'the user cannot create a memory summary');
+select pg_temp.logout();
+insert into public.deliveries (id, user_id, body, kind, scheduled_for) values ('40000000-0000-4000-8000-000000000002', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'a Rustle', 'daily', now());
+select pg_temp.login('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+select throws_ok($$update public.deliveries set body = 'rewritten' where id = '40000000-0000-4000-8000-000000000002'$$, '42501', null, 'the user cannot rewrite a Rustle');
+select throws_ok($$update public.deliveries set cost_micros = 0, model = 'x' where id = '40000000-0000-4000-8000-000000000002'$$, '42501', null, 'the user cannot touch model or cost');
+select lives_ok($$update public.deliveries set reaction = 'not_quite', reaction_reason = 'too_long', opened_at = now() where id = '40000000-0000-4000-8000-000000000002'$$, 'the user reacts and marks opened');
+select lives_ok($$delete from public.deliveries where id = '40000000-0000-4000-8000-000000000002'$$, 'the user deletes their own Rustle');
 
 -- Enum check constraints hold the shared values.
 select throws_ok($$insert into public.notes (body, life_areas) values ('x', '{bogus}')$$, '23514', null, 'notes.life_areas rejects a value outside LIFE_AREAS');

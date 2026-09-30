@@ -46,7 +46,7 @@ export function getSupabase(): SupabaseClient | null {
 }
 
 export interface DeleteAnonymousAccountResult {
-  /** True when the server confirmed the deletion. False when the function is unreachable or absent. */
+  /** True when the RPC confirmed the deletion. False on a PostgREST error (network, RLS, or no session: 28000). */
   serverDeleted: boolean;
   /** True when the local session was signed out; false if supabase-js reported an error doing so. */
   signedOut: boolean;

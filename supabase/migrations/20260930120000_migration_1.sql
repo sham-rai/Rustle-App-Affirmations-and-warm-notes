@@ -23,6 +23,13 @@
 --   3. Rename the secrets, drop the old one, drop the version branch from decrypt_text().
 --   Because pgp_sym_encrypt salts every value, re-encryption is safe to run twice.
 --
+-- Key escrow (operations)
+--   Vault secrets do not travel with pg_dump, PITR into another project or a preview branch.
+--   At creation the PO copies the secret's value into the company password manager. Restoring
+--   data into a fresh project means re-creating `rustle_column_key` with that same value BEFORE
+--   the restore; a project that gets a new random key cannot read any existing ciphertext, and
+--   the views then raise "Wrong key or corrupt data" instead of returning rows.
+--
 -- Deletion
 --   Everything hangs off public.users(id) with ON DELETE CASCADE, and public.users hangs
 --   off auth.users. delete_own_account() deletes the auth row; the rest follows.
@@ -36,6 +43,16 @@ create extension if not exists pgcrypto with schema extensions;
 create schema if not exists enc;
 revoke all on schema enc from public;
 grant usage on schema enc to authenticated, service_role;
+
+-- The two shared enums (packages/shared/enums.ts, D46), defined once each as a domain.
+-- scripts/check-enums.ts compares the array after each `-- enum:` marker with enums.ts.
+create domain public.life_area as text
+  -- enum:life_areas
+  check (value = any (array['exams', 'breakup', 'divorce', 'health', 'caregiving', 'work', 'grief', 'change', 'loneliness', 'hard_time', 'other']::text[]));
+
+create domain public.delivery_intent as text
+  -- enum:delivery_intents
+  check (value = any (array['daily', 'date_eve', 'date_day', 'follow_up', 'quiet_presence', 'win_celebration', 'first', 'seed', 'reengage']::text[]));
 
 -- ---------------------------------------------------------------------------
 -- 1. Column key in Vault, and the cipher functions
@@ -69,7 +86,7 @@ revoke all on function enc.column_key() from public, anon, authenticated, servic
 create or replace function enc.encrypt_text(plain text)
 returns bytea
 language sql
-stable
+volatile   -- pgp_sym_encrypt salts every call; never let the planner reuse a result
 security definer
 set search_path = ''
 as $$
@@ -204,9 +221,7 @@ create table enc.notes (
   hidden_from_recap boolean not null default false,
   exclude_from_ai   boolean not null default false,
   safety_level      text check (safety_level in ('none', 'low', 'elevated', 'crisis')),
-  life_areas        text[] not null default '{}'
-                    -- enum:life_areas
-                    check (life_areas <@ array['exams', 'breakup', 'divorce', 'health', 'caregiving', 'work', 'grief', 'change', 'loneliness', 'hard_time', 'other']::text[]),
+  life_areas        public.life_area[] not null default '{}',
   created_at        timestamptz not null default now(),
   edited_at         timestamptz,
   deleted_at        timestamptz
@@ -247,8 +262,7 @@ create table enc.memory_items (
   salience        real not null default 0.5 check (salience between 0 and 1),
   status          text not null default 'active' check (status in ('active', 'resolved', 'archived', 'user_deleted')),
   resolved_at     timestamptz,
-  life_areas      text[] not null default '{}'
-                  check (life_areas <@ array['exams', 'breakup', 'divorce', 'health', 'caregiving', 'work', 'grief', 'change', 'loneliness', 'hard_time', 'other']::text[]),
+  life_areas      public.life_area[] not null default '{}',
   first_seen_at   timestamptz not null default now(),
   last_seen_at    timestamptz not null default now(),
   times_mentioned integer not null default 1,
@@ -272,9 +286,7 @@ create table enc.deliveries (
   id              uuid primary key default gen_random_uuid(),
   user_id         uuid not null default auth.uid() references public.users (id) on delete cascade,
   body_enc        bytea not null,
-  kind            text not null
-                  -- enum:delivery_intents
-                  check (kind = any (array['daily', 'date_eve', 'date_day', 'follow_up', 'quiet_presence', 'win_celebration', 'first', 'seed', 'reengage']::text[])),
+  kind            public.delivery_intent not null,
   scheduled_for   timestamptz not null,
   delivered_at    timestamptz,
   opened_at       timestamptz,
@@ -752,6 +764,16 @@ revoke delete on public.consents from authenticated;
 revoke insert, update on public.warm_notes from authenticated;
 grant update (revoked) on public.warm_notes to authenticated;
 
+-- Server-written outputs: the user reacts, opens, rates and deletes; only the server creates
+-- them or sets model, prompt_version and cost (docs/07 §3, §7).
+revoke insert, update on public.deliveries from authenticated;
+grant update (delivered_at, opened_at, reaction, reaction_reason) on public.deliveries to authenticated;
+revoke insert, update on public.replies from authenticated;
+grant update (reaction, reaction_reason) on public.replies to authenticated;
+revoke insert, update on public.recaps from authenticated;
+grant update (helped, viewed_at, shared) on public.recaps to authenticated;
+revoke insert, update on public.memory_summary from authenticated;   -- read and delete only
+
 -- notes: the safety level is set by the server-side gate (docs/08 §7), never by the client.
 revoke insert, update on public.notes from authenticated;
 grant insert (id, user_id, body, mood, source, wants_reply, pinned, hidden_from_recap, exclude_from_ai, life_areas, created_at, edited_at, deleted_at) on public.notes to authenticated;
@@ -787,7 +809,7 @@ grant execute on function public.delete_own_account() to authenticated;
 -- The public warm-note page (docs/07 §8): only the fields the page shows, and only while the
 -- note is live. Counts the view. Called by the web with the anon key.
 create or replace function public.warm_note_read(slug text)
-returns table (body text, card_style text, recipient_label text, sender_first_name text, situation text)
+returns table (body text, card_style text, recipient_label text, sender_first_name text)
 language plpgsql
 security definer
 set search_path = ''
@@ -801,11 +823,10 @@ begin
         and not w.revoked
         and w.expires_at > now()
         and w.moderation_status = 'approved'
-      returning w.body, w.card_style, w.recipient_label, w.sender_user_id, w.situation
+      returning w.body, w.card_style, w.recipient_label, w.sender_user_id
     )
     select hit.body, hit.card_style, hit.recipient_label,
-           nullif(split_part(coalesce(p.display_name, ''), ' ', 1), '') as sender_first_name,
-           hit.situation
+           nullif(split_part(coalesce(p.display_name, ''), ' ', 1), '') as sender_first_name
     from hit
     left join public.profiles p on p.user_id = hit.sender_user_id;
 end

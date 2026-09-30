@@ -1,14 +1,21 @@
 -- docs/21 §0.4: encrypted columns are unreadable raw, readable and writable through the views,
 -- and the key in Vault is out of reach for authenticated.
 begin;
-select no_plan();
 create extension if not exists pgtap with schema extensions;
+select no_plan();
 
 -- Act as a signed-in user (the way PostgREST does: role + JWT claims), or as the anon role.
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', uid::text, true);
+  perform set_config('role', 'authenticated', true);
+end $$;
+
+create function pg_temp.login_nobody() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+  perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('role', 'authenticated', true);
 end $$;
 
@@ -53,16 +60,24 @@ select is((select count(*)::int from enc.notes where id = '20000000-0000-4000-80
 -- The other five encrypted columns round-trip.
 insert into public.memory_items (kind, content) values ('person', 'Sister Maya, surgery on Oct 3');
 select is((select content from public.memory_items), 'Sister Maya, surgery on Oct 3', 'memory_items.content round-trips');
-insert into public.memory_summary (summary) values ('who they are and what is happening now');
-select is((select summary from public.memory_summary), 'who they are and what is happening now', 'memory_summary.summary round-trips');
-insert into public.deliveries (body, kind, scheduled_for) values ('A Rustle for tonight', 'daily', now());
-select is((select body from public.deliveries), 'A Rustle for tonight', 'deliveries.body round-trips');
 insert into public.notes (id, body) values ('20000000-0000-4000-8000-000000000002', 'note for a reply');
-insert into public.replies (note_id, body) values ('20000000-0000-4000-8000-000000000002', 'a note back');
-select is((select body from public.replies), 'a note back', 'replies.body round-trips');
-insert into public.recaps (period_start, period_end, cards) values ('2026-09-01', '2026-09-30', '[{"title":"Look how far"}]');
-select is((select cards -> 0 ->> 'title' from public.recaps), 'Look how far', 'recaps.cards round-trips as jsonb');
+select pg_temp.logout();
+
+-- The server writes the outputs through the same views (postgres stands in for the service role).
+insert into public.memory_summary (user_id, summary) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'who they are and what is happening now');
+insert into public.deliveries (user_id, body, kind, scheduled_for) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'A Rustle for tonight', 'daily', now());
+insert into public.replies (user_id, note_id, body) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '20000000-0000-4000-8000-000000000002', 'a note back');
+insert into public.recaps (user_id, period_start, period_end, cards) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-09-01', '2026-09-30', '[{"title":"Look how far"}]');
 select is((select position('Look how far' in encode(cards_enc, 'escape')) from enc.recaps), 0, 'recap cards are ciphertext at rest');
+select is((select position('tonight' in encode(body_enc, 'escape')) from enc.deliveries), 0, 'delivery bodies are ciphertext at rest');
+
+select pg_temp.login('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+select is((select summary from public.memory_summary), 'who they are and what is happening now', 'memory_summary.summary round-trips');
+select is((select body from public.deliveries), 'A Rustle for tonight', 'deliveries.body round-trips');
+select is((select body from public.replies), 'a note back', 'replies.body round-trips');
+select is((select cards -> 0 ->> 'title' from public.recaps), 'Look how far', 'recaps.cards round-trips as jsonb');
+update public.deliveries set reaction = 'heart', opened_at = now();
+select is((select reaction from public.deliveries), 'heart', 'the user reacts to a Rustle through the view');
 
 -- The key stays out of reach.
 select throws_ok($$select * from vault.decrypted_secrets$$, '42501', null, 'authenticated cannot read vault.decrypted_secrets');

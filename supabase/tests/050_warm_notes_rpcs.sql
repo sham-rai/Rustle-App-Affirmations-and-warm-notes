@@ -1,13 +1,20 @@
 -- warm_notes: sender-only RLS, and the two SECURITY DEFINER RPCs the public page uses (docs/07 §8).
 begin;
-select no_plan();
 create extension if not exists pgtap with schema extensions;
+select no_plan();
 
 -- Act as a signed-in user (the way PostgREST does: role + JWT claims), or as the anon role.
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', uid::text, true);
+  perform set_config('role', 'authenticated', true);
+end $$;
+
+create function pg_temp.login_nobody() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+  perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('role', 'authenticated', true);
 end $$;
 
@@ -54,8 +61,8 @@ select pg_temp.logout();
 select pg_temp.login_anon();
 select throws_ok($$select * from public.warm_notes$$, '42501', null, 'anon cannot read warm_notes directly');
 select results_eq(
-  $$select body, card_style, recipient_label, sender_first_name, situation from public.warm_note_read('live-slug-0001')$$,
-  $$values ('You have got this', 'paper', 'Sam', 'Maya', 'exams')$$,
+  $$select body, card_style, recipient_label, sender_first_name from public.warm_note_read('live-slug-0001')$$,
+  $$values ('You have got this', 'paper', 'Sam', 'Maya')$$,
   'warm_note_read returns the page fields, with the sender first name only');
 select is((select count(*)::int from public.warm_note_read('revoked-slug-01')), 0, 'a revoked note is not served');
 select is((select count(*)::int from public.warm_note_read('expired-slug-01')), 0, 'an expired note is not served');

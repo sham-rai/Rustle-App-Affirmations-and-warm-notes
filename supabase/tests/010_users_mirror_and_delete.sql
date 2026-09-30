@@ -1,13 +1,20 @@
 -- auth.users → public.users mirror, and delete_own_account() cascading through everything.
 begin;
-select no_plan();
 create extension if not exists pgtap with schema extensions;
+select no_plan();
 
 -- Act as a signed-in user (the way PostgREST does: role + JWT claims), or as the anon role.
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', uid::text, true);
+  perform set_config('role', 'authenticated', true);
+end $$;
+
+create function pg_temp.login_nobody() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+  perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('role', 'authenticated', true);
 end $$;
 
@@ -57,7 +64,11 @@ select is((select count(*)::int from public.consents where user_id = 'aaaaaaaa-a
 select is((select count(*)::int from public.users where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), 1, 'B is untouched');
 
 select pg_temp.login_anon();
-select throws_ok($$select public.delete_own_account()$$, '28000', 'not signed in', 'anon cannot call delete_own_account');
+select throws_ok($$select public.delete_own_account()$$, '42501', null, 'anon cannot call delete_own_account');
+select pg_temp.logout();
+
+select pg_temp.login_nobody();
+select throws_ok($$select public.delete_own_account()$$, '28000', 'not signed in', 'an authenticated call with no subject is refused');
 select pg_temp.logout();
 
 select * from finish();
