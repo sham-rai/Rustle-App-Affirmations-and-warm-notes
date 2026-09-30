@@ -40,6 +40,19 @@ jobs:
       - run: deno check _shared/shared-smoke.ts
         working-directory: supabase/functions
 
+  db:
+    name: Migrations and pgTAP (docs/21 §0.3–0.4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      # Starts only the Postgres container, applies supabase/migrations, then runs supabase/tests/*.sql.
+      - run: supabase db start
+      - run: supabase test db
+
   secrets:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
