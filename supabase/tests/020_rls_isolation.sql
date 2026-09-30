@@ -129,8 +129,7 @@ with u as (update public.warm_notes set revoked = true where id = 'warmnote-slug
 with u as (update public.push_tokens set token = 'x' where id = '10000000-0000-4000-8000-000000000009' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A push_tokens');
 
-with d as (delete from public.consents where id = '10000000-0000-4000-8000-000000000001' returning 1)
-  select is((select count(*)::int from d), 0, 'B cannot delete A consents');
+select throws_ok($$delete from public.consents where id = '10000000-0000-4000-8000-000000000001'$$, '42501', null, 'B cannot delete A consents (delete is revoked for every user)');
 with d as (delete from public.profiles where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' returning 1)
   select is((select count(*)::int from d), 0, 'B cannot delete A profile');
 with d as (delete from public.delivery_prefs where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' returning 1)

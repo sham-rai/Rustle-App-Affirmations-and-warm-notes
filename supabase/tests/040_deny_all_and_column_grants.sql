@@ -95,11 +95,13 @@ select lives_ok($$delete from public.deliveries where id = '40000000-0000-4000-8
 -- Enum check constraints hold the shared values.
 select throws_ok($$insert into public.notes (body, life_areas) values ('x', '{bogus}')$$, '23514', null, 'notes.life_areas rejects a value outside LIFE_AREAS');
 select lives_ok($$insert into public.notes (body, life_areas) values ('x', '{exams,hard_time}')$$, 'notes.life_areas accepts LIFE_AREAS values');
-select throws_ok($$insert into public.deliveries (body, kind, scheduled_for) values ('x', 'presence', now())$$, '23514', null, 'deliveries.kind rejects the merged "presence" intent');
-select lives_ok($$insert into public.deliveries (body, kind, scheduled_for) values ('x', 'quiet_presence', now())$$, 'deliveries.kind accepts quiet_presence');
 select throws_ok($$insert into public.delivery_prefs (slots) values ('[1,2,3,4,5]')$$, '23514', null, 'delivery_prefs.slots holds at most four slots');
 select throws_ok($$insert into public.consents (kind, version, locale) values ('newsletter', '1', 'en')$$, '23514', null, 'consents.kind rejects an unknown kind');
 select pg_temp.logout();
+
+-- Deliveries are server-written, so the intent constraint is checked as the server.
+select throws_ok($$insert into public.deliveries (user_id, body, kind, scheduled_for) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'x', 'presence', now())$$, '23514', null, 'deliveries.kind rejects the merged "presence" intent');
+select lives_ok($$insert into public.deliveries (user_id, body, kind, scheduled_for) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'x', 'quiet_presence', now())$$, 'deliveries.kind accepts quiet_presence');
 
 select * from finish();
 rollback;
