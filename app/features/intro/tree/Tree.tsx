@@ -1,13 +1,18 @@
 import { Canvas, Picture } from '@shopify/react-native-skia';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
-import { useDerivedValue, useFrameCallback, useReducedMotion, useSharedValue } from 'react-native-reanimated';
+import { useDerivedValue, useFrameCallback, useSharedValue, type FrameInfo } from 'react-native-reanimated';
 
 import { useTheme } from '../../../hooks/useTheme';
-import { drawTree, type TreeColors } from './draw';
+import { drawTree, makeTreeKit } from './draw';
 import { buildTree, STILL_TIME, TREE_MOODS, type TreeIntensity } from './maths';
 
 export type TreeProps = {
+  /**
+   * The system reduce-motion setting, from the screen's live hook (features/intro/useReduceMotion),
+   * so the tree and the screen's fades always agree. True: the tree is drawn once, still.
+   */
+  reduceMotion: boolean;
   /** `full` on the Rustle screen; `quiet` behind the age gate and consent (M1-09). */
   intensity?: TreeIntensity;
   style?: StyleProp<ViewStyle>;
@@ -16,21 +21,26 @@ export type TreeProps = {
 /**
  * The tree at the edge of the screen (docs/05 §2). Decorative: hidden from screen readers and
  * never takes touches. Fills its parent; lay it out with absolute fill behind the content.
- * With reduce-motion on, it is drawn once, still, and the frame callback never runs.
  */
-export function Tree({ intensity = 'full', style }: TreeProps) {
+export function Tree({ reduceMotion, intensity = 'full', style }: TreeProps) {
   const { colors } = useTheme();
   const { width, height } = useWindowDimensions();
-  const reduceMotion = useReducedMotion();
 
   const tree = useMemo(() => buildTree(width, height), [width, height]);
   const mood = TREE_MOODS[intensity];
-  const treeColors = useMemo<TreeColors>(() => ({ ink: colors.ink, sage: colors.sage }), [colors.ink, colors.sage]);
+  // Paints and the leaf path are made once per theme and mood, never per frame.
+  const kit = useMemo(() => makeTreeKit({ ink: colors.ink, sage: colors.sage }, mood), [colors.ink, colors.sage, mood]);
 
   const time = useSharedValue(STILL_TIME);
-  const clock = useFrameCallback((frame) => {
-    time.value = STILL_TIME + frame.timeSinceFirstFrame / 1000;
-  }, false);
+  // Stable across renders, so useFrameCallback registers it once (it re-registers on a new identity).
+  const tick = useCallback(
+    (frame: FrameInfo) => {
+      'worklet';
+      time.set(STILL_TIME + frame.timeSinceFirstFrame / 1000);
+    },
+    [time],
+  );
+  const clock = useFrameCallback(tick, false);
 
   useEffect(() => {
     clock.setActive(!reduceMotion);
@@ -38,7 +48,7 @@ export function Tree({ intensity = 'full', style }: TreeProps) {
   }, [clock, reduceMotion]);
 
   const animate = !reduceMotion;
-  const picture = useDerivedValue(() => drawTree(tree, time.value, mood, treeColors, animate));
+  const picture = useDerivedValue(() => drawTree(tree, time.get(), mood, kit, animate));
 
   return (
     <View

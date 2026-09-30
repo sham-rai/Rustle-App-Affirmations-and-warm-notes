@@ -28,6 +28,42 @@ const RAD_TO_DEG = 180 / Math.PI;
 /** Colours arrive as token strings from the theme; this file never names a colour itself. */
 export type TreeColors = { readonly ink: string; readonly sage: string };
 
+/**
+ * The Skia objects every frame reuses: made once per theme (makeTreeKit, JS thread) and only
+ * mutated (stroke width, alpha) while recording on the UI thread. Nothing is allocated per frame
+ * except the pose arrays.
+ */
+export type TreeKit = {
+  readonly branchPaint: SkPaint;
+  readonly layerPaint: SkPaint;
+  readonly leafPaint: SkPaint;
+  readonly leafPath: SkPath;
+};
+
+export function makeTreeKit(colors: TreeColors, mood: TreeMood): TreeKit {
+  const branchPaint = Skia.Paint();
+  branchPaint.setAntiAlias(true);
+  branchPaint.setStyle(PaintStyle.Stroke);
+  branchPaint.setStrokeCap(StrokeCap.Round);
+  branchPaint.setColor(Skia.Color(colors.ink));
+
+  const layerPaint = Skia.Paint();
+  layerPaint.setAlphaf(mood.branchAlpha);
+
+  const leafPaint = Skia.Paint();
+  leafPaint.setAntiAlias(true);
+  leafPaint.setColor(Skia.Color(colors.sage));
+
+  // A leaf of length 1 pointing along +x from its stem: two soft curves.
+  const leafPath = Skia.Path.Make();
+  leafPath.moveTo(0, 0);
+  leafPath.quadTo(0.45, -0.3, 1, 0);
+  leafPath.quadTo(0.45, 0.3, 0, 0);
+  leafPath.close();
+
+  return { branchPaint, layerPaint, leafPaint, leafPath };
+}
+
 type LeafAt = { x: number; y: number; angle: number };
 
 function drawLeaf(canvas: SkCanvas, path: SkPath, paint: SkPaint, at: LeafAt, size: number, twist: number) {
@@ -42,37 +78,21 @@ function drawLeaf(canvas: SkCanvas, path: SkPath, paint: SkPaint, at: LeafAt, si
 }
 
 /** One frame of the tree at time `t`. `animate` false draws the still tree (no falling leaves). */
-export function drawTree(tree: Tree, t: number, mood: TreeMood, colors: TreeColors, animate: boolean): SkPicture {
+export function drawTree(tree: Tree, t: number, mood: TreeMood, kit: TreeKit, animate: boolean): SkPicture {
   'worklet';
   return createPicture((canvas) => {
     const motion = animate ? mood.motion : 0;
     const pose = poseAt(tree, t, motion);
+    const { branchPaint, layerPaint, leafPaint, leafPath } = kit;
 
     // Branches: drawn opaque into a layer, then the whole layer is faded, so overlapping joints
     // do not darken. Round caps keep the ends soft.
-    const branchPaint = Skia.Paint();
-    branchPaint.setAntiAlias(true);
-    branchPaint.setStyle(PaintStyle.Stroke);
-    branchPaint.setStrokeCap(StrokeCap.Round);
-    branchPaint.setColor(Skia.Color(colors.ink));
-    const layerPaint = Skia.Paint();
-    layerPaint.setAlphaf(mood.branchAlpha);
     canvas.saveLayer(layerPaint);
     for (let i = 0; i < tree.branches.length; i++) {
       branchPaint.setStrokeWidth(Math.max(0.75, tree.branches[i]!.thickness));
       canvas.drawLine(pose.x0[i]!, pose.y0[i]!, pose.x1[i]!, pose.y1[i]!, branchPaint);
     }
     canvas.restore();
-
-    // A leaf of length 1 pointing along +x from its stem: two soft curves.
-    const leafPath = Skia.Path.Make();
-    leafPath.moveTo(0, 0);
-    leafPath.quadTo(0.45, -0.3, 1, 0);
-    leafPath.quadTo(0.45, 0.3, 0, 0);
-    leafPath.close();
-    const leafPaint = Skia.Paint();
-    leafPaint.setAntiAlias(true);
-    leafPaint.setColor(Skia.Color(colors.sage));
 
     const falls = animate && mood.falling ? fallsAt(t, tree.leaves.length) : [];
 
