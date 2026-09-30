@@ -31,12 +31,24 @@ values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', true, now(), now(), '{}', '{}'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', true, now(), now(), '{}', '{}');
 
+-- The server (service role) publishes warm notes after moderation; here postgres stands in for it.
+insert into public.profiles (user_id, display_name) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Maya Tremblay');
+insert into public.warm_notes (id, sender_user_id, situation, body, recipient_label) values ('live-slug-0001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'You have got this', 'Sam');
+insert into public.warm_notes (id, sender_user_id, situation, body, revoked) values ('revoked-slug-01', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'gone', true);
+insert into public.warm_notes (id, sender_user_id, situation, body, expires_at) values ('expired-slug-01', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'gone', now() - interval '1 day');
+insert into public.warm_notes (id, sender_user_id, situation, body, moderation_status) values ('held-slug-00001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'gone', 'held');
+insert into public.warm_notes (id, sender_user_id, situation, body, moderation_status, reported_at) values ('removed-slug-01', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'gone', 'removed', now());
+
+-- The sender reads, revokes and deletes; nothing else is theirs to write.
 select pg_temp.login('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
-insert into public.profiles (display_name) values ('Maya Tremblay');
-insert into public.warm_notes (id, situation, body, recipient_label) values ('live-slug-0001', 'exams', 'You have got this', 'Sam');
-insert into public.warm_notes (id, situation, body, revoked) values ('revoked-slug-01', 'exams', 'gone', true);
-insert into public.warm_notes (id, situation, body, expires_at) values ('expired-slug-01', 'exams', 'gone', now() - interval '1 day');
-insert into public.warm_notes (id, situation, body, moderation_status) values ('held-slug-00001', 'exams', 'gone', 'held');
+select is((select count(*)::int from public.warm_notes), 5, 'the sender sees their own warm notes');
+select throws_ok($$insert into public.warm_notes (id, situation, body) values ('client-slug-000', 'exams', 'unmoderated text')$$, '42501', null, 'the sender cannot publish a warm note directly');
+select throws_ok($$update public.warm_notes set moderation_status = 'approved', reported_at = null where id = 'removed-slug-01'$$, '42501', null, 'the sender cannot undo a takedown');
+select throws_ok($$update public.warm_notes set body = 'edited after moderation' where id = 'live-slug-0001'$$, '42501', null, 'the sender cannot edit the body after publishing');
+select throws_ok($$update public.warm_notes set expires_at = now() + interval '10 years' where id = 'live-slug-0001'$$, '42501', null, 'the sender cannot extend the expiry');
+select throws_ok($$update public.warm_notes set opened_count = 999 where id = 'live-slug-0001'$$, '42501', null, 'the sender cannot touch the counters');
+select lives_ok($$update public.warm_notes set revoked = true where id = 'held-slug-00001'$$, 'the sender can revoke');
+select lives_ok($$delete from public.warm_notes where id = 'held-slug-00001'$$, 'the sender can delete their own warm note');
 select pg_temp.logout();
 
 select pg_temp.login_anon();

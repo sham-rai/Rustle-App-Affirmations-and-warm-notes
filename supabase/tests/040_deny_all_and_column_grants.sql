@@ -66,6 +66,12 @@ select lives_ok($$update public.consents set withdrawn_at = now()$$, 'the user m
 select throws_ok($$update public.consents set version = '9'$$, '42501', null, 'the user cannot rewrite a consent version');
 select throws_ok($$delete from public.consents$$, '42501', null, 'the user cannot delete consent rows');
 
+-- notes: the safety level belongs to the server-side gate.
+select lives_ok($$insert into public.notes (id, body, mood, life_areas) values ('40000000-0000-4000-8000-000000000001', 'a note', 3, '{work}')$$, 'the user writes a note');
+select throws_ok($$insert into public.notes (body, safety_level) values ('x', 'none')$$, '42501', null, 'the user cannot set safety_level on insert');
+select throws_ok($$update public.notes set safety_level = 'none' where id = '40000000-0000-4000-8000-000000000001'$$, '42501', null, 'the user cannot change safety_level');
+select lives_ok($$update public.notes set body = 'edited', pinned = true where id = '40000000-0000-4000-8000-000000000001'$$, 'the user edits their own note');
+
 -- Enum check constraints hold the shared values.
 select throws_ok($$insert into public.notes (body, life_areas) values ('x', '{bogus}')$$, '23514', null, 'notes.life_areas rejects a value outside LIFE_AREAS');
 select lives_ok($$insert into public.notes (body, life_areas) values ('x', '{exams,hard_time}')$$, 'notes.life_areas accepts LIFE_AREAS values');

@@ -44,10 +44,10 @@ insert into public.memory_summary (summary) values ('A private summary');
 insert into public.deliveries (id, body, kind, scheduled_for) values ('10000000-0000-4000-8000-000000000006', 'A private Rustle', 'daily', now());
 insert into public.replies (id, note_id, body) values ('10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002', 'A private note back');
 insert into public.recaps (id, period_start, period_end, cards) values ('10000000-0000-4000-8000-000000000008', '2026-09-01', '2026-09-30', '[{"t":"card"}]');
-insert into public.warm_notes (id, situation, body) values ('warmnote-slug-a', 'exams', 'A warm note');
 insert into public.push_tokens (id, token, platform) values ('10000000-0000-4000-8000-000000000009', 'tok-a', 'ios');
 select pg_temp.logout();
 insert into public.subscriptions (user_id, status) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'active');
+insert into public.warm_notes (id, sender_user_id, situation, body) values ('warmnote-slug-a', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'A warm note');
 
 -- A reads everything back through the same paths.
 select pg_temp.login('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');

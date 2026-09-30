@@ -699,8 +699,11 @@ create policy deliveries_own on enc.deliveries for all to authenticated using (u
 create policy replies_own on enc.replies for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create policy recaps_own on enc.recaps for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 
--- Sender-only (docs/07 §8); the public page goes through the RPCs below.
-create policy warm_notes_sender on public.warm_notes for all to authenticated using (sender_user_id = (select auth.uid())) with check (sender_user_id = (select auth.uid()));
+-- Sender-only (docs/07 §8); the public page goes through the RPCs below. Rows are written by the
+-- warm-notes Edge Function (service role) after moderation; the sender may read, revoke and delete.
+create policy warm_notes_sender_select on public.warm_notes for select to authenticated using (sender_user_id = (select auth.uid()));
+create policy warm_notes_sender_update on public.warm_notes for update to authenticated using (sender_user_id = (select auth.uid())) with check (sender_user_id = (select auth.uid()));
+create policy warm_notes_sender_delete on public.warm_notes for delete to authenticated using (sender_user_id = (select auth.uid()));
 
 -- Read-only for the user; written by the RevenueCat webhook with the service role.
 create policy subscriptions_select_own on public.subscriptions for select to authenticated using (user_id = (select auth.uid()));
@@ -743,6 +746,16 @@ revoke insert, delete on public.users from authenticated;
 revoke update on public.consents from authenticated;
 grant update (withdrawn_at) on public.consents to authenticated;
 revoke delete on public.consents from authenticated;
+
+-- warm_notes: the server publishes (App Attest, rate limit, moderation happen there); the sender
+-- can only revoke. Body, slug, expiry, counters and moderation state are never client-writable.
+revoke insert, update on public.warm_notes from authenticated;
+grant update (revoked) on public.warm_notes to authenticated;
+
+-- notes: the safety level is set by the server-side gate (docs/08 §7), never by the client.
+revoke insert, update on public.notes from authenticated;
+grant insert (id, user_id, body, mood, source, wants_reply, pinned, hidden_from_recap, exclude_from_ai, life_areas, created_at, edited_at, deleted_at) on public.notes to authenticated;
+grant update (body, mood, source, wants_reply, pinned, hidden_from_recap, exclude_from_ai, life_areas, edited_at, deleted_at) on public.notes to authenticated;
 
 revoke insert, update, delete on public.subscriptions from authenticated;
 revoke all on public.entitlement_grants from authenticated;
