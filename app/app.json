@@ -50,6 +50,9 @@
         "projectId": "21619f5a-d42f-4e57-a1b2-3795a6ae0b45"
       }
     },
-    "owner": "rustleapp"
+    "owner": "rustleapp",
+    "updates": {
+      "url": "https://u.expo.dev/21619f5a-d42f-4e57-a1b2-3795a6ae0b45"
+    }
   }
 }
