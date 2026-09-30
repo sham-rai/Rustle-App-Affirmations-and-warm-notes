@@ -7,6 +7,20 @@
     "errorSaved_vous": "Quelque chose n’a pas fonctionné. Votre note est enregistrée ; je réessaie dans un instant.",
     "notNow": "Pas maintenant"
   },
+  "intro": {
+    "aiDisclosure": "Rustle est une IA, et non un thérapeute ni un service de crise.",
+    "company": "DreamTeam Co.",
+    "crisis": "Ce n’est pas un service médical. Si tu es en crise, <link>trouve de l’aide maintenant</link>.",
+    "crisisPending": "Les ressources de crise arrivent dans une prochaine version.",
+    "crisis_vous": "Ce n’est pas un service médical. Si vous êtes en crise, <link>trouvez de l’aide maintenant</link>.",
+    "haveAccount": "J’ai déjà un compte",
+    "headline": "Des notes qui savent ce que tu traverses.",
+    "headline_vous": "Des notes qui savent ce que vous traversez.",
+    "sub": "Raconte-moi un peu. Je m’en souviendrai, et je te laisserai un mot réconfortant quand tu en auras besoin.",
+    "sub_vous": "Racontez-moi un peu. Je m’en souviendrai, et je vous laisserai un mot réconfortant quand vous en aurez besoin.",
+    "wordmark": "rustle",
+    "wordmarkLabel": "Rustle"
+  },
   "settings": {
     "backup": {
       "accountId": "Compte {{id}}",
