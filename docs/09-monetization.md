@@ -44,11 +44,13 @@
 
 **Never paywalled, ever:** crisis and safety responses, the ability to write, memory visibility and control, export and delete, warm notes, key-date notes on the day, lock-screen privacy and the app lock.
 
+**Inactivity in door open (D46):** after 30 days without an open, a reaction, a note or a check-in, one "I'm here if you need me" Rustle, then the weekly note stops; key dates with `remind` on still fire; any open restores it (doc 07 §6).
+
 **Why one note back a week in door open:** doc 01 says a board without replies is a void. One reply a week keeps the board alive and the memory growing for a cent a month, and it turns the contextual paywall (§3) from an absence ("nothing came") into a comparison ("want this on everything you write?").
 
 ## 3. The paywall
 
-**When, first time:** after onboarding, after the first note has been shown and reacted to, and after the notification permission prompt. Never before the wow. Never in a session where onboarding text was `elevated` or `crisis` (the user gets the welcome week that session and the paywall appears on a later, calmer open).
+**When, first time:** after onboarding, after the first note has been shown and reacted to, and after the notification permission prompt. Never before the wow. Never in a session where onboarding text was `elevated` or `crisis`: the welcome week starts silently that session (`welcome_week_ends_at` is set without a tap), no paywall appears during the week, and the first paywall the user sees is the day-7 one, which itself obeys the heavy-session rule (D46).
 
 **What it says:** headline *"Let me be there every day."* Three benefits: notes every day, timed to your life · a note back on everything you write · your month, told back to you. Plan selector: **annual preselected** (CA$59.99, "≈ CA$5 a month") and monthly (CA$10.99), both with the **7-day free trial**. A trial timeline: today full access · day 5 reminder · day 7 trial ends. One plain sentence under the buttons: *"Either way, you keep your notes and this week's Rustles."* A quiet secondary line: *"Things are tight right now?"* → the hardship offer (§4). Links to terms and privacy, restore purchases, redeem a code, and a **"Not now"** button in the secondary style (same size as the primary; doc 20 §7.8). Below the fold, the one-line AI reminder (doc 11 §3).
 

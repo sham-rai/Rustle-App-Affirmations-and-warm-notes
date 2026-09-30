@@ -40,7 +40,7 @@ Goal: collect **enough** for a first note that is **clearly personal**, and set 
 
 | # | Screen | Type | Purpose / Stored as |
 |---|---|---|---|
-| 1 | **"What's going on in your life right now?"** (pick up to 3) — Exams/studies · A breakup · Divorce/separation · Health or illness · Caring for someone · Lost my job / work stress · Grief · Moving / big change · Loneliness · Just a hard time · Something else | Multi-select chips | `notes.life_areas[]`, `profiles.focus_weights` |
+| 1 | **"What's going on in your life right now?"** (pick up to 3) — Exams/studies · A breakup · Divorce/separation · Health or illness · Caring for someone · Lost my job / work stress · Grief · Moving / big change · Loneliness · Just a hard time · Something else | Multi-select chips | `notes.life_areas[]`, `profiles.focus_weights`; the chips map one to one onto `LIFE_AREAS` (`exams`, `breakup`, `divorce`, `health`, `caregiving`, `work`, `grief`, `change`, `loneliness`, `hard_time`, `other`; doc 00, D46) |
 | 2 | **"Tell me a bit more, in your own words."** Placeholder changes with screen 1 ("My exam is on… and I'm worried about…"). Below the text, one optional line: **"Is there a date coming up that matters?"** (label + date; for anniversary and medical kinds a second line asks *"Want me to be with you on that day, or leave it quiet?"*, opt-in `key_dates.remind`) | Free text (skippable), 🎤 dictation, + optional date | First **note** + memory extraction; `key_dates[]` |
 | 3 | **"How are you feeling most days lately?"** | Five abstract marks with labels (heavy · low · okay · lighter · good; doc 20 §7.4), not faces | First `checkin` |
 | 4 | **"How should I talk to you?"** Two chip groups on one screen: *Words that help* — Gentle & soft · Calm & grounded · Encouraging & strong · Honest & real · A little humour; *Words you'd rather not hear* — Advice · Religious/spiritual phrases · "Stay positive" talk · Mentions of my ex · Nothing, all fine (+ a short text field). French users also see the tu / vous choice here, with a one-line example of each | Multi-select chips ×2 | `profiles.tone`, `profiles.avoid[]` (hard constraints, very important for trust) |
@@ -52,7 +52,7 @@ Micro-copy between screens reflects back what the user said ("Thank you for trus
 
 **Variant to test** (doc 12 §6): screens 1–3 → first note → "does this feel right?" → screens 4–5 framed as "make it yours" → notification permission. The first note is then written in the neutral gentle register and tone/avoid shape the second note onward.
 
-**Language:** English and French at launch, with **Canadian French (fr-CA) as the primary French variant** (D25); France-French wording is reviewed before the European launch. Detect the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French UI). Notes are written in whatever language the user writes in. French notes default to **"tu"**, the warm, informal register that friends use; a setting lets the user switch to "vous" (some users aged 45+ may prefer it, and it's asked about in onboarding step 6 for French users).
+**Language:** English and French at launch, with **Canadian French (fr-CA) as the primary French variant** (D25); France-French wording is reviewed before the European launch. Detect the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French UI). Notes are written in whatever language the user writes in. French notes default to **"tu"**, the warm, informal register that friends use; a setting lets the user switch to "vous" (some users aged 45+ may prefer it, and it's asked about on onboarding screen 4 for French users).
 
 **Age gate (18+):** a date-of-birth picker (or "I'm 18 or older" confirmation) on the consent screen before onboarding. Under 18 → a kind "Rustle is for adults. Here are resources for younger people" screen with localised youth helplines. See the risks doc §5.
 
@@ -65,7 +65,7 @@ Micro-copy between screens reflects back what the user said ("Thank you for trus
 
 ### Paywall
 
-Shown after the first note and notification permission, never in a session where onboarding text was `elevated` or `crisis`. Headline *"Let me be there every day."*, the 7-day trial on both plans, and a **"Not now"** button in the secondary style that leads to the **welcome week** (seven days of the full experience, no card). The paywall body says so plainly: *"Either way, you keep your notes and this week's Rustles."* Full spec in [09-monetization.md §3](09-monetization.md).
+Shown after the first note and notification permission, never in a session where onboarding text was `elevated` or `crisis` (the welcome week then starts silently and the day-7 paywall is the first one seen, doc 09 §3). Headline *"Let me be there every day."*, the 7-day trial on both plans, and a **"Not now"** button in the secondary style that leads to the **welcome week** (seven days of the full experience, no card). The paywall body says so plainly: *"Either way, you keep your notes and this week's Rustles."* Full spec in [09-monetization.md §3](09-monetization.md).
 
 ### Account prompt
 
@@ -101,22 +101,21 @@ Order matters: the first two rows carry visual weight; account and help sit at t
 - **Focus areas:** life areas with weights ("more about my recovery, less about work").
 - **Tone:** re-pick tone and avoid-list.
 - **Themes & widget:** themes, fonts, widget styles.
-- **About:** shows the company name (DreamTeam Co., placeholder until registration) beside "Made in Ontario, Canada".
 - **Account & data:** sign in / link account, backup status, export (JSON + PDF), delete account, privacy, consents, subscription (with a clear « Résilier mon abonnement » entry that deep-links to the store), redeem a code.
 - **Help:** crisis resources (localised), FAQ, contact.
-- **About:** "Made in Ontario, Canada 🍁 · Your notes are stored in Canada", the AI disclosure ("Rustle is AI, not a therapist or a crisis service"), version, licences.
+- **About:** the company name (DreamTeam Co., placeholder until registration) beside "Made in Ontario, Canada 🍁 · Your notes are stored in Canada", the AI disclosure ("Rustle is AI, not a therapist or a crisis service"), version, licences.
 
 ## 7. Notifications
 
 - **Format:** two states. Privacy off: the title is the user's name or nothing, the body is the note itself (≤ 180 characters so it isn't truncated), e.g. *"Thursday's the interview. You already did the brave part: you applied. 🌿"*. Privacy on: the title is "A note from Rustle" and the body "🌿 A note is waiting for you." The push itself carries no text (doc 07 §6); the iOS extension and the Android app fill it in on-device.
-- **Lock-screen privacy:** "Hide note text on lock screen". **Defaults to on** when the life areas include divorce or separation, abuse, illness or grief, with one line explaining why and a switch to reveal; off otherwise. This matters most for the people least likely to find a setting.
+- **Lock-screen privacy:** "Hide note text on lock screen". **Defaults to on** when the life areas include `divorce`, `health` or `grief`, and **switches on** when the safety classifier flags an abuse disclosure in any text (D46), with one line explaining why and a switch to reveal; off otherwise. This matters most for the people least likely to find a setting.
 - **Actionable notification:** iOS/Android actions ❤️ / "Write a note".
 - **Check-in notification:** "How's today? Tap 1–5" with inline actions.
 - **Anti-annoyance:** if the last 5 notifications went unopened, halve the frequency (floor: one every two days) and show a gentle in-app message; any ❤️, note or check-in restores the user's setting.
 
 ## 8. Widgets
 
-- **iOS (WidgetKit):** small (a short line of the latest note), medium (note plus date), large (note plus next key date), lock-screen (short line). Refreshes when a new note arrives (via app-group shared storage plus a timeline reload).
+- **iOS (WidgetKit):** small (a short line of the latest note), medium (note plus date) and lock-screen (short line) in the MVP; large (note plus next key date) in V1.1 with the Android widget (D46). Refreshes when a new note arrives (via app-group shared storage plus a timeline reload).
 - **Android (Glance):** 2×2 and 4×2 versions.
 - Tap → opens Today.
 - Widget themes match the app theme (premium).

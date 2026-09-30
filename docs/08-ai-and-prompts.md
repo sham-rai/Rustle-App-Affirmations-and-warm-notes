@@ -94,7 +94,8 @@ CONTEXT PACK (≈1.5–3k tokens)
 - anchors: 1–3 "helps"/identity items for texture
 - recent_outputs: last 14 notes sent (to avoid repetition), with ❤️/"not quite" reactions
 - slot: "morning" | "midday" | "evening" | "before_sleep" + local weekday
-- delivery_intent: daily | date_eve | date_day | follow_up | quiet_presence | win_celebration
+- delivery_intent: daily | date_eve | date_day | follow_up | quiet_presence | win_celebration | first | seed | reengage
+  (DELIVERY_INTENTS in packages/shared/enums.ts, D46)
 ```
 
 **Rotation logic (in code, not in the prompt):** to avoid "every note is about the exam", the planner chooses a **delivery_intent and focus** for each slot:
@@ -102,7 +103,7 @@ CONTEXT PACK (≈1.5–3k tokens)
 - If a recent win → `win_celebration` (at most 1 per day).
 - Otherwise sample the focus by `focus_weights` × salience, with about 1 in 5 being `quiet_presence` ("Thinking of you. No agenda.") or an anchor-based note (the dog, the garden) so it feels like a friend, not a tracker.
 - **Memory surfacing rate:** at most 1 explicit callback to an older memory (> 7 days) per day. The goal is to *quietly* show memory, not show off.
-- **Entitlement states (doc 09 §2):** `premium` and `welcome_week` users get the full rhythm above. `door_open` users get one `presence` Rustle a week at their favourite slot, key-date notes on the day, and one note back a week on the first note they write; nothing else is composed for them, except safety responses.
+- **Entitlement states (doc 09 §2):** `premium` and `welcome_week` users get the full rhythm above. `door_open` users get one `quiet_presence` Rustle a week at their favourite slot, key-date notes on the day, and one note back a week on the first note they write; nothing else is composed for them, except safety responses.
 - **Seasons and closed chapters (D22):** when a situation is `resolved` (the exam passed, about a month of support after a breakup has passed and check-ins are calmer, a new relationship started), the chapter is **closed**: it stops being a focus for daily notes after one follow-up, and it isn't mentioned again unless the user brings it up. Closed chapters still feed the **recap**, which is where "how far you've come" is said. When *all* active chapters are closed and the last two weeks of check-ins are ≥ 3/5, the planner proposes the **quiet season** once ("Things sound lighter lately. Want me to write less often for a while?"): 2–3 notes a week, mostly `quiet_presence` and anchors, and the recap becomes the main touchpoint. A new hard signal (a new situation, low check-ins) returns the rhythm to active, without asking.
 
 ---
@@ -159,7 +160,8 @@ WHAT YOU NEVER DO
 - Never write about self-harm, suicide methods, weight/calories, or medication doses.
 
 STYLE
-- 1–3 sentences. Default under 160 characters for notifications; never over 280.
+- 1–3 sentences. Aim under 160 characters; never over 180, so a note always fits a
+  notification body (the limits per output kind are in §5.8).
 - Plain, warm, human language. Short words. No clichés, no hashtags, no quotes from famous
   people. At most one emoji, and only if their tone preference allows; 🌿 is the house emoji.
 - Write in the person's language and match their register (formal/informal, French "tu/vous" per their setting, Quebec vs France vocabulary, etc.).
@@ -293,7 +295,7 @@ Return JSON matching schema:
     {"op": "update", "id": "...", "content": "...", "salience": 0.0-1.0},
     {"op": "resolve", "id": "...", "resolution": "..."}
   ],
-  "life_areas": ["exams|love|divorce|health|caregiving|work|grief|change|loneliness|other"],
+  "life_areas": ["exams|breakup|divorce|health|caregiving|work|grief|change|loneliness|hard_time|other"],   // LIFE_AREAS in packages/shared (D46)
   "mood_estimate": 1-5 | null,
   "situation_changed_significantly": true|false,
   "requested_no_mention": ["things they said not to bring up"]
@@ -351,7 +353,7 @@ levels:
 - elevated: passive death wishes ("I wish I could disappear"), self-harm history mention,
   abuse disclosure, eating-disorder behaviour, severe hopelessness
 - crisis: suicidal intent/plan, active self-harm, being in immediate danger, harm to others
-Also flag: "minor_indicators" (text suggests user is under 16), "abuse_disclosure",
+Also flag: "minor_indicators" (text suggests the user may be under 18), "abuse_disclosure",
 "medical_emergency".
 <text>{{text}}</text>
 Return: {"level": "...", "flags": [...], "rationale": "one short sentence"}
@@ -360,7 +362,16 @@ Plus a **deterministic pre-filter** (multilingual keyword lists for suicide, sel
 
 ### 5.8 Output guardrail
 
-**Rules (code):** length limits; banned phrases list (e.g. "as an AI", "according to", "you should", "everything happens for a reason", "stay positive"); avoid-list term match (including synonyms/names); no URLs/phone numbers (except the crisis flow); similarity against the last 14 notes (normalised trigram or token-set similarity above 0.8 → regenerate; no embeddings in the MVP, D31); language check.
+**Rules (code):** length limits from the table below; banned phrases list (e.g. "as an AI", "according to", "you should", "everything happens for a reason", "stay positive"); avoid-list term match (including synonyms/names); no URLs/phone numbers (except the crisis flow); similarity against the last 14 notes (normalised trigram or token-set similarity above 0.8 → regenerate; no embeddings in the MVP, D31); language check.
+
+| Output | Target | Hard max (regenerate above) |
+|---|---|---|
+| A Rustle (every `DELIVERY_INTENTS` value) | 160 chars | 180 chars, so it fits a notification body (doc 05 §7) |
+| Note back | — | 240 chars |
+| Warm note | — | 220 chars |
+| Recap card text | — | 280 chars |
+
+The same limits apply in French; the target absorbs the extra length. This table is the single source for length rules (D46); the prompts state the same numbers.
 
 **LLM check (small model, only on flagged or sampled outputs):** "Does this note give advice, make promises, use clinical labels, mention avoid-topics, or sound robotic? yes/no + reason." If it fails → one regeneration → template fallback.
 

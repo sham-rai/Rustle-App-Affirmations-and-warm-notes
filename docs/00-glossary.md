@@ -25,9 +25,10 @@ The word **"affirmation" never appears in the product.** It lives only in App St
 | **Now summary** | The rolling ~250-word private briefing about the person that every generation reads. | `memory_summary` |
 | **Avoid list** | Hard constraints the user set ("no advice", "don't mention my ex"). Violations must be zero. | `profiles.avoid`, memory kind `avoid` |
 | **Just listen** | Per-note toggle: "no note back on this one". Rustle still remembers it. | `notes.wants_reply = false` |
-| **Focus areas** | AI-detected life areas (exams, love, health, work...) with user-adjustable weights. Replaces "categories". | `profiles.focus_weights`, `notes.life_areas` |
+| **Life area** | One of eleven values, defined once as `LIFE_AREAS` in `packages/shared/enums.ts` (D46): `exams`, `breakup`, `divorce`, `health`, `caregiving`, `work`, `grief`, `change`, `loneliness`, `hard_time`, `other`. Onboarding chips map one to one; the extractor uses the same list. | `notes.life_areas`, `profiles.focus_weights` |
+| **Focus areas** | The user's life areas with user-adjustable weights. Replaces "categories". | `profiles.focus_weights`, `notes.life_areas` |
 | **Slot** | A delivery time the user chose (morning, midday, evening, before sleep). | `delivery_prefs.slots` |
-| **Intent** | Why a given Rustle exists: `daily`, `date_eve`, `date_day`, `follow_up`, `quiet_presence`, `win_celebration`, `first`, `reengage`. | `deliveries.kind`, planner |
+| **Intent** | Why a given Rustle exists: `daily`, `date_eve`, `date_day`, `follow_up`, `quiet_presence`, `win_celebration`, `first`, `seed`, `reengage`. Defined once as `DELIVERY_INTENTS` in `packages/shared/enums.ts` (D46). The door-open weekly note is a `quiet_presence` on a weekly cadence, not a separate intent. | `deliveries.kind`, planner |
 | **Season** | The rhythm Rustle is in for this person: **active** (the hard period; 1–5 Rustles a day) or **quiet** (the situation resolved; a few a week, mostly presence and anchors). See doc 01 §5.6. | `delivery_prefs.rhythm` |
 | **Chapter** | A resolved situation (the breakup, the exam term). Closed chapters stop driving daily Rustles but stay in recaps as "how far you've come". | `memory_items.status = resolved` |
 | **Recap** | The monthly "Look how far you've come" story (6–8 cards). | `recaps` |

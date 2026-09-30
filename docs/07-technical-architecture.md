@@ -89,7 +89,7 @@ Edge Functions have hard wall-clock and CPU-time limits per invocation (check Su
 
 ## 3. Data model (Postgres)
 
-> Every table has RLS: `user_id = auth.uid()`. Sensitive text columns are encrypted at rest (Supabase disk encryption), with optional **column-level encryption** (pgsodium / app-layer envelope encryption) for note bodies. See §8.
+> Every table has RLS: `user_id = auth.uid()` where a row belongs to a user; the two tables without one (`warm_notes` for the public page, `entitlement_grants`) are handled as described in §8. Sensitive text columns use `pgcrypto` column encryption with a Vault key and decrypting views (D29, §8).
 
 ```sql
 -- Identity
@@ -120,7 +120,8 @@ notes (id uuid pk, user_id, body text /* encrypted, §8 */, mood smallint null, 
        wants_reply bool, pinned bool, hidden_from_recap bool,
        exclude_from_ai bool default false,   -- "forget this": the note stays on the board, never enters context again
        safety_level text,            -- 'none'|'low'|'elevated'|'crisis'
-       life_areas text[], created_at, edited_at, deleted_at)
+       life_areas text[],            -- LIFE_AREAS (packages/shared/enums.ts, D46)
+       created_at, edited_at, deleted_at)
 
 checkins (id, user_id, mood smallint, energy smallint null, line text null, created_at)
 
@@ -145,7 +146,7 @@ memory_summary (user_id pk, summary text /* encrypted */,   -- rolling ~250-word
                 version int, updated_at)
 
 -- Outputs
-deliveries (id uuid pk, user_id, body text /* encrypted */, kind text,     -- daily|date_eve|date_day|follow_up|quiet_presence|win_celebration|first|seed|presence|reengage  ("a Rustle"; see 00-glossary)
+deliveries (id uuid pk, user_id, body text /* encrypted */, kind text,     -- DELIVERY_INTENTS (packages/shared/enums.ts, D46): daily|date_eve|date_day|follow_up|quiet_presence|win_celebration|first|seed|reengage  ("a Rustle"; see 00-glossary)
               scheduled_for timestamptz, delivered_at, opened_at,
               reaction text null,                            -- heart|not_quite
               reaction_reason text null,                     -- too_generic|too_positive|wrong_topic|too_long|dont_mention
@@ -191,7 +192,7 @@ safety_events (id, user_id, note_id, level, action_taken, created_at)   -- minim
 
 ### 4.1 Onboarding complete → first note
 1. The app collects answers locally and calls `POST /onboarding/complete` with an **App Attest / Play Integrity** assertion (§8); the endpoint is rate-limited per device and IP.
-2. The server stores the profile, the consent records (`consents`), the first note, key dates (with `remind` set from the opt-in question for grief and medical dates) and a check-in.
+2. The server checks that the required `consents` rows exist (the consent screens write them before onboarding, doc 21 §1.3) and stores the profile, the first note, key dates (with `remind` set from the opt-in question for grief and medical dates) and a check-in.
 3. It runs the safety classifier on the free text. If `crisis` → crisis flow (see risks doc).
 4. The memory extractor runs (synchronously for onboarding) and writes `memory_items` and `memory_summary v1`.
 5. The note composer runs **in real time** with streaming (target < 5 s) and saves `deliveries(kind='first')`.
@@ -206,7 +207,7 @@ safety_events (id, user_id, note_id, level, action_taken, created_at)   -- minim
 
 ### 4.3 Daily notes (the main engine)
 - **Nightly batch per timezone** (for example at 02:00 local): for each user in an active entitlement state (premium, welcome week), build a context (profile, memory summary, relevant memory items, key dates in the next 7 days, recent check-ins, recent notes, the last ~14 notes sent to avoid repetition) and submit *N* note-generation requests to the **Message Batches API** (50% cheaper). Generate **two days ahead**: batches usually finish within an hour but the guarantee is 24 hours. Timezone shards with fewer than 50 users are merged into hourly groups.
-- Door-open users are planned by the same job: one `presence` Rustle a week at their favourite slot, plus key-date notes on the day (doc 09 §2).
+- Door-open users are planned by the same job: one `quiet_presence` Rustle a week at their favourite slot, plus key-date notes on the day (doc 09 §2).
 - Store the results as `deliveries` with `scheduled_for` per the user's slots.
 - **Real-time fallback:** a cron tick 30 minutes before any slot with no delivered note for that user composes one directly (Messages API), then the template.
 - **Delivery (hybrid, opaque payloads, D30):**
@@ -234,7 +235,7 @@ A `pg_cron` job on day 30 and monthly gathers the month's notes, check-ins, memo
    - **iOS:** store the refresh token in the **Keychain** (`expo-secure-store` with `keychainAccessible: AFTER_FIRST_UNLOCK`, service `app.rustle.session`, in the App Group `group.app.rustle` so the widget and the notification extension can read it). Keychain items usually persist after uninstall on iOS, so a reinstall silently restores the session. **This is observed behaviour, not a documented guarantee:** treat it as best-effort, test it on every iOS major version, and nudge account linking early for anyone with more than a few notes. The item is **not** synced to iCloud Keychain in the MVP (`expo-secure-store` has no option for it); a new phone restores through linking or the recovery key.
    - **Android:** use **Google Block Store** (it persists tokens across reinstalls, and across device restores when it confirms end-to-end encryption, which needs a screen lock; we request the cloud copy only in that case). **Not the Android Keystore alone:** Keystore keys are deleted when the app is uninstalled. Expo has no official Block Store module, so a small Expo local module in Kotlin (`app/modules/block-store`) wraps it; keep it updated with Expo SDK upgrades.
    - This covers most reinstall cases **without the user ever creating an account**.
-3. **Gentle "Keep your notes safe" prompt** after value is proven: after the 5th note, on day 3, before the first recap, or when they subscribe. Copy: *"You've shared 12 notes with me. Want to make sure they're never lost, even on a new phone?"* Offer **Sign in with Apple / Google** (one tap) or an email magic link. This **links** to the same account (Supabase `linkIdentity`), with no data migration needed.
+3. **Gentle "Keep your notes safe" prompt** after value is proven: after the 5th note, on day 5, before the first recap, or when they subscribe (whichever comes first; doc 05 §13). Copy: *"You've shared 12 notes with me. Want to make sure they're never lost, even on a new phone?"* Offer **Sign in with Apple / Google** (one tap) or an email magic link. This **links** to the same account (Supabase `linkIdentity`), with no data migration needed.
 4. **At purchase:** RevenueCat uses the Supabase user ID as `appUserID`. Store-level "Restore purchases" works regardless, and we strongly nudge account linking for subscribers.
 5. **Settings always shows the status:** "Your notes are backed up ✓ (Apple ID)" or "⚠️ Not backed up. If you delete the app you may lose your notes. [Protect them]".
 6. **Recovery code option** for privacy-maximalists: a 12-word or QR "Rustle key" they can save, with no email needed.
@@ -250,7 +251,7 @@ Sign in with Apple stays the primary option on iOS: it's the one-tap choice ther
 | New phone, anonymous, no keychain sync / Android without Block Store | Data is lost unless linked. This is why we nudge linking. Show "Restore with recovery key". |
 | User links Apple ID that already has a Rustle account | Ask: "Switch to that account" or "Merge". Merge = keep **both** sets of notes and memory items, re-run the summariser, keep the older subscription, and show a one-time banner in "What Rustle remembers" so the user can tidy duplicates. |
 | Anonymous user subscribes, then reinstalls with no token | RevenueCat restore by store receipt → reattaches the entitlement; data is recovered only if linked. Show a warning at purchase. |
-| Anonymous accounts inactive for 12+ months | Soft email impossible → keep them for 24 months, then delete (disclosed in the privacy policy). |
+| Anonymous, never-linked account with no app open for 24 months | Deleted, disclosed in the privacy policy and on the backup-status screen ("Not backed up. If you don't open Rustle for two years, it will be deleted."). Linked accounts are never auto-deleted (D46). |
 | "Hide My Email" Apple relay | Supported; store the relay address. |
 
 ---
@@ -258,9 +259,9 @@ Sign in with Apple stays the primary option on iOS: it's the one-tap choice ther
 ## 6. Notifications: technical details
 
 - **Payloads are opaque (D30).** The push carries a delivery ID and a generic alert; the **iOS Notification Service Extension** (MVP, same `expo-apple-targets` plugin as the widget) and Android data messages fetch the text on-device. Local backup notifications carry the text fetched directly from our API. Expo's relay, APNs and FCM never see note content. The extension respects the lock-screen privacy setting: with privacy on, it leaves the generic alert.
-- **Lock-screen privacy defaults to on** when the life areas include divorce or separation, abuse, illness, or grief, with a one-line explanation the user can change. It's off by default otherwise.
+- **Lock-screen privacy defaults to on** when the life areas include `divorce`, `health` or `grief`, and switches on when the classifier flags `abuse_disclosure` on any text (D46), with a one-line explanation the user can change. It's off by default otherwise.
 - Mark sensitive pushes with `interruption-level: passive` / `active` appropriately; never `time-sensitive` for marketing.
-- **Rate limits and fatigue:** a max of 5/day, plus quiet hours. If the last 5 are unopened, halve the user's chosen frequency, down to a **floor of one every two days**; any ❤️, note written or check-in **restores the user's setting**. After 14 days inactive, 1 per 3 days; after 30 days, stop and send one gentle "I'm here if you need me." Door-open users are already at one a week and aren't reduced further.
+- **Rate limits and fatigue:** a max of 5/day, plus quiet hours. If the last 5 are unopened, halve the user's chosen frequency, down to a **floor of one every two days**; any ❤️, note written or check-in **restores the user's setting**. After 14 days inactive, 1 per 3 days; after 30 days, stop and send one gentle "I'm here if you need me." Door-open users are already at one a week and aren't halved, but the 30-day rule applies to them too: one "I'm here" Rustle, then the weekly note stops; key dates with `remind` on still fire because the user asked for them; any open, ❤️, note or check-in restores the rhythm (D46).
 - **Timezones and travel:** store the IANA timezone and update it on app open. Schedule in the user's local time; on a timezone change, reschedule.
 - **Widget refresh:** after a delivery, write the note to App Group storage and call `WidgetCenter.reloadTimelines`. On Android, update the Glance state via WorkManager.
 - **Android exact alarms:** use `SCHEDULE_EXACT_ALARM` only if needed. Inexact local notifications with ±10 min are acceptable and avoid permission friction.
@@ -275,11 +276,11 @@ Sign in with Apple stays the primary option on iOS: it's the one-tap choice ther
 | Memory extraction | async | `claude-haiku-4-5` or `claude-sonnet-5`, structured JSON output | Upserts memory items, updates the summary weekly or on big changes |
 | Daily notes | nightly **Batch API** | **Chosen by blind test:** `claude-haiku-4-5` vs `claude-sonnet-5` vs `claude-opus-5-5` (doc 08 §2) | 50% batch discount + prompt caching of the static system prompt |
 | Note replies | async, delayed | Same test as daily notes | Human-like delay hides latency |
-| Monthly recap | async | `claude-sonnet-5` or `claude-opus-5`, higher effort | Once a month, so the cost is small |
+| Monthly recap | async | `claude-sonnet-5` or `claude-opus-5-5`, higher effort | Once a month, so the cost is small |
 | Warm notes to friends | real time | Same test as daily notes | 3 drafts in one call (JSON) |
 | Output guardrail | sync after generation | Rules + `claude-haiku-4-5` | Checks for advice, forbidden topics, length, repetition |
 
-**Provider abstraction:** a thin `LLMClient` interface (`generate(prompt, schema, tier)`) so models can be swapped or A/B-tested per step. Log `model`, `provider`, `prompt_version`, tokens and cost for every generation.
+**Provider abstraction:** a thin `LLMClient` interface (`generate(prompt, schema, tier)`) so models can be swapped or A/B-tested per step. Code and docs name **tiers** (`fast` for safety, extraction and the guardrail; `writer` for anything the user reads; `deep` for the recap); the tier-to-model-ID map lives in one config read by `LLMClient`, and the IDs in it are verified against the console at M1-06 (D46). The names in this table are the current candidates, not literal IDs. Log `model`, `provider`, `prompt_version`, tokens and cost for every generation.
 
 **Failover chain:** Claude on the Anthropic API → **the same Claude model on Amazon Bedrock or Google Vertex AI (EU region)** → static template. The overnight batch rarely needs failover (it can retry before delivery time); failover matters mostly for the real-time paths. A second-vendor model (e.g. gpt-5-nano) may be wired into `LLMClient` but stays **off by default**. Turning it on requires a signed DPA and retention check, a sub-processor disclosure update, and a separate pass of the full eval suite with the same prompts.
 

@@ -21,7 +21,7 @@
 ## 2. Onboarding and the first note (doc 05 §3, doc 07 §4.1, doc 08 §5.10)
 1. Five screens as specified in doc 05 §3; every open question is skippable; the progress line has no step numbers; chips are laid out at French length without truncation; the whole flow takes under 90 s when every open field is skipped.
 2. Screen 2 stores the free text as the first note and the optional date as a `key_dates` row, asking the opt-in question for anniversary and medical kinds (`key_dates.remind`); screen 3 uses the five labelled marks; screen 4 stores tone and avoid list and, for French users, tu/vous; screen 5 stores the optional name and the slots, and `delivery_prefs.per_day` defaults to 2.
-3. `POST /onboarding/complete` requires a valid App Attest / Play Integrity assertion, is rate-limited per device and IP, and stores profile, consents, first note, key dates and check-in in one transaction.
+3. `POST /onboarding/complete` requires a valid App Attest / Play Integrity assertion, is rate-limited per device and IP, verifies that the terms, AI-processing and special-category `consents` rows exist (written by the consent screens, §1.3) and rejects otherwise, then stores profile, first note, key dates and check-in in one transaction.
 4. The first Rustle streams and appears within 5 s in the happy path; at 8 s without a result the personalised template shows, and the regenerated note replaces it silently later; the screen never shows two notes.
 5. The first Rustle references at least one specific thing from screens 1–2 (eval check on the golden personas > 95%); when every open question was skipped it still references the chosen life areas.
 6. Onboarding text classified `crisis` shows the crisis screen before anything else; `elevated` or `crisis` suppresses the paywall for that session and marks the first Rustle as soft.
@@ -63,17 +63,17 @@
 ## 7. Daily Rustles, delivery, seed notes (doc 07 §4.3, §6, doc 08 §3.3)
 1. The nightly job runs per timezone shard (shards under 50 users merged hourly), builds context packs, submits one Message Batch per shard, polls on later cron ticks and ingests results as `deliveries` two days ahead; no invocation waits on a batch.
 2. The planner picks an intent per slot by the rotation rules, at most one explicit older-memory callback a day, about one in five `quiet_presence`, no upbeat intents for 72 h after an `elevated` signal, and honours `rhythm = 'quiet'` (2–3 a week).
-3. Door-open users get one `presence` Rustle a week at their favourite slot plus key-date notes on the day; nothing else is composed for them.
+3. Door-open users get one `quiet_presence` Rustle a week at their favourite slot plus key-date notes on the day; nothing else is composed for them.
 4. A slot with no delivered Rustle 30 minutes before its time gets a real-time composition, then the template; no slot is ever empty and no push is ever blank.
 5. The push carries only `delivery_id` and the generic alert; the iOS Notification Service Extension fetches the text (from the App Group cache or the API) and rewrites the notification, leaving the generic line when lock-screen privacy is on or the fetch fails; Android data messages build the notification in-app.
 6. The app pre-fetches 48 h of Rustles and schedules local notifications; a Rustle delivered by push suppresses its local twin and vice versa (idempotency key); the manual checklist covers timezone change, DST and a phone offline for two days.
 7. After a significant change, today's undelivered local notifications are cancelled and the remaining slots regenerated.
-8. Fatigue rule: five unopened in a row halves frequency to a floor of one every two days; any ❤️, note or check-in restores the setting; 14 days inactive → 1 per 3 days; 30 days → one "I'm here if you need me" and stop.
+8. Fatigue rule: five unopened in a row halves frequency to a floor of one every two days; any ❤️, note or check-in restores the setting; 14 days inactive → 1 per 3 days; 30 days → one "I'm here if you need me" and stop. The 30-day stop applies to door-open users too, while key dates with `remind` on still fire.
 9. The output guardrail rejects banned phrases, advice, avoid-list terms, URLs or numbers outside the crisis flow, wrong language, and > 0.8 similarity to the last 14 Rustles; one regeneration, then the template.
 
 ## 8. Delivery settings, lock-screen privacy, app lock (doc 05 §6–7, doc 07 §6, doc 11 §2)
 1. Slots, quiet hours, "adapt to me" and quiet season are editable by everyone; frequency (1–5) is editable in `premium` and `welcome_week` and shown disabled with one line in `door_open`.
-2. Lock-screen privacy defaults to on when life areas include divorce/separation, abuse, illness or grief, with an explanation and a switch; off otherwise; the extension respects it.
+2. Lock-screen privacy defaults to on when life areas include `divorce`, `health` or `grief`, or when the classifier flags an abuse disclosure on any text, with an explanation and a switch; off otherwise; the extension and the local notifications respect it.
 3. App lock (Face ID / Touch ID / PIN) protects every screen after 30 s in the background and is offered once after onboarding for the same sensitive life areas.
 4. Grief and medical dates with `remind = false` never produce a Rustle; with `remind = true`, the date-day Rustle passes the extra-gentle eval rubric.
 

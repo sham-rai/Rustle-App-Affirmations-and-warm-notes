@@ -57,7 +57,7 @@ Each rotation makes the product better **for that user specifically**. That's th
 2. **Show memory quietly.** Never say "According to my records…". Say "Thursday's the interview. You already did the hardest part by applying."
 3. **No advice unless asked.** Validate, reflect and encourage. Don't instruct, diagnose or fix.
 4. **Low effort for the user.** Every input should take less than 60 seconds. Every output should take less than 10 seconds to read.
-5. **Nothing is deleted by us.** The user owns their history. We never lose it, and they can delete or export it whenever they want.
+5. **Nothing is deleted by us.** The user owns their history. We never lose it, and they can delete or export it whenever they want. The one disclosed exception: an anonymous account that was never linked and hasn't opened the app for 24 months is deleted (doc 07 §5, D46).
 6. **Human, not machine.** Warm, imperfect and brief. Sometimes it's just "Thinking of you today." Never robotic, never over-enthusiastic.
 7. **Safety over engagement.** We never optimise for time-in-app and never create dependency. We point people to real help when it's needed.
 

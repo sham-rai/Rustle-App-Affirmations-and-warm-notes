@@ -35,7 +35,7 @@ MVP success criteria (closed beta → soft launch):
 9. Safety gate + crisis flow + localised resources (US, UK, IE, CA, AU, FR, BE, CH at launch)
 10. **Share card** (Stories/image) with a sensitive-content check
 11. **Send a warm note** (simple: 3 AI drafts → edit → link + web page)
-12. iOS widget (small + medium)
+12. iOS widget (small, medium, lock-screen)
 13. Paywall (RevenueCat): **trial-first with the welcome week**, the hardship offer, **door-open mode** rules in the planner, and **access codes** (`entitlement_grants`) for beta testers and creators (doc 09)
 14. 3 themes (paper, dawn, night)
 15. Settings: account, export (JSON), delete account, consent records, « Résilier mon abonnement », help
@@ -45,7 +45,7 @@ MVP success criteria (closed beta → soft launch):
 
 ### 🟡 V1.1–1.3 (weeks 2–12 after launch)
 - "Look how far you've come" monthly recap (needed by day 30 of the first cohort!)
-- Android widget
+- Android widget and the large iOS widget
 - More themes plus widget styles
 - Tone learning from reactions; adaptive timing
 - Date follow-up notes ("how did it go?")
@@ -128,10 +128,10 @@ Recap (V1.1)                                                   █████�
 | **0. Discovery & concierge test** | 1–3 | 15–20 interviews (18–60, EN + FR), 20–30 people receiving hand-sent notes via WhatsApp/Telegram, final name + trademark search, waitlist landing page |
 | **1. Design** | 2–7 | Brand, design system, key screens in Figma (freelancer + you + Claude) |
 | **2. M1 Foundations** | 5–8 | Expo app skeleton, Supabase project, database schema + RLS, anonymous auth + Keychain persistence, i18n (EN/FR), CI, Sentry, PostHog |
-| **3. M2 Onboarding + first note** | 8–11 | Splash and Rustle screen, 5-screen onboarding, consent + 18+ gate, AI pipeline v1 (Edge Functions), the first personalised note, notification permission |
+| **3. M2 Onboarding + first note** | 8–11 | Splash and Rustle screen, 5-screen onboarding, consent + 18+ gate, AI pipeline v1 (Edge Functions), the first personalised note, notification permission, **the first paywall, welcome week, the entitlement-state reader and code redemption** (moved up from M5 so RevenueCat and sandbox trials are set up early, D46) |
 | **4. M3 Notes, memory, replies** | 11–15 | Notes board, memory extraction + summary, "What Rustle remembers", delayed replies, safety gate + crisis flow |
 | **5. M4 Daily notes, push, widget** | 15–18 | Nightly batch generation two days ahead, opaque push + Notification Service Extension + local backup, delivery settings, iOS widget |
-| **6. M5 Paywall, sharing, warm notes** | 18–20 | RevenueCat trial-first paywall, welcome week + door-open rules in the planner, hardship offer, access codes, share cards, warm-note links + web page with the thank-you tap |
+| **6. M5 Paywall, sharing, warm notes** | 18–20 | The day-7 and contextual paywalls, door-open rules in the planner, hardship offer, share cards, warm-note links + web page with the thank-you tap |
 | **7. M6 Safety, legal, French polish** | 20–22 | Red-team, eval suite, legal docs, French copy review, security review by a freelance dev |
 | **8. Closed beta** | 21–25 | TestFlight + Play testing with 100–200 waitlist users; weekly prompt iterations |
 | **9. Store prep & soft launch** | 25–27 | ASO in EN + FR, soft launch in Canada (EN + FR in one market!) and Belgium or Ireland |

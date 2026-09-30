@@ -59,11 +59,11 @@
 - **Phone off / offline for days:** local pre-scheduled notes cover 48 h. After that, the server doesn't spam a backlog; it resumes fresh.
 - **Duplicate delivery (local + push):** idempotency key per affirmation. The app suppresses local notifications already delivered by push (and vice versa).
 - **A note references a date that got rescheduled:** the user edits the date → notes are regenerated.
-- **Lock-screen exposure** in shared households: "hide text on lock screen" **defaults to on** for divorce or separation, abuse, illness and grief, with a one-line explanation and a switch to reveal; plus an app lock (Face ID / PIN) in the MVP. The people at most risk are the least likely to find a setting.
+- **Lock-screen exposure** in shared households: "hide text on lock screen" **defaults to on** for `divorce`, `health` and `grief`, and switches on when the classifier flags an abuse disclosure in any text, with a one-line explanation and a switch to reveal; plus an app lock (Face ID / PIN) in the MVP. The people at most risk are the least likely to find a setting.
 
 ### Account & payments
 - See the account edge cases in [07-technical-architecture.md §5](07-technical-architecture.md).
-- **Family sharing:** decide whether to enable Family Sharing for the subscription (probably yes for the annual plan; it's good for the gift framing).
+- **Family Sharing:** off at launch (doc 09 §7: intimate notes and shared entitlements don't mix); revisit with gifting.
 - **Refund requests:** handled by the stores; reply templates for support.
 - **The user cancels mid-crisis:** never hold data hostage. Door-open mode continues and all memory remains.
 - **Deceased user / account of a person who died:** support a family request process for deletion.
