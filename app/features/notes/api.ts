@@ -3,7 +3,14 @@ import * as Crypto from 'expo-crypto';
 import { useEffect, useMemo } from 'react';
 import { z } from 'zod';
 
-import { getOutbox, type NoteFields, type NotePatch, type Outbox, type OutboxItem } from '../../lib/outbox';
+import {
+  getOutbox,
+  type NoteFields,
+  type NotePatch,
+  type Outbox,
+  type OutboxEvent,
+  type OutboxItem,
+} from '../../lib/outbox';
 import {
   CHECKIN_LINE_MAX_CHARS,
   NOTE_BODY_MAX_CHARS,
@@ -244,8 +251,44 @@ export function parseNoteRows(data: readonly unknown[]): BoardNote[] {
   return rows;
 }
 
+/**
+ * Keeps the query cache in step with the outbox:
+ * - a note write synced or dropped refetches the notes, so a fetch that started before the write
+ *   and landed after it cannot leave the note out, and a refused write shows the server's truth;
+ * - a synced check-in is no longer pending.
+ */
+export function applyOutboxEvent(queryClient: QueryClient, event: OutboxEvent): void {
+  if (event.type === 'enqueued') return;
+  if (event.kind === 'checkin_create') {
+    if (event.type === 'synced') {
+      queryClient.setQueryData<Checkin[]>(checkinsQueryKey, (previous) =>
+        previous?.map((checkin) => (checkin.id === event.entityId ? { ...checkin, pending: false } : checkin)),
+      );
+    } else {
+      queryClient.setQueryData<Checkin[]>(checkinsQueryKey, (previous) =>
+        previous?.filter((checkin) => checkin.id !== event.entityId),
+      );
+    }
+    return;
+  }
+  void queryClient.invalidateQueries({ queryKey: notesQueryKey });
+}
+
+/** Subscribes a query cache to the outbox events. Returns the unsubscribe function. */
+export function connectOutboxToQueryCache(outbox: Pick<Outbox, 'onEvent'>, queryClient: QueryClient): () => void {
+  return outbox.onEvent((event) => applyOutboxEvent(queryClient, event));
+}
+
+/** One connection per query cache for the life of the app, however many screens use the hooks. */
+const connectedCaches = new WeakSet<QueryClient>();
+
 function useNotesApiDeps(): NotesApiDeps {
   const queryClient = useQueryClient();
+  useEffect(() => {
+    if (connectedCaches.has(queryClient)) return;
+    connectedCaches.add(queryClient);
+    connectOutboxToQueryCache(getOutbox(), queryClient);
+  }, [queryClient]);
   return useMemo(
     () => ({ outbox: getOutbox(), queryClient, newId: () => Crypto.randomUUID(), now: () => new Date() }),
     [queryClient],
@@ -260,18 +303,7 @@ export function useNotes() {
   const deps = useNotesApiDeps();
   const { outbox, queryClient } = deps;
 
-  useEffect(() => {
-    const fullOutbox = getOutbox();
-    const unsubscribe = fullOutbox.subscribe(() => setNotes(deps, (notes) => notes));
-    const unsubscribeEvents = fullOutbox.onEvent((event) => {
-      // A write the server refused is gone from the queue; show the server's truth again.
-      if (event.type === 'dropped') void queryClient.invalidateQueries({ queryKey: notesQueryKey });
-    });
-    return () => {
-      unsubscribe();
-      unsubscribeEvents();
-    };
-  }, [deps, queryClient]);
+  useEffect(() => getOutbox().subscribe(() => setNotes(deps, (notes) => notes)), [deps]);
 
   return useQuery({
     queryKey: notesQueryKey,

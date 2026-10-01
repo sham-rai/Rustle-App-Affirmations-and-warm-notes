@@ -4,6 +4,7 @@ import {
   CheckinLineTooLongError,
   NoteTooLongError,
   checkinsQueryKey,
+  connectOutboxToQueryCache,
   createCheckin,
   createNote,
   deleteNote,
@@ -202,5 +203,29 @@ describe('notes api over the outbox', () => {
     expect(thrown).toMatchObject({ kind: 'checkin_create', paths: ['mood'] });
     expect((thrown as Error).message).not.toContain('private line');
     expect(outbox.items()).toEqual([]);
+  });
+
+  it('a synced check-in is no longer pending', async () => {
+    const { deps, outbox, queryClient, net } = apiDeps(false);
+    connectOutboxToQueryCache(outbox, queryClient);
+    outbox.start();
+    await idle(outbox);
+    const checkin = createCheckin(deps, { mood: 2 });
+    expect(queryClient.getQueryData<Checkin[]>(checkinsQueryKey)?.[0]?.pending).toBe(true);
+    net.set(true);
+    await idle(outbox);
+    expect(queryClient.getQueryData<Checkin[]>(checkinsQueryKey)).toEqual([{ ...checkin, pending: false }]);
+  });
+
+  it('a synced note invalidates the notes query, so an older fetch cannot drop it', async () => {
+    const { deps, outbox, queryClient, net } = apiDeps(false);
+    connectOutboxToQueryCache(outbox, queryClient);
+    outbox.start();
+    await idle(outbox);
+    createNote(deps, { body: 'synced later' });
+    expect(queryClient.getQueryState(notesQueryKey)?.isInvalidated).toBe(false);
+    net.set(true);
+    await idle(outbox);
+    expect(queryClient.getQueryState(notesQueryKey)?.isInvalidated).toBe(true);
   });
 });
