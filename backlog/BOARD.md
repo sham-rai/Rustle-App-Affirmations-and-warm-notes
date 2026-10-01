@@ -16,7 +16,7 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 | M1-08 | Offline outbox for notes and check-ins | in progress | subagent · opus | M1-03 | |
 | M1-09 | Consent screens, 18+ gate, `consents` rows | in progress | subagent · opus | M1-02, M1-04 | |
 | M1-10 | Device checklist v1 and the first status note | ready | lead · fable | all | |
-| M1-11 | Migration 1 follow-ups from the D48 review (warm_notes.body encrypted, read/opened RPC split, catalog tests) | in progress | lead · fable | M1-02 | |
+| M1-11 | Migration 1 follow-ups from the D48 review (warm_notes.body encrypted, read/opened RPC split, catalog tests) | PR open (PO) | lead · fable | M1-02 | `feat/M1-11-migration-1-follow-ups` pushed 2026-10-01; PO opens the PR, CI `db` job runs the 7 pgTAP files |
 
 ## M2 · Splash, Rustle screen, onboarding, first note, Today
 
