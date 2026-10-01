@@ -29,6 +29,7 @@ Tapping done on screen 5 calls /onboarding/complete behind App Attest, runs the 
 - Seed notes are a `seed_notes` job enqueued at the end of the request, one per chosen slot for 48 h; the app polls until they exist
 - The endpoint verifies the three required `consents` rows exist (written by M1-09) and rejects otherwise
 - The permission pre-prompt names the chosen slots' times
+- After an onboarding classified `elevated` or `crisis`, the permission is not asked in that session; it is asked, with the same pre-prompt, at the first app open on day 2 or later (docs/21 §2.9, §9.5, D48)
 
 ## Questions for the PO
 - none yet

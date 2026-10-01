@@ -93,7 +93,7 @@
 
 ## 4. Legal & regulatory checklist
 
-> This isn't legal advice. Budget for a few hours of review by a lawyer who knows privacy and consumer apps (EU plus US) before launch.
+> This isn't legal advice, and **no legal review has happened** (D48). There is no lawyer in the near future: the lead drafts the privacy policy, terms and consent copy from the real data flows (doc 07, §4.2 below), and the founder reads and owns them as privacy officer under Quebec Law 25. The closed beta is invite-only, Canada only, under a short beta agreement. A lawyer who knows privacy and consumer apps (EU plus US) reviews before public launch if budget allows, and may review everything later.
 
 ### 4.1 Positioning
 - **Not a medical device, not therapy.** No claims like "treats anxiety", "reduces depression" or "clinically proven". Use "supportive notes", "feel heard", "self-care companion".
@@ -106,14 +106,14 @@
 - **Data rights:** access/export, rectification (memory editing), erasure (in-app delete), objection, portability. All are built into the product.
 - **US state privacy laws** (CCPA/CPRA, and **Washington My Health My Data Act**, which covers consumer health data, requires consent and has a private right of action). Treat notes as consumer health data.
 - **France (CNIL):** GDPR as applied by the CNIL. Health-related data in a wellness app is sensitive data, so you need explicit consent, a DPIA, and a clear privacy policy **in French**.
-  - **HDS (Hébergeur de Données de Santé) certification:** required by French law (Code de la santé publique, art. L.1111-8) for hosting health data collected during *prevention, diagnosis, care or medico-social follow-up*. A non-medical wellness app is generally **argued to be outside** HDS scope, but the boundary is blurry, and apps often discover they're in scope once they partner with a health organisation. **Ask the lawyer for an opinion.** If you later do B2B deals with French health or insurance partners, plan to use an HDS-certified host (several EU clouds offer it).
+  - **HDS (Hébergeur de Données de Santé) certification:** required by French law (Code de la santé publique, art. L.1111-8) for hosting health data collected during *prevention, diagnosis, care or medico-social follow-up*. A non-medical wellness app is generally **argued to be outside** HDS scope, but the boundary is blurry, and apps often discover they're in scope once they partner with a health organisation. **Ask a lawyer for an opinion when one is engaged** (D48). If you later do B2B deals with French health or insurance partners, plan to use an HDS-certified host (several EU clouds offer it).
 - **Quebec Law 25** (fully in force since 22 Sept 2024): express, granular consent for sensitive information; a **Privacy Impact Assessment** before launching a new system and before **transferring personal information outside Quebec** (our servers are in Canada Central, outside Quebec, and the LLM is US-based, so this applies); a named person responsible for personal information (the founder at first); privacy settings at the highest level by default; transparency about automated processing; the policy published in French.
 - **Canada (federal): PIPEDA** for the rest of Canada.
 - **Switzerland: the revised FADP (nLPD, 2023)**, similar to GDPR. **Belgium:** GDPR via the APD/GBA.
 - **Children:** Rustle is **18+**, which avoids COPPA (US, under 13), GDPR Art. 8 parental consent (**under 15 in France**) and Quebec's under-14 rules. We still need reasonable age measures (§5).
 - **AI training:** don't use user notes to train models. Put this clearly in the privacy policy (it's a big trust point).
 - **Consent records:** every consent is a row in `consents` (kind, version, locale, granted and withdrawn timestamps; doc 07 §3): terms, AI processing (Apple's requirement), special-category data (GDPR Art. 9, Law 25), **quality review** (beta testers who let you read their notes and generated notes for quality, separately and explicitly, through a review tool that logs access, never the database), and **marketing use** (a specific note, specifically). Consent copy is separate from ToS acceptance, and re-consent is required when the purpose changes, for example enabling a second AI vendor.
-- **Sub-processors that can receive note text:** Supabase, Anthropic, Vercel (warm-note pages), and AWS or Google only if failover is enabled. RevenueCat, PostHog, Sentry and Expo's push relay receive no content by design (doc 07 §8). PostHog does receive coarse category values (life areas from the chips, the check-in mark) and no safety levels; the special-category consent names usage analytics with coarse categories, and the lawyer confirms the wording (D46). **No note content in email, ever.** Anthropic's API retention terms are disclosed, and batch inputs are deleted on our side after processing.
+- **Sub-processors that can receive note text:** Supabase, Anthropic, Vercel (warm-note pages), and AWS or Google only if failover is enabled. RevenueCat, PostHog, Sentry and Expo's push relay receive no content by design (doc 07 §8). PostHog receives bare events only: no life areas, no mood or check-in values and nothing about safety (D48, superseding D46's coarse categories); segment analysis by life area or mood runs in Postgres. **No note content in email, ever.** Anthropic's API retention terms are disclosed, and batch inputs are deleted on our side after processing.
 - **Warm-note pages** are `noindex`, unguessable, expiring, revocable and reportable, show none of the sender's other data, and carry no analytics beyond a page-view count.
 
 ### 4.3 EU AI Act
@@ -172,6 +172,6 @@ Use [findahelpline.com](https://findahelpline.com) as the fallback for other cou
 5. Communicate: to affected users honestly; to regulators within 72 h for a GDPR breach (this one is the law, so the out-of-office plan below exists for it).
 6. Post-mortem: add the case to the eval set and red-team list.
 
-In-app: a "Report this note" action on every note and reply → automated response at once, human review within 2 working days.
+In-app: a "Report this note" action on every note and reply → automated response at once, human review within 1 working day.
 
 **Out-of-office plan:** before any break longer than two days, name a backup person (the freelance security reviewer or a trusted peer) with access to the feature flags and the incident runbook, and lower the generation spend limit in the Anthropic console.

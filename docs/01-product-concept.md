@@ -217,7 +217,7 @@ Emojis are minimal and optional (🌿 at most). There's no toxic positivity: pai
 
 - A user says: **"How did it know?"**, which is our north-star feeling.
 - **North-star metric:** *weekly "felt seen" moments.* That's the number of users who react ❤️ to a Rustle or a note back, or write a note or check-in after one arrived, each week. Notification opens are attention, not feeling seen, and are tracked separately (see [12-metrics-and-analytics.md](12-metrics-and-analytics.md)).
-- D30 retention above 20% (the category average is roughly 3–8%).
+- D30 retention of at least 15% (the category average is roughly 3–7%; targets in doc 06 §1).
 - At least 15% of monthly active users send a warm note to a friend in their first month.
 
 ## 8. Honest assessment: does it have a chance?

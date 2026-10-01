@@ -13,10 +13,10 @@ Mobile app (iOS + Android) that writes short, personal support notes from what u
 - **How we work** (roles, tickets, delegation, review ladder, model routing): `docs/22-working-agreement.md` · Tickets and board: `backlog/`
 
 ## Working as the team lead
-- The PO (Daria) approves the ticket split on Monday and merges PRs; the lead never merges to `main`.
+- The PO (Daria) approves the ticket split on Monday and merges PRs; the lead never merges a PR to `main`. The one exception is a board-only commit (D48, below).
 - One ticket per subagent, in its own worktree, with only the ticket, this file and the linked doc sections. At most three subagents at once, on disjoint `owner_files`.
 - The lead writes migrations, RLS, encryption, `LLMClient`, the safety gate, the planner, the paywall and first-note state machines, and the notification extension itself; subagents get screens, wiring, tests, i18n and the web (routing table in docs/22 §6).
-- Every ticket gets a lead review (typecheck, tests, `/code-review`, `/security-review` where it applies, `npm run eval` for prompts) before a PR. Update `backlog/BOARD.md` on every state change.
+- Every ticket gets a lead review (typecheck, tests, `/code-review`, `/security-review` where it applies, `npm run eval` for prompts) before a PR. Update `backlog/BOARD.md` on every state change, as a board-only commit directly on `main` (D48); everything else goes through a PR.
 
 ## Glossary (docs/00). One name per thing, in UI, schema, events and docs
 | Thing | UI | Schema | Events |
@@ -38,12 +38,12 @@ Expo (expo-router, TypeScript strict, TanStack Query, MMKV cache + offline outbo
 - TypeScript strict; no `any`. Run `npm run typecheck && npm test` before saying a task is done.
 - Every new table has RLS in the same migration: `user_id = auth.uid()` where a row belongs to a user; deny-all where it doesn't (`entitlement_grants`), reached only through Edge Functions or `SECURITY DEFINER` RPCs (the `warm_notes` public page). Never disable RLS. Encrypted columns are read and written through the decrypting views.
 - Life areas and delivery intents are the `LIFE_AREAS` and `DELIVERY_INTENTS` enums in `packages/shared/enums.ts`; never redefine them. Length limits per output kind are the table in docs/08 §5.8.
-- Never send note text, replies, memory content or recap text to analytics, logs, Sentry, email or push payloads. Pushes carry a delivery ID and a generic alert; text is fetched on-device.
+- Never send note text, replies, memory content or recap text to analytics, logs, Sentry, email or push payloads. Analytics also never receive life areas, mood or check-in values, or safety signals (no safety level, crisis-screen or resource events, or safety reports); those analyses run in Postgres. Pushes carry a delivery ID and a generic alert; text is fetched on-device.
 - All user-facing strings go through i18n (`en.json` + `fr.json`); never hard-code text. Design at French length. A "vous" user is never "tu"-ed, including in errors.
 - All LLM calls go through `LLMClient` with a versioned prompt from `supabase/functions/_shared/prompts/`. Log model, prompt_version, tokens, cost and `cache_read_input_tokens` for every call.
 - Background jobs are short, idempotent and resumable (docs/07 §2.1); never wait on a Batch inside one invocation. Generate two days ahead.
 - Any change to prompts must pass `npm run eval` (golden persona set) before merge. Avoid-list violations must be 0. Crisis-level text never gets an AI-generated reply (docs/08 §7).
-- Generation endpoints require App Attest / Play Integrity and are rate-limited per user, device and IP.
+- Edge Functions that generate text on demand (`/onboarding/complete`, `/warm-notes`, any future on-demand composer) require App Attest / Play Integrity and are rate-limited per user, device and IP. Board notes are written through PostgREST under RLS, so the reply pipeline cannot carry an assertion and is rate-limited per user server-side.
 - Colours come from tokens (`packages/shared/tokens.ts`), never hex literals in components. Contrast is checked in CI.
 - No paywall, upsell or prompt of any kind on a crisis, elevated or heavy-note screen. "Not now" is the same size as the primary button.
 - Small commits with clear messages; one feature per branch. When a decision changes, update the docs and this file in the same branch and log it in docs/13 §D.

@@ -26,6 +26,7 @@ One wrapper that every AI call goes through: Messages and Batches, cached system
 - Log cache_read_input_tokens from day one; zero on the daily composer means the prefix is being invalidated
 - Handle stop_reason == 'refusal' → template, never an empty result
 - Deno runtime: no Node built-ins; test with Deno's runner or Vitest via npm specifiers, decide and record
+- Failover before launch is templates only (D48): Bedrock/Vertex stays a provider hook in `LLMClient`, not built or tested until beta data shows outages are a problem
 
 ## Questions for the PO
 - none yet

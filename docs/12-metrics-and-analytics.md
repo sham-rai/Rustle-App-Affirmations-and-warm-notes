@@ -27,21 +27,23 @@ Growth
 
 ## 3. Targets (first 6 months)
 
+"Good" is the canonical target set in doc 06 §1 (D48); the other two columns sit around it.
+
 | Metric | Launch target | Good | Great |
 |---|---|---|---|
-| Onboarding completion | 70% | 80% | 88% |
-| First note ❤️ | 60% | 70% | 80% |
-| Notification opt-in | 60% | 70% | 80% |
+| Onboarding completion | 60% | 70% | 88% |
+| First note ❤️ | 50% | 60% | 80% |
+| Notification opt-in | 50% | 60% | 80% |
 | Notification open rate | 10% | 18% | 25% |
-| D1 / D7 / D30 retention | 40 / 25 / 12% | 50 / 32 / 18% | 60 / 40 / 25% |
+| D1 / D7 / D30 retention | 40 / 25 / 12% | 50 / 30 / 15% | 60 / 40 / 25% |
 | "Not quite" rate per Rustle | < 15% | < 10% | < 6% |
-| Trial start at the first paywall (of installs) | 6% | 10% | 14% |
-| Welcome week → trial or paid at day 7 | 8% | 12% | 18% |
-| Trial → paid | 30% | 40% | 55% |
-| Paying by day 14 (of installs) | 4% | 6% | 9% |
+| Trial start at the first paywall (of installs) | 6% | 8% | 14% |
+| Welcome week → trial or paid at day 7 | 8% | 10% | 18% |
+| Trial → paid | 30% | 35% | 55% |
+| Paying by day 14 (of installs) | 4% | 5% | 9% |
 | Door-open → paid within 90 days | 1.5% | 2.5% | 4% |
-| Monthly paid churn | 10% | 7% | 5% |
-| Warm notes sent / MAU / month | 0.1 | 0.3 | 0.6 |
+| Monthly paid churn | 10% | 6% | 4% |
+| MAU who send a warm note in their first month (doc 01 §7) | 8% | 15% | 25% |
 | AI cost / paying user / month | < $1.5 | < $1.0 | < $0.6 |
 
 Benchmarks from research: typical wellness apps D30 ≈ 3–7%, best health apps 15–25%; RevenueCat H&F median trial → paid ≈ 40%.
@@ -52,47 +54,47 @@ Benchmarks from research: typical wellness apps D30 ≈ 3–7%, best health apps
 
 ## 4. Event tracking plan (PostHog)
 
-> **Never send note content, reply text or memory content to analytics.** Only metadata.
+> **Never send note content, reply text or memory content to analytics, and never life areas, mood or check-in values, or anything about safety (D48).** Only bare events and the pre-approved metadata below.
 
 | Event | Key properties |
 |---|---|
 | `app_opened` | source (push/widget/icon/deeplink) |
 | `onboarding_step_viewed` / `_completed` | step, skipped (bool), chars_written (bucketed) |
-| `onboarding_completed` | life_areas, has_key_date, tone, duration_s, variant |
+| `onboarding_completed` | has_key_date, tone, duration_s, variant |
 | `consent_granted` / `_withdrawn` | kind, version |
 | `delivery_first_shown` | latency_ms, fallback_used |
 | `delivery_reaction` | kind (a `DELIVERY_INTENTS` value, packages/shared), reaction (heart/not_quite), reason |
 | `delivery_opened` | slot, intent, minutes_after_delivery, via (push/local/widget) |
 | `notification_permission` | granted |
-| `board_note_created` / `_edited` / `_deleted` | length_bucket, wants_reply, mood, offline (bool) |
+| `board_note_created` / `_edited` / `_deleted` | length_bucket, wants_reply, offline (bool) |
 | `reply_viewed` | delay_min |
 | `reply_reaction` | reaction, reason |
-| `checkin_completed` | mood |
+| `checkin_completed` | (none) |
 | `memory_viewed` / `memory_item_deleted` / `memory_item_edited` / `memory_paused` | count |
-| `situation_resolved` | life_area (no content) |
+| `situation_resolved` | (none) |
 | `season_changed` | from, to (active/quiet), initiated_by (planner/user) |
-| `share_card_exported` | destination, theme, sensitive_warning_shown |
-| `warm_note_created` / `_sent` / `_opened` (web) / `_thanked` / `_install` | situation |
+| `share_card_exported` | destination, theme |
+| `sensitive_warning_shown` | (none; it carries no content) |
+| `warm_note_created` / `_sent` / `_opened` (web) / `_thanked` / `_install` | (none) |
 | `paywall_viewed` | placement (first/day7/contextual_*), variant |
 | `welcome_week_started` / `_ended` | ended_with (trial/paid/door_open) |
 | `trial_started` / `subscription_started` / `_cancelled` | product, price, placement, offer (none/hardship/student) |
 | `entitlement_granted` | kind (beta/creator/student/gift/partner/hardship/support) |
 | `account_linked` | provider, notes_count_at_link |
-| `crisis_screen_shown` / `resource_tapped` | country |
-| `note_reported` | kind (safety/quality/other) |
+| `note_reported` | kind (quality/other; safety reports are never sent, they are counted in Postgres) |
 | `widget_added` | size |
 | `recap_viewed` / `recap_shared` / `recap_helped` | cards_viewed · answer (a_lot/a_little/not_really) |
 
-PostHog receives coarse category values (`life_areas` from the chips, the 1–5 check-in mark, the warm-note situation chip) and no safety levels; the special-category consent names usage analytics with coarse categories, pending the lawyer's confirmation (doc 11 §4.2, D46). Names follow the glossary prefixes (doc 00): `delivery_*` for what Rustle sends, `board_note_*` for what the user writes, `reply_*` for notes back, `warm_note_*` for notes to friends.
+PostHog receives bare events only (D48): no note text, no life areas, no mood or check-in values, no warm-note situation, and nothing about safety (no safety level, no crisis-screen or resource events, no safety reports). This supersedes D46's "coarse life areas pending the lawyer". Segment analysis by life area or mood is done in Postgres, not PostHog. Names follow the glossary prefixes (doc 00): `delivery_*` for what Rustle sends, `board_note_*` for what the user writes, `reply_*` for notes back, `warm_note_*` for notes to friends.
 
 ## 5. Dashboards
 
 1. **Activation funnel:** install → consent → onboarding steps → first note → ❤️ → notification permission → paywall → trial.
-2. **Retention cohorts:** weekly, split by life area, tone, notes/day, widget yes/no, wrote-a-note-in-week-1 yes/no.
+2. **Retention cohorts:** weekly, split by tone, notes/day, widget yes/no, wrote-a-note-in-week-1 yes/no in PostHog; splits by life area or mood are computed in Postgres (D48).
 3. **Quality:** ❤️ rate by prompt version and model; "not quite" reasons; guardrail rewrite rate; fallback rate.
 4. **Monetization:** RevenueCat charts plus paywall variant comparisons.
 5. **Cost:** LLM spend per day, per step, per user; tokens per note; cache hit rate.
-6. **Safety:** counts of elevated/crisis events read from `safety_events` in the database (safety levels are never sent to PostHog, D46), weekly manual review of a sample, time to resolve reports.
+6. **Safety:** counts of elevated/crisis events read from `safety_events` in the database (nothing about safety is sent to PostHog, D48), weekly manual review of a sample, time to resolve reports.
 
 ## 6. Experiments backlog (first ones)
 

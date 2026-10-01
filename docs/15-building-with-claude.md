@@ -56,7 +56,7 @@ Use these as starting prompts for Claude Code sessions.
 | 3 | Anonymous auth + persistence | "Implement anonymous sign-in with the session persisted in iOS Keychain / Android Block Store (not Keystore alone) so it survives reinstall (docs/07 §5). Add the 'backed up / not backed up' status in settings, and the offline outbox for notes and check-ins (docs/07 §4.2)." |
 | 4 | Consent + 18+ gate | "Build the welcome, age gate (18+) and consent screens (terms, AI processing, special-category data) that write `consents` rows with version and locale (docs/05 §2–3, docs/11 §4), EN + FR." |
 | 5 | Splash, Rustle screen, onboarding UI | "Build the company splash, the Rustle screen with the Skia tree (docs/05 §2, the style board as reference) and the 5-screen onboarding from docs/05 §3, storing answers locally until completion." |
-| 6 | LLM client + prompts | "Create supabase/functions/_shared/llm/LLMClient.ts (Claude API, structured outputs, prompt caching, retries, cost logging, failover to the same model on Bedrock/Vertex, then template) and load versioned prompts from supabase/functions/_shared/prompts. Add the Rustle voice system prompt from docs/08 §5.1." |
+| 6 | LLM client + prompts | "Create supabase/functions/_shared/llm/LLMClient.ts (Claude API, structured outputs, prompt caching, retries, cost logging, failover to a template, with a Bedrock/Vertex provider hook left unbuilt (D48)) and load versioned prompts from supabase/functions/_shared/prompts. Add the Rustle voice system prompt from docs/08 §5.1." |
 | 7 | Safety gate | "Implement the keyword pre-filter + classifier from docs/08 §5.7 and the crisis screen with localised resources (docs/11). Add tests with sample texts in EN and FR." |
 | 8 | First note | "Implement /onboarding/complete behind App Attest / Play Integrity: save, safety check, memory extraction, first-note generation with streaming and an 8-second template fallback, then the 48 h of seed notes (docs/07 §4.1)." |
 | 9 | Eval harness | "Build `npm run eval`: 40 golden personas (docs/08 §8), rule checks, and an LLM-as-judge rubric, output as a report." |
@@ -76,7 +76,7 @@ Use these as starting prompts for Claude Code sessions.
 |---|---|
 | **Brand & visual design** | Taste and originality matter a lot in this category. Claude can prototype, but a designer makes it distinctive. |
 | **Security review** | A second pair of expert human eyes on auth, RLS and encryption before real users' intimate notes go in. |
-| **Legal documents** | A lawyer must review the privacy policy, terms and consent flows (GDPR, Quebec Law 25, US state laws). |
+| **Legal documents** | No lawyer for now (D48): Claude drafts the privacy policy, terms and consent flows from the real data flows and the founder reads and owns them as privacy officer; a lawyer reviews them (GDPR, Quebec Law 25, US state laws) before public launch if budget allows. |
 | **Crisis copy & safety taxonomy** | This should be reviewed by a clinical professional. |
 | **French quality** | A native speaker (ideally both France and Quebec) should check that the notes sound like a real person, not a translation. |
 | **Real users** | Interviews, the concierge test and beta feedback. Nothing replaces talking to people. |

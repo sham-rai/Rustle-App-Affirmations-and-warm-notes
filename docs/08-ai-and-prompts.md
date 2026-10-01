@@ -45,7 +45,7 @@ As of September 2026, Claude pricing per 1M tokens (input/output) is roughly: **
 
 > **How the model for user-facing writing is chosen:** run the golden persona set (§8) through all three models with the same prompts, then have the founders and testers **blind-rate** the notes, and in beta compare the ❤️-rate. **Pick the cheapest model that users can't tell apart from the best one.** Rough cost per premium user per month (§9): Haiku 4.5 ≈ $0.3, Sonnet 5 ≈ $0.5, Opus 5.5 ≈ $0.8. All are affordable at $7.99; the choice is about quality, not survival. Until the test is done, the prompt lab and prototype use Sonnet 5.
 
-**Failover (all steps):** Claude on the Anthropic API → the **same Claude model on Amazon Bedrock or Google Vertex AI (Canada or EU region)** → template note. Using the same model keeps the voice and safety behaviour identical, so prompts only need tuning once. A second-vendor model (e.g. OpenAI gpt-5-nano) can be added behind `LLMClient` but is **off by default**; see doc 07 §7 for what turning it on requires.
+**Failover (all steps, D48):** before launch, Claude on the Anthropic API → template note. The **same Claude model on Amazon Bedrock or Google Vertex AI (Canada or EU region)** stays a hook in `LLMClient`, not built or tested until beta data shows outages are a problem; using the same model would keep the voice and safety behaviour identical, so prompts would only need tuning once. A second-vendor model (e.g. OpenAI gpt-5-nano) can be added behind `LLMClient` but is **off by default**; see doc 07 §7 for what turning it on requires.
 
 **Implementation notes (Claude API):**
 - Use **prompt caching** on the static system prompt and style guide. They're identical for all users and make up about 60% of input tokens. At M1-06, check the minimum cacheable prefix length per candidate model and keep the shared prompt above it for all three (the example pairs in §4 do most of that work); batch requests don't guarantee cache hits, so measure the hit rate on staging before trusting §9 (D46).
@@ -72,6 +72,7 @@ As of September 2026, Claude pricing per 1M tokens (input/output) is roughly: **
 | `helps` | "Walks with her dog Biscuit help" | Grounding details |
 | `avoid` | "Don't mention the ex by name" | **Hard constraint** |
 | `goal` | "Wants to finish the thesis by December" | Encouragement |
+| `fact` | "Has two kids" | A stable fact about their life, for texture |
 | `identity` | "Nurse; loves gardening; mum of two" | Anchoring, texture |
 
 Each item carries: `salience` (0–1), `status` (active/resolved/archived), `first_seen`, `last_seen`, `times_mentioned`, and source note IDs.
@@ -86,7 +87,7 @@ Each item carries: `salience` (0–1), `status` (active/resolved/archived), `fir
 
 ```
 CONTEXT PACK (≈1.5–3k tokens)
-- profile: name, language, tone prefs, AVOID list (hard), pronouns if given
+- profile: name, note_language (the setting, D48), French register (tu|vous), tone prefs, AVOID list (hard), pronouns if given
 - now_summary: rolling ~250-word memory summary
 - upcoming_dates: next 7 days (+ days until)
 - recent_signals: last 3 check-ins (mood trend), last 5 notes (short, most recent first)
@@ -122,7 +123,7 @@ CONTEXT PACK (≈1.5–3k tokens)
 
 ## 5. Prompt templates
 
-> These are production-ready starting points. `{{…}}` marks variables. Keep them in English even for non-English users. The model writes the note in `{{language}}`.
+> These are production-ready starting points. `{{…}}` marks variables. Keep them in English even for non-English users. The model writes the note in `{{language}}`, which is `profiles.note_language` (a setting that defaults to the UI language, en or fr, read by every composer, D48), and, in French, in `{{register}}` (`tu` or `vous`), passed as an input to every prompt.
 
 ### 5.1 Shared system prompt: "Rustle voice" (cached)
 
@@ -164,7 +165,8 @@ STYLE
   notification body (the limits per output kind are in §5.8).
 - Plain, warm, human language. Short words. No clichés, no hashtags, no quotes from famous
   people. At most one emoji, and only if their tone preference allows; 🌿 is the house emoji.
-- Write in the person's language and match their register (formal/informal, French "tu/vous" per their setting, Quebec vs France vocabulary, etc.).
+- Write in {{language}} and match their register: in French, always {{register}} ("tu" or "vous",
+  never mixed); Quebec vs France vocabulary as their own words show it.
 - Use their name sometimes, not always (roughly 1 in 3 notes).
 - Vary openings; never start two recent notes the same way. Don't start with "Hey" or
   "Remember".
@@ -192,6 +194,7 @@ Delivery intent: {{delivery_intent}}. Focus: {{focus}}.
 
 <person>
 language: {{language}}
+register: {{register}}                  # tu|vous, French only
 tone_preferences: {{tone}}              # e.g. gentle, a little humour
 avoid (HARD RULES, never mention): {{avoid_list}}
 </person>
@@ -248,7 +251,7 @@ caring friend would leave a reply on a sticky note: 1–3 sentences, max 240 cha
 {{now_summary}}
 Relevant memories: {{top_memories}}
 Avoid (hard rules): {{avoid_list}}
-Language/tone: {{language}}, {{tone}}
+Language/register/tone: {{language}}, {{register}}, {{tone}}
 Safety level from classifier: {{safety_level}}   # none|low|elevated
 </context>
 
@@ -289,7 +292,7 @@ infer diagnoses; never store third parties' sensitive details beyond what's need
 Return JSON matching schema:
 {
   "operations": [
-    {"op": "add", "kind": "situation|person|date|feeling|struggle|win|helps|avoid|goal|identity",
+    {"op": "add", "kind": "fact|situation|person|date|feeling|struggle|win|helps|avoid|goal|identity",   // fact: a stable fact about the person's life, e.g. "has two kids"
      "content": "short third-person statement", "salience": 0.0-1.0,
      "date": "YYYY-MM-DD|null"},
     {"op": "update", "id": "...", "content": "...", "salience": 0.0-1.0},
@@ -319,7 +322,8 @@ Write in English, third person, plain prose.
 <task>
 Create a gentle monthly reflection for {{name}} covering {{period}}. It will be shown as
 6–8 story cards. Use their OWN words where possible (short quotes from their notes).
-Tone: proud of them, soft, honest — never "you're fixed now", never comparing to others,
+Tone: warm about what they did, in the I voice, never praise from above (never "I'm proud
+of you"), soft, honest — never "you're fixed now", never comparing to others,
 never implying they should be further along. Skip anything in <hidden_topics>.
 </task>
 <first_words_this_period>{{earliest_note_excerpt}}</first_words_this_period>
@@ -394,9 +398,10 @@ Same as the daily composer, but with `delivery_intent = first`. Extra rule: *"Th
 
 ## 6. Personalisation beyond content
 
-- **Timing learning:** track open times per slot. If evening notes get opened and mornings don't, shift and suggest it ("I noticed evenings suit you. Move notes to 20:30?").
-- **Tone learning:** ❤️/"not quite" reactions feed a per-user style note ("prefers shorter, less emoji, likes humour") appended to the context pack. "Not quite" opens a one-tap reason: *too generic · too positive · wrong topic · too long · don't mention this* (the last one adds to the avoid list).
-- **Language:** detect it per note, so bilingual users can mix languages. Notes follow the language of recent notes unless it's set explicitly.
+- **Timing learning (V1.1, D48):** track open times per slot. If evening notes get opened and mornings don't, shift and suggest it ("I noticed evenings suit you. Move notes to 20:30?").
+- **Explicit instructions (MVP):** "Not quite" opens a one-tap reason: *too generic · too positive · wrong topic · too long · don't mention this*; "don't mention this" adds to the avoid list at once.
+- **Tone learning (V1.1, D48):** ❤️/"not quite" reactions feed a per-user style note (`profiles.style_notes`: "prefers shorter, less emoji, likes humour") appended to the context pack. In the MVP the reasons are stored but nothing is learned from them.
+- **Language (D48):** Rustles are written in `profiles.note_language`, a setting that defaults to the UI language (en or fr); the user changes it in Settings, and every composer reads it.
 
 ## 7. Crisis & sensitive-topic handling (AI side)
 

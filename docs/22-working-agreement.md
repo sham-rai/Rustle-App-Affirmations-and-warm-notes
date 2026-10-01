@@ -1,7 +1,7 @@
 # 22 · Working Agreement: How We Build Rustle
 
-> **Roles:** Daria is the **product manager and product owner**: she sets goals, decides priorities and trade-offs, accepts work, tests on devices and merges. Claude (Fable 5.1, in Claude Code) is the **team lead**: it plans, splits work into tickets, delegates tickets to subagents, reviews every line before it reaches a pull request, integrates, and keeps the docs true. Subagents are **engineers on one ticket each**. Paid humans (designer, security reviewer, lawyer, clinical advisor, French reviewer) come in at the points doc 06 §3 names.
-> **One rule above the others:** nothing reaches `main` that the PO hasn't accepted and the lead hasn't run.
+> **Roles:** Daria is the **product manager and product owner**: she sets goals, decides priorities and trade-offs, accepts work, tests on devices and merges. Claude (Fable 5.1, in Claude Code) is the **team lead**: it plans, splits work into tickets, delegates tickets to subagents, reviews every line before it reaches a pull request, integrates, and keeps the docs true. Subagents are **engineers on one ticket each**. Paid humans (designer, security reviewer, clinical advisor, French reviewer, and a lawyer before public launch if budget allows) come in at the points doc 06 §3 names.
+> **One rule above the others:** nothing reaches `main` that the PO hasn't accepted and the lead hasn't run. The one exception is a board-only commit to `backlog/BOARD.md` (§5, D48).
 
 ---
 
@@ -50,11 +50,11 @@ One milestone per Claude Code session start; a fresh session per week at least. 
 4. **PO acceptance:** run it on the iPhone (and Android where the ticket says), walk the listed steps, spot-check the criteria, read the "decide" items. Merge, or send back with one comment per problem.
 5. **`main` is always green.** Squash merge; the commit message carries the ticket ID.
 
-**Human reviews on the calendar:** one-hour RLS and Edge Function auth check before the first real beta tester; full security review before beta and before launch; legal review before beta; clinical review of crisis copy before beta; French review weekly in beta (doc 06 §3, doc 17 §6.4).
+**Human reviews on the calendar:** one-hour RLS and Edge Function auth check before the first real beta tester; full security review before beta and before launch; legal review before public launch if budget allows, with no legal review before then (the lead drafts the privacy policy, terms and consent copy from the real data flows, the founder reads and owns them as privacy officer, and the closed beta is invite-only, Canada only, under a short beta agreement, D48); clinical review of crisis copy before beta; French review weekly in beta (doc 06 §3, doc 17 §6.4).
 
 ## 5. How the PO monitors without reading code
 
-- **`backlog/BOARD.md`:** every ticket, its state, owner, model and PR link. The lead updates it with every state change.
+- **`backlog/BOARD.md`:** every ticket, its state, owner, model and PR link. The lead updates it with every state change, committing board-only changes directly on `main` so the board never lags behind a branch; everything else still goes through a PR (D48).
 - **Pull requests:** the review queue. Each PR is one ticket, testable in under fifteen minutes.
 - **`docs/status/<week>.md`:** written by the lead every Friday: done, in progress, blocked, decisions needed, spend (LLM API and Claude usage), next week's candidates. Two hundred words, never more.
 - **On demand:** "status" at any time makes the lead read the board and the git log and answer in five lines.

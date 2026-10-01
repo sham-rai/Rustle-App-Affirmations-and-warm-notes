@@ -34,7 +34,7 @@
 | Code | Run the app, test on your phone, report what you see, review plans | Writes ~90% of the code, tests, migrations, native widget code | A senior dev reviews security twice |
 | Testing | Manual device tests, beta management, reading feedback | Writes automated tests, test plans, bug fixes | Beta testers (unpaid) |
 | French | Decide tone ("tu"), approve copy | Writes French UI copy and prompts | A native reviewer (France + Quebec) |
-| Legal & stores | Sign up, submit, answer App Review | Drafts policies, store listings, consent screens | Lawyer reviews the documents |
+| Legal & stores | Sign up, submit, answer App Review; read and own the policies as privacy officer (Quebec Law 25) | Drafts policies, store listings, consent screens from the real data flows | No lawyer for now (D48); one before public launch if budget allows |
 | Marketing | Be the face, post content, talk to creators | Drafts posts, scripts, press kit, ASO keywords in EN/FR | Optional: video editor |
 
 **Your weekly time budget (full-time):** ~50% building with Claude, 20% testing on devices, 15% users and research, 15% marketing and admin. The weekly cadence, the ticket format and who reviews what are in [22-working-agreement.md](22-working-agreement.md).
@@ -89,7 +89,7 @@ Plan (Claude, plan mode) → you approve → build (Claude) → run on phone (yo
 | Day | Session goal | You check |
 |---|---|---|
 | 1 | Set up the repo from doc 07 §11, add `CLAUDE.md`, install tools, first Expo development build on your iPhone | The app opens on your phone |
-| 2 | Supabase dev project, first migration (users, profiles, notes) with RLS, local Supabase running | Tables exist; RLS tests pass |
+| 2 | Supabase dev project, migration 1 (every table in doc 07 §3, doc 21 §0.3) with RLS, local Supabase running | Tables exist; RLS tests pass |
 | 3 | Anonymous sign-in plus Keychain persistence; delete and reinstall the app | **Same account after reinstall** |
 | 4 | i18n (EN/FR), theme tokens from the design, navigation skeleton (Today / Notes / You) | Switch the phone to French and everything is French |
 | 5 | CI (typecheck, tests, lint), Sentry, PostHog with a first event | A failing test blocks the merge |
@@ -147,10 +147,10 @@ After M1, continue with M2 → M6 in order (doc 06 §4). **Never start the next 
 ### 6.4 Beta plan (weeks 21–25)
 0. **Before the first real tester:** a one-hour review of the RLS policies and the Edge Function auth checks by the freelance security reviewer (cheaper than the full review, and it catches the mistakes that matter most).
 1. **Week 21:** internal beta with 10–15 friends (TestFlight internal + Play internal testing), on `beta` access codes.
-2. **Weeks 22–25:** closed beta with 100–200 waitlist users, EN + FR, across ages. Testers who agree to let you read their notes and generated notes for quality give a **separate, explicit consent** (`consents.kind = 'quality_review'`); reading happens through a review tool that logs access, never in the database.
+2. **Weeks 22–25:** closed beta with 100–200 waitlist users, EN + FR, across ages; invite-only, Canada only, under a short beta agreement (D48). Testers who agree to let you read their notes and generated notes for quality give a **separate, explicit consent** (`consents.kind = 'quality_review'`); reading happens through a review tool that logs access, never in the database.
 3. **In-app:** "Report this note" and a feedback button; ❤️/"not quite" on every note.
 4. **Weekly:** read feedback, fix the top 3 issues, ship a new build, and interview 3–5 testers.
-5. **Beta exit criteria:** crash-free sessions ≥ 99.5%, first-note ❤️ ≥ 60%, D7 ≥ 30%, no open safety issues, security review passed, legal documents reviewed.
+5. **Beta exit criteria:** crash-free sessions ≥ 99.5%, first-note ❤️ ≥ 60%, D7 ≥ 30%, no open safety issues, security review passed, legal documents drafted by the lead and read and owned by the founder (no legal review has happened; a lawyer before public launch if budget allows, D48).
 
 ### 6.5 Soft launch (weeks 25–27)
 Canada only (EN + FR in one market). Watch the funnel (doc 12): onboarding completion, notification opt-in, trial start at the first paywall, welcome week → paid at day 7, trial → paid, and the hardship-offer share (doc 09 §8). Fix, then launch everywhere.

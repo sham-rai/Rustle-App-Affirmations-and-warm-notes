@@ -7,7 +7,7 @@
 1. Monorepo with `/app`, `/supabase`, `/packages/shared`, `/evals`, `/web`, `/scripts`, `CLAUDE.md`; `npm run typecheck`, `npm run lint` and `npm test` run in CI on every PR and a failure blocks merge; `npm run eval` runs in CI on every PR that changes `supabase/functions/_shared/prompts/**` or `evals/**` (it calls the Claude API) and a failure blocks merge.
 2. Three Supabase projects (dev, staging, prod) with matching EAS profiles; secrets only in EAS/Supabase secrets; a pre-commit secret scanner is installed.
 3. Migration 1 creates every table in doc 07 §3 with RLS in the same migration; tables without a `user_id` (`entitlement_grants`) get deny-all policies and are reached only through Edge Functions or `SECURITY DEFINER` RPCs (doc 07 §8); pgTAP tests prove user A cannot read, update or delete user B's rows in any table.
-4. Encrypted columns (`notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards`) are unreadable in a raw `SELECT` and readable and writable through the decrypting views under RLS (`security_invoker` views with `INSTEAD OF` triggers, doc 07 §8); the key lives in Vault and pgTAP proves `authenticated` cannot read it.
+4. Encrypted columns (`notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards`, and `warm_notes.body` through a follow-up migration before M5 writes any warm note, D48) are unreadable in a raw `SELECT` and readable and writable through the decrypting views under RLS (`security_invoker` views with `INSTEAD OF` triggers, doc 07 §8); the key lives in Vault and pgTAP proves `authenticated` cannot read it.
 5. Sentry receives a test crash with request bodies scrubbed; PostHog receives `app_opened` with no content properties; both run in their EU/Canada-appropriate regions.
 6. `packages/shared` exports zod schemas, the glossary constants and the design tokens, and is imported by both the Expo app and a Deno Edge Function without a build step.
 
@@ -27,14 +27,14 @@
 6. Onboarding text classified `crisis` shows the crisis screen before anything else; `elevated` or `crisis` suppresses the paywall for that session and marks the first Rustle as soft.
 7. The call enqueues a job that writes 48 h of seed Rustles (`kind='seed'`, one per chosen slot); the app polls until they exist, pre-fetches them and schedules them locally.
 8. ❤️ / "Not quite" on the first Rustle writes `deliveries.reaction` and, for "Not quite", a one-tap `reaction_reason`.
-9. The notification permission prompt appears only after the first Rustle and its reaction, with the pre-prompt line naming the chosen slots' times.
+9. The notification permission prompt appears only after the first Rustle and its reaction, with the pre-prompt line naming the chosen slots' times. After an onboarding classified `elevated` or `crisis` it is not asked in that session; it is asked, with the same pre-prompt, at the first app open on day 2 or later (D48).
 
 ## 3. Anonymous account, persistence, linking (doc 07 §5)
 1. First launch creates an anonymous Supabase user with no form; all data syncs server-side from the first write.
 2. iOS: delete and reinstall on the same iPhone restores the same account; Android: the same on two different phones via Block Store; both are in the manual checklist for every OS major version.
 3. "Keep your notes safe" appears after the fifth note, on day 5, before the first recap, or at purchase, whichever first, at most once per day, never in a heavy-note session; Sign in with Apple, Google and email magic link all link to the existing user (`linkIdentity`) with no data copy.
 4. Settings always shows backup status ("Backed up ✓ (Apple ID)" or the warning with "Protect them"); a recovery key can be generated and used to restore an anonymous account on a new device.
-5. Linking an identity that already owns another Rustle account offers "Switch" or "Merge"; merge keeps both note sets, re-runs the summariser, keeps the older subscription, and shows the tidy-up banner in "What Rustle remembers".
+5. Linking an identity that already owns another Rustle account offers "Switch" only; "Merge" is V1.1 (D48, doc 07 §5).
 
 ## 4. Today (doc 05 §4, doc 20 §7.1)
 1. The latest Rustle is the hero card in the user's theme with ❤️, share and "Send a warm note"; "Not quite" is one tap deeper except on the first Rustle.
@@ -72,7 +72,7 @@
 9. The output guardrail rejects banned phrases, advice, avoid-list terms, URLs or numbers outside the crisis flow, wrong language, and > 0.8 similarity to the last 14 Rustles; one regeneration, then the template.
 
 ## 8. Delivery settings, lock-screen privacy, app lock (doc 05 §6–7, doc 07 §6, doc 11 §2)
-1. Slots, quiet hours, "adapt to me" and quiet season are editable by everyone; the slot picker (one Rustle per slot, up to four) is editable in `premium` and `welcome_week` and shown disabled with one line in `door_open`.
+1. Slots, quiet hours and quiet season are editable by everyone; the slot picker (one Rustle per slot, up to four) is editable in `premium` and `welcome_week` and shown disabled with one line in `door_open`.
 2. Lock-screen privacy defaults to on when life areas include `divorce`, `health` or `grief`, or when the classifier flags an abuse disclosure on any text, with an explanation and a switch; off otherwise; the extension and the local notifications respect it.
 3. App lock (Face ID / Touch ID / PIN) protects every screen after 30 s in the background and is offered once after onboarding for the same sensitive life areas.
 4. Grief and medical dates with `remind = false` never produce a Rustle; with `remind = true`, the date-day Rustle passes the extra-gentle eval rubric.
@@ -82,8 +82,8 @@
 2. `crisis` shows the human-written crisis screen (doc 20 §7.9) with the user's country lines from doc 11 §5b, composes nothing, pauses upbeat Rustles for 24 h (extendable), replaces them with presence copy, and logs a minimal `safety_event`.
 3. Crisis resources are one tap away on the welcome screen, in Help and on the warm-note web page; every number is verified at build and every six months (a dated checklist in the repo).
 4. `minor_indicators` triggers a gentle age re-confirmation; a second signal limits the account and shows youth resources.
-5. No paywall, backup prompt or permission prompt appears in a session that began from a `crisis` or `elevated` text.
-6. "Report this note" flags the delivery or reply, triggers the automated first response (pause generation for safety reports, email the founder) and is reviewed within 2 working days.
+5. No paywall, backup prompt or permission prompt appears in a session that began from a `crisis` or `elevated` text; after such an onboarding the notification permission is asked at the first app open on day 2 or later (§2.9).
+6. "Report this note" flags the delivery or reply, triggers the automated first response (pause generation for safety reports, email the founder) and is reviewed within 1 working day.
 
 ## 10. Share cards (doc 05 §9, doc 20 §9.1)
 1. 9:16 and 1:1 cards render on-device from the Rustle text and theme, with the watermark in `door_open` and `welcome_week`, optional in `premium`.
@@ -93,7 +93,7 @@
 ## 11. Send a warm note (doc 05 §10, doc 07 §4.5, doc 08 §5.9)
 1. Situation chips + optional line → three drafts in one call → edit → re-moderation of the edited text (a failed check does not publish) → card style → system share sheet with link and image.
 2. `POST /warm-notes` requires App Attest / Play Integrity and is rate-limited; unlimited for every entitlement state within the abuse limits.
-3. The web page renders server-side with an OG image, is `noindex`, unguessable, expires, can be revoked, shows a "Need support now?" link, has a report link, and carries only a page-view counter.
+3. The web page renders server-side with an OG image, is `noindex`, unguessable, expires 30 days after creation, can be revoked, shows a "Need support now?" link, has a report link, and carries only a page-view counter.
 4. The recipient's one-tap ❤️ sets `thanked_at` once and sends the sender a single push; there is no text reply.
 5. The install CTA deep-links with referral attribution and logs `warm_note_install`.
 
@@ -131,8 +131,9 @@
 ## 17. Languages: English and French (doc 05 §3, doc 20 §10, doc 14 §6)
 1. Every string lives in `en.json` / `fr.json`; a lint rule flags hard-coded text, "!" in UI strings and the word "affirmation".
 2. French defaults to "tu", switchable to "vous" in onboarding for French users and in Settings; a "vous" user never sees "tu" anywhere, including errors and legal screens (a snapshot test over all strings).
-3. Rustles, notes back, recaps and warm notes are written in the user's language, detected per note; fr-CA vocabulary is preferred when the user's own words show it; the golden set includes Quebec and France personas.
+3. Rustles, notes back, recaps and warm notes are written in the `note_language` setting (criterion 5); fr-CA vocabulary is preferred when the user's own words show it; the golden set includes Quebec and France personas.
 4. Layouts at French length and at the largest accessibility text size show no truncation in the eight key screens.
+5. Settings has "Notes written in" (English or French), stored as `profiles.note_language` and defaulting to the UI language; every composer reads it, and every prompt receives the French register (tu or vous) as an input (D48).
 
 ## 18. Landing page, privacy and terms (doc 07 §1, doc 11 §4.5, doc 10 §3.3b)
 1. rustle.app serves the landing page, privacy policy, terms, subscription terms (including the welcome week, hardship offer and codes), the sub-processor list and the cookie notice, in EN and FR.
