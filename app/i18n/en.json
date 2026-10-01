@@ -37,7 +37,6 @@
       "later": "If you change your mind, open Rustle again and start from the beginning.",
       "title": "That’s all right"
     },
-    "leaving": "One moment.",
     "saveError": "Something went wrong. Nothing was saved; try again in a moment.",
     "specialCategory": {
       "body": "What you share may touch on your health, your relationships or your beliefs. Rustle keeps it encrypted, uses it only to write your notes, and never sells it. You can see what Rustle remembers, change it, export it or delete everything at any time.",
@@ -60,7 +59,6 @@
     "crisis": "Not a medical service. If you’re in crisis, <link>get help now</link>.",
     "haveAccount": "I already have an account",
     "headline": "Notes that know what you’re going through.",
-    "notMedical": "Not a medical service.",
     "sub": "Tell me a little. I’ll remember, and leave you something kind when you need it.",
     "wordmark": "rustle",
     "wordmarkLabel": "Rustle"

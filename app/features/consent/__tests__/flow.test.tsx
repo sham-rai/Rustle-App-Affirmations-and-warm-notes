@@ -123,6 +123,16 @@ describe('the age gate (docs/21 §1.2)', () => {
     expect(screen.queryByText(/18/)).toBeNull();
   });
 
+  it('pads a one-digit day or month when the field is left', async () => {
+    await renderAt('/age');
+    fireEvent.changeText(screen.getByTestId('age-day'), '7');
+    fireEvent(screen.getByTestId('age-day'), 'blur');
+    fireEvent.changeText(screen.getByTestId('age-month'), '3');
+    fireEvent(screen.getByTestId('age-month'), 'blur');
+    expect(screen.getByTestId('age-day').props.value).toBe('07');
+    expect(screen.getByTestId('age-month').props.value).toBe('03');
+  });
+
   it('refuses an impossible date without writing anything', async () => {
     await renderAt('/age');
     await enterBirthDate('31', '2', '1990');

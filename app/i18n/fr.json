@@ -48,7 +48,6 @@
       "later_vous": "Si vous changez d’idée, ouvrez Rustle de nouveau et recommencez depuis le début.",
       "title": "C’est correct"
     },
-    "leaving": "Un instant.",
     "saveError": "Quelque chose n’a pas fonctionné. Rien n’a été enregistré ; réessaie dans un instant.",
     "saveError_vous": "Quelque chose n’a pas fonctionné. Rien n’a été enregistré ; réessayez dans un instant.",
     "specialCategory": {
@@ -80,7 +79,6 @@
     "haveAccount": "J’ai déjà un compte",
     "headline": "Des notes qui savent ce que tu traverses.",
     "headline_vous": "Des notes qui savent ce que vous traversez.",
-    "notMedical": "Ce n’est pas un service médical.",
     "sub": "Raconte-moi un peu. Je m’en souviendrai, et je te laisserai un mot réconfortant quand tu en auras besoin.",
     "sub_vous": "Racontez-moi un peu. Je m’en souviendrai, et je vous laisserai un mot réconfortant quand vous en aurez besoin.",
     "wordmark": "rustle",

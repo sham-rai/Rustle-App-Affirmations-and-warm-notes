@@ -43,6 +43,8 @@ export function AgeGate() {
   const inputs = useRef<Partial<Record<Field, TextInput | null>>>({});
   // What the server already holds, read once on arrival (the gate asks once: D46, M1-09).
   const known = useRef<OnboardingState | null>(null);
+  const entryRef = useRef(entry);
+  entryRef.current = entry;
 
   // A blocked install that opens Rustle again has a fresh anonymous account from the launch; it
   // goes too, so a minor never keeps an account (D46).
@@ -83,6 +85,22 @@ export function AgeGate() {
     setEntry((current) => ({ ...current, [field]: digits }));
     if (phase === 'invalid' || phase === 'error') setPhase('ask');
     if (digits.length === length && next) inputs.current[next]?.focus();
+  };
+
+  // The iOS number pad has no return key: when a field is left, focus moves on to the next empty
+  // one, unless the user already tapped into another field themselves.
+  const advanceFrom = (next: Field | undefined) => {
+    if (!next) return;
+    setTimeout(() => {
+      if (TextInput.State.currentlyFocusedInput() != null) return;
+      if (entryRef.current[next] === '') inputs.current[next]?.focus();
+    }, 0);
+  };
+
+  // "7" reads as "07" once the field is left (day and month only).
+  const padField = (field: Field) => {
+    if (field === 'year') return;
+    setEntry((current) => (current[field].length === 1 ? { ...current, [field]: `0${current[field]}` } : current));
   };
 
   const onContinue = async () => {
@@ -173,8 +191,8 @@ export function AgeGate() {
               autoCorrect={false}
               importantForAutofill="no"
               editable={!busy}
-              returnKeyType={field === 'year' ? 'done' : 'next'}
-              onSubmitEditing={field === 'year' && complete ? () => void onContinue() : undefined}
+              onEndEditing={() => advanceFrom(FIELDS[index + 1]?.field)}
+              onBlur={() => padField(field)}
               style={[
                 textStyleFor('body'),
                 styles.input,
