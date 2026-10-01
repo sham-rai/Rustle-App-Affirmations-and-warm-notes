@@ -1,4 +1,26 @@
 {
+  "age": {
+    "blocked": {
+      "body": "Merci de me l’avoir dit. Rustle est conçu pour les personnes de 18 ans et plus, alors on s’arrête ici. Rien de ce que tu as saisi n’a été conservé.",
+      "body_vous": "Merci de me l’avoir dit. Rustle est conçu pour les personnes de 18 ans et plus, alors on s’arrête ici. Rien de ce que vous avez saisi n’a été conservé.",
+      "resourcesIntro": "Si c’est lourd en ce moment, ces lignes sont là pour les jeunes. Elles sont gratuites et confidentielles.",
+      "title": "Rustle est réservé aux adultes"
+    },
+    "continue": "Continuer",
+    "day": "Jour",
+    "dayHint": "JJ",
+    "invalid": "Cette date ne semble pas correcte. Vérifie le jour, le mois et l’année.",
+    "invalid_vous": "Cette date ne semble pas correcte. Vérifiez le jour, le mois et l’année.",
+    "month": "Mois",
+    "monthHint": "MM",
+    "saveError": "Quelque chose n’a pas fonctionné. Rien n’a été enregistré ; réessaie dans un instant.",
+    "saveError_vous": "Quelque chose n’a pas fonctionné. Rien n’a été enregistré ; réessayez dans un instant.",
+    "sub": "Rustle pose la question à tout le monde, une seule fois. La date elle-même n’est jamais conservée.",
+    "title": "Quelle est ta date de naissance ?",
+    "title_vous": "Quelle est votre date de naissance ?",
+    "year": "Année",
+    "yearHint": "AAAA"
+  },
   "common": {
     "back": "Retour",
     "begin": "Commencer",
@@ -6,6 +28,48 @@
     "errorSaved": "Quelque chose n’a pas fonctionné. Ta note est enregistrée ; je réessaie dans un instant.",
     "errorSaved_vous": "Quelque chose n’a pas fonctionné. Votre note est enregistrée ; je réessaie dans un instant.",
     "notNow": "Pas maintenant"
+  },
+  "consent": {
+    "agree": "J’accepte",
+    "ai": {
+      "body": "Pour écrire tes notes, ce que tu partages est envoyé à notre partenaire d’IA, Anthropic, aux États-Unis. Ces mots servent seulement à écrire tes notes, jamais à entraîner des modèles d’IA.",
+      "body_vous": "Pour écrire vos notes, ce que vous partagez est envoyé à notre partenaire d’IA, Anthropic, aux États-Unis. Ces mots servent seulement à écrire vos notes, jamais à entraîner des modèles d’IA.",
+      "title": "Tes mots et notre partenaire d’IA",
+      "title_vous": "Vos mots et notre partenaire d’IA"
+    },
+    "declineNote": "Si tu préfères ne pas accepter, Rustle s’arrête ici et ne garde rien.",
+    "declineNote_vous": "Si vous préférez ne pas accepter, Rustle s’arrête ici et ne garde rien.",
+    "goodbye": {
+      "body": "Rustle a besoin de ton accord pour écrire tes notes, alors on s’arrête ici. Rien de ce que tu as partagé n’a été conservé, et ce compte a été supprimé.",
+      "body_vous": "Rustle a besoin de votre accord pour écrire vos notes, alors on s’arrête ici. Rien de ce que vous avez partagé n’a été conservé, et ce compte a été supprimé.",
+      "later": "Si tu changes d’idée, ouvre Rustle de nouveau et recommence depuis le début.",
+      "later_vous": "Si vous changez d’idée, ouvrez Rustle de nouveau et recommencez depuis le début.",
+      "title": "C’est correct"
+    },
+    "leaving": "Un instant.",
+    "saveError": "Quelque chose n’a pas fonctionné. Rien n’a été enregistré ; réessaie dans un instant.",
+    "saveError_vous": "Quelque chose n’a pas fonctionné. Rien n’a été enregistré ; réessayez dans un instant.",
+    "specialCategory": {
+      "body": "Ce que tu partages peut toucher ta santé, tes relations ou tes croyances. Rustle le garde chiffré, s’en sert seulement pour écrire tes notes et ne le vend jamais. Tu peux voir ce dont Rustle se souvient, le modifier, l’exporter ou tout supprimer en tout temps.",
+      "body_vous": "Ce que vous partagez peut toucher votre santé, vos relations ou vos croyances. Rustle le garde chiffré, s’en sert seulement pour écrire vos notes et ne le vend jamais. Vous pouvez voir ce dont Rustle se souvient, le modifier, l’exporter ou tout supprimer en tout temps.",
+      "title": "Les choses personnelles que tu partages",
+      "title_vous": "Les choses personnelles que vous partagez"
+    },
+    "step": "Étape {{step}} sur {{total}}",
+    "terms": {
+      "body": "Rustle écrit de courtes notes de soutien à partir de ce que tu partages. Ce n’est ni une thérapie, ni un service médical, ni une ligne de crise. En acceptant, tu acceptes les conditions d’utilisation et la politique de confidentialité de Rustle.",
+      "body_vous": "Rustle écrit de courtes notes de soutien à partir de ce que vous partagez. Ce n’est ni une thérapie, ni un service médical, ni une ligne de crise. En acceptant, vous acceptez les conditions d’utilisation et la politique de confidentialité de Rustle.",
+      "title": "Avant de commencer"
+    }
+  },
+  "help": {
+    "elsewhere": "Ailleurs ? <link>findahelpline.com</link> répertorie les lignes près de chez toi.",
+    "elsewhere_vous": "Ailleurs ? <link>findahelpline.com</link> répertorie les lignes près de chez vous.",
+    "emergency": "En cas de danger immédiat, appelle le 911 (Canada, États-Unis), le 112 (Europe), le 999 (Royaume-Uni), le 000 (Australie) ou le 15 (France).",
+    "emergency_vous": "En cas de danger immédiat, appelez le 911 (Canada, États-Unis), le 112 (Europe), le 999 (Royaume-Uni), le 000 (Australie) ou le 15 (France).",
+    "intro": "Si tu es en crise ou si tu penses à mettre fin à tes jours, contacte une de ces lignes maintenant. Tu n’as pas à traverser ça seul ou seule.",
+    "intro_vous": "Si vous êtes en crise ou si vous pensez à mettre fin à vos jours, contactez une de ces lignes maintenant. Vous n’avez pas à traverser ça seul ou seule.",
+    "title": "Trouver de l’aide maintenant"
   },
   "intro": {
     "aiDisclosure": "Rustle est une IA, et non un thérapeute ni un service de crise.",
@@ -20,6 +84,34 @@
     "sub_vous": "Racontez-moi un peu. Je m’en souviendrai, et je vous laisserai un mot réconfortant quand vous en aurez besoin.",
     "wordmark": "rustle",
     "wordmarkLabel": "Rustle"
+  },
+  "resources": {
+    "call": "Appeler {{name}} au {{number}}",
+    "countries": {
+      "AU": "Australie",
+      "BE": "Belgique",
+      "CA": "Canada",
+      "CH": "Suisse",
+      "FR": "France",
+      "GB": "Royaume-Uni",
+      "IE": "Irlande",
+      "US": "États-Unis"
+    },
+    "lines": {
+      "belgiumCps": "Centre de Prévention du Suicide",
+      "canada988": "Ligne d’aide en cas de crise de suicide, appel ou texto",
+      "childline": "Childline",
+      "filSanteJeunes": "Fil Santé Jeunes",
+      "france3114": "3114, numéro national de prévention du suicide",
+      "kidsHelpPhone": "Jeunesse, J’écoute",
+      "lifeline988": "988 Suicide & Crisis Lifeline, appel ou texto",
+      "lifelineAu": "Lifeline",
+      "mainTendue": "La Main Tendue",
+      "quebecAppelle": "Ligne québécoise de prévention du suicide",
+      "samaritans": "Samaritans",
+      "sosAmitie": "SOS Amitié, écoute et clavardage"
+    },
+    "open": "Ouvrir {{name}}"
   },
   "settings": {
     "backup": {
