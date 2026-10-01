@@ -9,7 +9,7 @@ import { getSupabase } from '../../lib/supabase';
 import { Button } from './Button';
 import { leaveOnboarding } from './leave';
 import { OnboardingPage } from './OnboardingPage';
-import { CONSENT_KINDS, recordConsent, type ConsentKind } from './records';
+import { recordConsent, type ConsentKind } from './records';
 
 const COPY = {
   terms: 'terms',
@@ -49,7 +49,6 @@ export function ConsentStep({ kind, next }: { kind: ConsentKind; next: Href }) {
 
   return (
     <OnboardingPage
-      eyebrow={t('consent.step', { step: CONSENT_KINDS.indexOf(kind) + 1, total: CONSENT_KINDS.length })}
       title={t(`consent.${copy}.title`)}
       actions={
         <View testID={`consent-${kind}`} style={{ gap: space[2] }}>

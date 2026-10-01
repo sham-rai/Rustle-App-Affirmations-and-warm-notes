@@ -55,7 +55,6 @@
       "title": "Les choses personnelles que tu partages",
       "title_vous": "Les choses personnelles que vous partagez"
     },
-    "step": "Étape {{step}} sur {{total}}",
     "terms": {
       "body": "Rustle écrit de courtes notes de soutien à partir de ce que tu partages. Ce n’est ni une thérapie, ni un service médical, ni une ligne de crise. En acceptant, tu acceptes les conditions d’utilisation et la politique de confidentialité de Rustle.",
       "body_vous": "Rustle écrit de courtes notes de soutien à partir de ce que vous partagez. Ce n’est ni une thérapie, ni un service médical, ni une ligne de crise. En acceptant, vous acceptez les conditions d’utilisation et la politique de confidentialité de Rustle.",

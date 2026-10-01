@@ -89,7 +89,8 @@ describe('the age gate in French', () => {
 describe('the consents in French', () => {
   it('records the fr-CA copy locale and shows the AI disclosure', async () => {
     const router = await renderAt('/consent/terms');
-    expect(screen.getByText('Étape 1 sur 3')).toBeOnTheScreen();
+    // No step numbers in onboarding (docs/05 §3).
+    expect(screen.queryByText(/Étape/)).toBeNull();
     expect(screen.getByText('Rustle est une IA, et non un thérapeute ni un service de crise.')).toBeOnTheScreen();
     await act(async () => {
       fireEvent.press(screen.getByRole('button', { name: 'J’accepte' }));

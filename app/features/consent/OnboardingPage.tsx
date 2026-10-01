@@ -9,8 +9,6 @@ import { useReduceMotion } from '../intro/useReduceMotion';
 
 export type OnboardingPageProps = {
   title: string;
-  /** A small line above the title, such as "Step 1 of 3". */
-  eyebrow?: string;
   children?: ReactNode;
   /** Buttons, pinned under the content in the scroll so long French text never hides them. */
   actions?: ReactNode;
@@ -21,7 +19,7 @@ export type OnboardingPageProps = {
 };
 
 /** The page shared by the age gate, the consent steps and the help pages. */
-export function OnboardingPage({ title, eyebrow, children, actions, footer, tree = true }: OnboardingPageProps) {
+export function OnboardingPage({ title, children, actions, footer, tree = true }: OnboardingPageProps) {
   const { colors, space } = useTheme();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
@@ -41,16 +39,9 @@ export function OnboardingPage({ title, eyebrow, children, actions, footer, tree
         ]}
       >
         <View style={[styles.column, { gap: space[5] }]}>
-          <View style={{ gap: space[2] }}>
-            {eyebrow ? (
-              <Text variant="label" color="ink2">
-                {eyebrow}
-              </Text>
-            ) : null}
-            <Text variant="title" accessibilityRole="header">
-              {title}
-            </Text>
-          </View>
+          <Text variant="title" accessibilityRole="header">
+            {title}
+          </Text>
           {children}
         </View>
         <View style={[styles.column, styles.bottom, { gap: space[3], paddingTop: space[5] }]}>

@@ -186,7 +186,8 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
   it('each writes its own row with kind, version and locale, then Today', async () => {
     const router = await renderAt('/consent/terms');
 
-    expect(screen.getByText('Step 1 of 3')).toBeOnTheScreen();
+    // No step numbers in onboarding (docs/05 §3).
+    expect(screen.queryByText(/Step \d/)).toBeNull();
     expect(screen.getByText('Rustle is AI, not a therapist or a crisis service.')).toBeOnTheScreen();
     await press('I agree');
     expect(router.getPathname()).toBe('/consent/ai');
@@ -196,7 +197,7 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
     await press('I agree');
     expect(router.getPathname()).toBe('/consent/special-category');
 
-    expect(screen.getByText('Step 3 of 3')).toBeOnTheScreen();
+    expect(screen.getByText('The personal things you share')).toBeOnTheScreen();
     await press('I agree');
     expect(router.getPathname()).toBe('/today');
 
