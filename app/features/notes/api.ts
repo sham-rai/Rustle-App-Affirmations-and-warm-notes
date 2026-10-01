@@ -8,6 +8,7 @@ import {
   CHECKIN_LINE_MAX_CHARS,
   NOTE_BODY_MAX_CHARS,
   charLength,
+  withoutUndefined,
 } from '../../lib/outbox/types';
 import { getSupabase } from '../../lib/supabase';
 
@@ -167,7 +168,8 @@ export function createNote(deps: NotesApiDeps, input: NewNoteInput): BoardNote {
  * Last write wins: folded into a queued create or edit of the same note, else queued on its own.
  * Throws `NoteTooLongError` before anything is queued.
  */
-export function editNote(deps: NotesApiDeps, id: string, patch: NotePatch): void {
+export function editNote(deps: NotesApiDeps, id: string, input: NotePatch): void {
+  const patch = withoutUndefined(input);
   if (patch.body !== undefined) assertNoteBody(patch.body);
   const edited_at = deps.now().toISOString();
   deps.outbox.enqueue({ kind: 'note_update', noteId: id, patch, edited_at });

@@ -1,5 +1,13 @@
 import type { KeyValueStore } from '../secure-storage/session-cache';
-import { entityIdOf, outboxItemSchema, type OutboxItem, type OutboxOp } from './types';
+import {
+  InvalidOutboxOpError,
+  entityIdOf,
+  outboxItemSchema,
+  outboxOpSchema,
+  withoutUndefined,
+  type OutboxItem,
+  type OutboxOp,
+} from './types';
 
 /** MMKV key of the persisted queue. Bump the suffix if the item shape changes incompatibly. */
 export const OUTBOX_STORAGE_KEY = 'outbox.v1';
@@ -11,6 +19,7 @@ export interface OutboxQueue {
    * Queues a write, folding it into an earlier one where it can (see the coalescing rules below).
    * Returns the item that now carries the write, or null when nothing needs to reach the server
    * (a delete of a note that never left the device, or an edit to a note already being deleted).
+   * Throws `InvalidOutboxOpError` for a write that does not match the schema.
    */
   enqueue(op: OutboxOp, opts: { createdOffline: boolean }): OutboxItem | null;
   /** The oldest item that may be sent now: not in flight, not in backoff, nothing earlier pending for its row. */
@@ -133,7 +142,18 @@ export function createOutboxQueue(deps: Deps): OutboxQueue {
   return {
     items: () => items,
 
-    enqueue(op, { createdOffline }) {
+    enqueue(input, { createdOffline }) {
+      // Everything queued must read back after a restart: validate, and drop `undefined` keys
+      // (a form spreading an unset field) so they never overwrite a required field when folded.
+      const parsed = outboxOpSchema.safeParse(input);
+      if (!parsed.success) {
+        throw new InvalidOutboxOpError(
+          String((input as { kind?: unknown }).kind),
+          parsed.error.issues.map((issue) => issue.path.join('.')),
+        );
+      }
+      const op: OutboxOp =
+        parsed.data.kind === 'note_update' ? { ...parsed.data, patch: withoutUndefined(parsed.data.patch) } : parsed.data;
       if (op.kind === 'note_update') {
         const last = lastFor(op.noteId);
         if (last?.op.kind === 'note_delete') return null;

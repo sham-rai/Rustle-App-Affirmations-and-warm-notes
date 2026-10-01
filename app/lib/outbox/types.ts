@@ -95,6 +95,23 @@ export function entityIdOf(op: OutboxOp): string {
   return op.kind === 'checkin_create' ? op.checkinId : op.noteId;
 }
 
+/** Drops keys whose value is `undefined`: JSON would drop them on the way to disk anyway. */
+export function withoutUndefined<T extends object>(value: T): T {
+  return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined)) as T;
+}
+
+/** A write refused before queueing because it does not match the outbox schema. Field paths only, no values. */
+export class InvalidOutboxOpError extends Error {
+  readonly kind: string;
+  readonly paths: string[];
+  constructor(kind: string, paths: string[]) {
+    super(`invalid_outbox_op:${kind}:${paths.join(',')}`);
+    this.name = 'InvalidOutboxOpError';
+    this.kind = kind;
+    this.paths = paths;
+  }
+}
+
 /** Why a queued write was given up on. Carries ids and codes only, never note or check-in text. */
 export interface OutboxError {
   kind: OutboxOpKind;

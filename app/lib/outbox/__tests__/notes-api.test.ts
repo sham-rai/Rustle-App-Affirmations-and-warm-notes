@@ -15,7 +15,7 @@ import {
   type Checkin,
   type NotesApiDeps,
 } from '../../../features/notes/api';
-import { CHECKIN_LINE_MAX_CHARS, NOTE_BODY_MAX_CHARS, type NoteFields } from '../types';
+import { CHECKIN_LINE_MAX_CHARS, InvalidOutboxOpError, NOTE_BODY_MAX_CHARS, type NoteFields } from '../types';
 import { idle, setup, testUuid } from './harness';
 
 function apiDeps(online: boolean) {
@@ -170,5 +170,37 @@ describe('notes api over the outbox', () => {
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith('notes_unreadable_rows:1');
     warn.mockRestore();
+  });
+
+  it('an edit with undefined fields survives a restart and keeps the required fields', () => {
+    const { deps, outbox, store, server } = apiDeps(false);
+    const note = createNote(deps, { body: 'first', mood: 3 });
+    editNote(deps, note.id, { body: 'x', mood: undefined });
+
+    const restarted = setup({ online: false, store, server });
+    const items = restarted.outbox.items();
+    expect(items).toHaveLength(1);
+    const op = items[0]?.op;
+    expect(op?.kind === 'note_create' ? op.fields : null).toMatchObject({ body: 'x', mood: 3 });
+
+    // The same holds when an op with undefined values reaches the queue directly.
+    outbox.enqueue({ kind: 'note_update', noteId: note.id, patch: { pinned: true, mood: undefined }, edited_at: '2026-10-01T13:00:00.000Z' });
+    const again = setup({ online: false, store, server }).outbox.items();
+    expect(again).toHaveLength(1);
+    expect(again[0]?.op.kind === 'note_create' ? again[0].op.fields : null).toMatchObject({ mood: 3, pinned: true });
+  });
+
+  it('refuses an op that does not match the schema, with field paths only', () => {
+    const { outbox } = apiDeps(false);
+    let thrown: unknown;
+    try {
+      outbox.enqueue({ kind: 'checkin_create', checkinId: testUuid(), mood: 9, energy: null, line: 'private line', created_at: 'x' });
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(InvalidOutboxOpError);
+    expect(thrown).toMatchObject({ kind: 'checkin_create', paths: ['mood'] });
+    expect((thrown as Error).message).not.toContain('private line');
+    expect(outbox.items()).toEqual([]);
   });
 });
