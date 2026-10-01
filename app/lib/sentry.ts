@@ -14,7 +14,8 @@ const REDACTED = '[scrubbed]';
 
 function scrubValue(value: unknown, depth: number): unknown {
   if (typeof value === 'string') return value.length > MAX_STRING_LENGTH ? REDACTED : value;
-  if (depth > 8 || value === null || typeof value !== 'object') return value;
+  if (value === null || typeof value !== 'object') return value;
+  if (depth > 8) return REDACTED;
   if (Array.isArray(value)) return value.map((v) => scrubValue(v, depth + 1));
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value)) out[k] = scrubValue(v, depth + 1);
@@ -46,6 +47,12 @@ export function scrubEvent<T extends Sentry.ErrorEvent>(event: T): T {
   return scrubbed;
 }
 
+/**
+ * Native events are not scrubbed by this file: native crash reports and the native SDK's own
+ * automatic breadcrumbs (view and lifecycle) never pass through beforeSend. SDK 7.x has no option
+ * to turn native auto-breadcrumbs off, so the rule is: no screen may ever put note text in an
+ * accessibility label or a screen name. Native crash handling stays on.
+ */
 const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
 
 export function initSentry(): void {

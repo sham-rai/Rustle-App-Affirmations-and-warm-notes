@@ -25,4 +25,11 @@ describe('scrubEvent', () => {
     expect(out.extra).toBeUndefined();
     expect(json).not.toContain('my day sux');
   });
+
+  it('redacts, rather than keeps, a string nested past the depth limit', () => {
+    let deep: unknown = 'short deep note';
+    for (let i = 0; i < 10; i++) deep = { n: deep };
+    const out = scrubEvent({ contexts: { deep } } as unknown as ErrorEvent);
+    expect(JSON.stringify(out)).not.toContain('short deep note');
+  });
 });
