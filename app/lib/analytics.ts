@@ -96,10 +96,6 @@ function getClient(): PostHog | null {
   return client;
 }
 
-export function isAnalyticsEnabled(): boolean {
-  return Boolean(key);
-}
-
 /** Ties events to the anonymous Supabase user id, nothing else. */
 export function identifyAnalyticsUser(anonymousUserId: string): void {
   getClient()?.identify(anonymousUserId);

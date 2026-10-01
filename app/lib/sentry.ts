@@ -48,10 +48,6 @@ export function scrubEvent<T extends Sentry.ErrorEvent>(event: T): T {
 
 const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
 
-export function isSentryEnabled(): boolean {
-  return Boolean(dsn);
-}
-
 export function initSentry(): void {
   if (!dsn) return;
   Sentry.init({
