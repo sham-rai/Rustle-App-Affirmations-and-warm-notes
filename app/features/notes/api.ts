@@ -4,7 +4,12 @@ import { useEffect, useMemo } from 'react';
 import { z } from 'zod';
 
 import { getOutbox, type NoteFields, type NotePatch, type Outbox, type OutboxItem } from '../../lib/outbox';
-import { noteFieldsSchema } from '../../lib/outbox/types';
+import {
+  CHECKIN_LINE_MAX_CHARS,
+  NOTE_BODY_MAX_CHARS,
+  charLength,
+  noteFieldsSchema,
+} from '../../lib/outbox/types';
 import { getSupabase } from '../../lib/supabase';
 
 // Notes and check-ins are written only through the offline outbox (docs/07 §4.2 step 1): the
@@ -53,6 +58,35 @@ export interface NotesApiDeps {
   now: () => Date;
 }
 
+/** A note body over the limit. Carries the length and the limit, never the text. */
+export class NoteTooLongError extends Error {
+  readonly length: number;
+  readonly limit: number;
+  constructor(length: number, limit: number = NOTE_BODY_MAX_CHARS) {
+    super(`note_too_long:${length}>${limit}`);
+    this.name = 'NoteTooLongError';
+    this.length = length;
+    this.limit = limit;
+  }
+}
+
+/** A check-in line over the limit. Carries the length and the limit, never the text. */
+export class CheckinLineTooLongError extends Error {
+  readonly length: number;
+  readonly limit: number;
+  constructor(length: number, limit: number = CHECKIN_LINE_MAX_CHARS) {
+    super(`checkin_line_too_long:${length}>${limit}`);
+    this.name = 'CheckinLineTooLongError';
+    this.length = length;
+    this.limit = limit;
+  }
+}
+
+function assertNoteBody(body: string): void {
+  const length = charLength(body);
+  if (length > NOTE_BODY_MAX_CHARS) throw new NoteTooLongError(length);
+}
+
 const byNewest = (a: { created_at: string }, b: { created_at: string }) => b.created_at.localeCompare(a.created_at);
 
 /**
@@ -90,7 +124,9 @@ function setNotes(deps: NotesApiDeps, update: (notes: BoardNote[]) => BoardNote[
   );
 }
 
+/** Throws `NoteTooLongError` before anything is queued or shown. */
 export function createNote(deps: NotesApiDeps, input: NewNoteInput): BoardNote {
+  assertNoteBody(input.body);
   const id = deps.newId();
   const fields: NoteFields = {
     body: input.body,
@@ -109,8 +145,12 @@ export function createNote(deps: NotesApiDeps, input: NewNoteInput): BoardNote {
   return note;
 }
 
-/** Last write wins: folded into a queued create or edit of the same note, else queued on its own. */
+/**
+ * Last write wins: folded into a queued create or edit of the same note, else queued on its own.
+ * Throws `NoteTooLongError` before anything is queued.
+ */
 export function editNote(deps: NotesApiDeps, id: string, patch: NotePatch): void {
+  if (patch.body !== undefined) assertNoteBody(patch.body);
   const edited_at = deps.now().toISOString();
   deps.outbox.enqueue({ kind: 'note_update', noteId: id, patch, edited_at });
   setNotes(deps, (notes) => notes.map((note) => (note.id === id ? { ...note, ...patch, edited_at } : note)));
@@ -122,7 +162,12 @@ export function deleteNote(deps: NotesApiDeps, id: string): void {
   setNotes(deps, (notes) => notes.filter((note) => note.id !== id));
 }
 
+/** Throws `CheckinLineTooLongError` before anything is queued or shown. */
 export function createCheckin(deps: NotesApiDeps, input: NewCheckinInput): Checkin {
+  if (input.line) {
+    const length = charLength(input.line);
+    if (length > CHECKIN_LINE_MAX_CHARS) throw new CheckinLineTooLongError(length);
+  }
   const checkin: Checkin = {
     id: deps.newId(),
     mood: input.mood,

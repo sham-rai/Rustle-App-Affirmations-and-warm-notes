@@ -7,12 +7,26 @@ import { z } from 'zod';
 /** `notes.source` values (migration 1 check constraint). */
 export const NOTE_SOURCES = ['onboarding', 'board', 'checkin', 'voice'] as const;
 
+/**
+ * Longest note body, in characters (code points, as Postgres `char_length` counts). Over it the
+ * server rejects the write as a permanent 23514 and the note would vanish after showing, so the
+ * app refuses it before queueing. Moves to `NOTE_BODY_MAX_CHARS` in packages/shared/limits.ts with M1-11.
+ */
+export const NOTE_BODY_MAX_CHARS = 2000;
+/** Longest check-in line (`checkins.line` check constraint). Moves to packages/shared/limits.ts with M1-11. */
+export const CHECKIN_LINE_MAX_CHARS = 280;
+
+/** Length in code points, so an emoji counts once, as it does for the database. */
+export function charLength(text: string): number {
+  return Array.from(text).length;
+}
+
 const mood = z.number().int().min(1).max(5);
 const isoTime = z.string().min(1);
 
 /** The note columns a user may write (migration 1 column grants on the `notes` view). */
 export const noteFieldsSchema = z.object({
-  body: z.string(),
+  body: z.string().refine((body) => charLength(body) <= NOTE_BODY_MAX_CHARS),
   mood: mood.nullable(),
   source: z.enum(NOTE_SOURCES),
   wants_reply: z.boolean(),
@@ -50,7 +64,10 @@ export const outboxOpSchema = z.discriminatedUnion('kind', [
     checkinId: z.string().uuid(),
     mood,
     energy: mood.nullable(),
-    line: z.string().max(280).nullable(),
+    line: z
+      .string()
+      .refine((line) => charLength(line) <= CHECKIN_LINE_MAX_CHARS)
+      .nullable(),
     created_at: isoTime,
   }),
 ]);

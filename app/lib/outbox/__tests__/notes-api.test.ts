@@ -1,6 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 
 import {
+  CheckinLineTooLongError,
+  NoteTooLongError,
   checkinsQueryKey,
   createCheckin,
   createNote,
@@ -12,7 +14,7 @@ import {
   type Checkin,
   type NotesApiDeps,
 } from '../../../features/notes/api';
-import type { NoteFields } from '../types';
+import { CHECKIN_LINE_MAX_CHARS, NOTE_BODY_MAX_CHARS, type NoteFields } from '../types';
 import { idle, setup, testUuid } from './harness';
 
 function apiDeps(online: boolean) {
@@ -107,5 +109,41 @@ describe('notes api over the outbox', () => {
     net.set(true);
     await idle(outbox);
     expect(server.tables.checkins.get(checkin.id)).toMatchObject({ mood: 4, line: 'slept well', energy: null });
+  });
+
+  it('refuses a note body over the limit before anything is queued or shown, without the text in the error', async () => {
+    const { deps, outbox, notes } = apiDeps(false);
+    const tooLong = 'é'.repeat(NOTE_BODY_MAX_CHARS + 1);
+    let thrown: unknown;
+    try {
+      createNote(deps, { body: tooLong });
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(NoteTooLongError);
+    expect(thrown).toMatchObject({ length: NOTE_BODY_MAX_CHARS + 1, limit: NOTE_BODY_MAX_CHARS });
+    expect(String((thrown as Error).message)).not.toContain('é');
+    expect(outbox.items()).toEqual([]);
+    expect(notes()).toEqual([]);
+
+    // Exactly at the limit is fine; an emoji counts as one character, as it does for Postgres.
+    const atLimit = createNote(deps, { body: '🌿'.repeat(NOTE_BODY_MAX_CHARS) });
+    expect(outbox.items()).toHaveLength(1);
+
+    expect(() => editNote(deps, atLimit.id, { body: 'x'.repeat(NOTE_BODY_MAX_CHARS + 1) })).toThrow(NoteTooLongError);
+    expect(notes()[0]?.body).toBe('🌿'.repeat(NOTE_BODY_MAX_CHARS));
+    const queued = outbox.items()[0]?.op;
+    expect(queued?.kind === 'note_create' ? queued.fields.body : null).toBe('🌿'.repeat(NOTE_BODY_MAX_CHARS));
+  });
+
+  it('refuses a check-in line over the limit before anything is queued or shown', () => {
+    const { deps, outbox, queryClient } = apiDeps(false);
+    expect(() => createCheckin(deps, { mood: 3, line: 'a'.repeat(CHECKIN_LINE_MAX_CHARS + 1) })).toThrow(
+      expect.objectContaining({ name: 'CheckinLineTooLongError', length: CHECKIN_LINE_MAX_CHARS + 1, limit: CHECKIN_LINE_MAX_CHARS }),
+    );
+    expect(outbox.items()).toEqual([]);
+    expect(queryClient.getQueryData(checkinsQueryKey)).toBeUndefined();
+    expect(() => createCheckin(deps, { mood: 3, line: 'a'.repeat(CHECKIN_LINE_MAX_CHARS) })).not.toThrow();
+    expect(new CheckinLineTooLongError(300).limit).toBe(CHECKIN_LINE_MAX_CHARS);
   });
 });
