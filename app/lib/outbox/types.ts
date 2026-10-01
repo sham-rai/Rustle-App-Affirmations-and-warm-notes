@@ -8,9 +8,10 @@ import { z } from 'zod';
 export const NOTE_SOURCES = ['onboarding', 'board', 'checkin', 'voice'] as const;
 
 /**
- * Longest note body, in characters (code points, as Postgres `char_length` counts). Over it the
- * server rejects the write as a permanent 23514 and the note would vanish after showing, so the
- * app refuses it before queueing. Moves to `NOTE_BODY_MAX_CHARS` in packages/shared/limits.ts with M1-11.
+ * Longest note body, in characters (code points, as Postgres `char_length` counts). The app
+ * refuses a longer body before queueing. The matching server-side cap is not in the database
+ * today: it lands with M1-11, and once it does a longer write would be a permanent 23514 and the
+ * note would vanish after showing. Moves to `NOTE_BODY_MAX_CHARS` in packages/shared/limits.ts with M1-11.
  */
 export const NOTE_BODY_MAX_CHARS = 2000;
 /** Longest check-in line (`checkins.line` check constraint). Moves to packages/shared/limits.ts with M1-11. */
