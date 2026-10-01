@@ -151,6 +151,13 @@ describe('the age gate (docs/21 §1.2)', () => {
     expect(screen.queryByTestId('age-year')).toBeNull();
   });
 
+  it('under 18 with a throwing delete still reaches the block screen', async () => {
+    fake.deleteAnonymousAccount.mockRejectedValueOnce(new Error('keystore unavailable'));
+    await renderAt('/age');
+    await enterBirthDate('15', '6', String(thisYear - 15));
+    expect(screen.getByText('Rustle is for adults')).toBeOnTheScreen();
+  });
+
   it('a blocked install sees the block screen again, with no inputs, and its new account goes too', async () => {
     await renderAt('/age');
     await enterBirthDate('15', '6', String(thisYear - 15));
@@ -236,6 +243,14 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
+  it('a throwing delete still reaches the goodbye screen', async () => {
+    fake.deleteAnonymousAccount.mockRejectedValueOnce(new Error('keystore unavailable'));
+    const router = await renderAt('/consent/ai');
+    await press('Not now');
+    expect(router.getPathname()).toBe('/consent/goodbye');
+    expect(isIntroSeen()).toBe(false);
+  });
+
   it('a failed write stays on the step and says so', async () => {
     fake.failWrites = true;
     const router = await renderAt('/consent/terms');
@@ -294,5 +309,16 @@ describe('deep links on an onboarded install (security review)', () => {
     await expect(leaveOnboarding()).resolves.toEqual({ refused: true });
     expect(fake.deleteAnonymousAccount).not.toHaveBeenCalled();
     expect(isConsentsComplete()).toBe(true);
+  });
+});
+
+describe('leaveOnboarding never throws', () => {
+  it('reports what it could not do', async () => {
+    fake.deleteAnonymousAccount.mockRejectedValueOnce(new Error('keystore unavailable'));
+    await expect(leaveOnboarding()).resolves.toEqual({ refused: false, serverDeleted: false, localCleared: false });
+  });
+
+  it('passes the delete result through', async () => {
+    await expect(leaveOnboarding()).resolves.toEqual({ refused: false, serverDeleted: true, localCleared: true });
   });
 });

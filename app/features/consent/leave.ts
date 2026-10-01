@@ -13,14 +13,24 @@ export type LeaveResult =
  * and consents-complete flags, so the next account created on this install sees the intro again.
  * A failed server call still wipes the local session; the never-linked account then ages out under
  * the 24-month rule. Refuses on an onboarded install, so no route can delete a real account.
+ * Never throws: the result says what happened.
  */
 export async function leaveOnboarding(): Promise<LeaveResult> {
   if (isConsentsComplete()) return { refused: true };
+  let serverDeleted = false;
+  let localCleared = false;
   try {
     const result = await deleteAnonymousAccount();
-    return { refused: false, serverDeleted: result.serverDeleted, localCleared: result.localCleared };
-  } finally {
+    serverDeleted = result.serverDeleted;
+    localCleared = result.localCleared;
+  } catch {
+    // A throwing token store or client: the caller still reaches the block or goodbye screen.
+  }
+  try {
     resetIntroSeen();
     resetConsentsComplete();
+  } catch {
+    // The flags live in MMKV; a failure here must not strand the user either.
   }
+  return { refused: false, serverDeleted, localCleared };
 }
