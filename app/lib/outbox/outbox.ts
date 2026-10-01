@@ -1,6 +1,6 @@
 import type { KeyValueStore } from '../secure-storage/session-cache';
 import { createOutboxQueue } from './queue';
-import type { Connectivity, OutboxEvent, OutboxItem, OutboxOp, OutboxTransport } from './types';
+import { eventInfoOf, type Connectivity, type OutboxEvent, type OutboxItem, type OutboxOp, type OutboxTransport } from './types';
 import { createOutboxWorker } from './worker';
 
 export interface Outbox {
@@ -17,9 +17,9 @@ export interface Outbox {
   subscribe(listener: () => void): () => void;
   /**
    * `enqueued`, `synced` and `dropped` events. The hook for analytics: the caller logs
-   * `board_note_created` with `offline = item.createdOffline` on `synced` of a `note_create`,
-   * and surfaces `dropped` errors. Events carry the queued item; only ids, kinds and flags may
-   * leave the device, never `op.fields.body` or a check-in line.
+   * `board_note_created` with `offline = event.createdOffline` on `synced` of a `note_create`,
+   * and surfaces `dropped` errors. Events carry ids, the kind and the offline flag only, never
+   * the note body or a check-in line.
    */
   onEvent(listener: (event: OutboxEvent) => void): () => void;
 }
@@ -50,14 +50,14 @@ export function createOutbox(deps: OutboxDeps): Outbox {
     random: deps.random,
     setTimer: deps.setTimer,
     clearTimer: deps.clearTimer,
-    onSynced: (item) => emit({ type: 'synced', item }),
-    onDropped: (item, error) => emit({ type: 'dropped', item, error }),
+    onSynced: (item) => emit({ type: 'synced', ...eventInfoOf(item) }),
+    onDropped: (item, error) => emit({ type: 'dropped', ...eventInfoOf(item), error }),
   });
 
   return {
     enqueue(op) {
       const item = queue.enqueue(op, { createdOffline: worker.isOnline() === false });
-      if (item) emit({ type: 'enqueued', item });
+      if (item) emit({ type: 'enqueued', ...eventInfoOf(item) });
       void worker.flush();
       return item;
     },

@@ -9,7 +9,7 @@ import { createSupabaseTransport, supabaseOutboxDb } from './transport';
 import { attachOutboxTriggers } from './triggers';
 
 export { createOutbox, type Outbox, type OutboxDeps } from './outbox';
-export type { NoteFields, NotePatch, OutboxError, OutboxEvent, OutboxItem, OutboxOp } from './types';
+export type { NoteFields, NotePatch, OutboxError, OutboxEvent, OutboxEventInfo, OutboxItem, OutboxOp } from './types';
 export { entityIdOf } from './types';
 
 let outbox: Outbox | undefined;

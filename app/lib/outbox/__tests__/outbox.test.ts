@@ -53,8 +53,10 @@ describe('offline outbox', () => {
     expect(server.tables.notes.get(noteId)).toMatchObject({ id: noteId, body: 'first draft' });
     expect(outbox.items()).toEqual([]);
     const synced = events.find((event) => event.type === 'synced');
-    expect(synced?.item.op.kind).toBe('note_create');
-    expect(synced?.item.createdOffline).toBe(true);
+    expect(synced?.kind).toBe('note_create');
+    expect(synced?.createdOffline).toBe(true);
+    // Events never carry the text.
+    expect(JSON.stringify(events)).not.toContain('first draft');
   });
 
   it('a note written online syncs at once and is not marked offline', async () => {
@@ -65,7 +67,7 @@ describe('offline outbox', () => {
     outbox.enqueue(createOp(noteId));
     await idle(outbox);
     expect(server.tables.notes.has(noteId)).toBe(true);
-    expect(events.find((event) => event.type === 'synced')?.item.createdOffline).toBe(false);
+    expect(events.find((event) => event.type === 'synced')?.createdOffline).toBe(false);
   });
 
   it('retries a transient failure with backoff', async () => {

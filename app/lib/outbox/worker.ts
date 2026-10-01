@@ -1,5 +1,5 @@
 import type { OutboxQueue } from './queue';
-import type { Connectivity, OutboxError, OutboxItem, OutboxTransport, SendResult } from './types';
+import { entityIdOf, type Connectivity, type OutboxError, type OutboxItem, type OutboxTransport, type SendResult } from './types';
 
 export const BACKOFF_BASE_MS = 2_000;
 export const BACKOFF_MAX_MS = 5 * 60_000;
@@ -118,7 +118,7 @@ export function createOutboxWorker(deps: Deps): OutboxWorker {
       } else {
         const error: OutboxError = {
           kind: sent.op.kind,
-          entityId: sent.op.kind === 'checkin_create' ? sent.op.checkinId : sent.op.noteId,
+          entityId: entityIdOf(sent.op),
           key: sent.key,
           status: result.status,
           code: result.code,

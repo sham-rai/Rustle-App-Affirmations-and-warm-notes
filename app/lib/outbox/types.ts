@@ -144,7 +144,25 @@ export interface Connectivity {
   subscribe(listener: (online: boolean) => void): () => void;
 }
 
+/**
+ * What listeners learn about a queued write: ids, kind and the offline flag. Never the item
+ * itself, which holds the note body or check-in line; that stays inside outbox.ts.
+ */
+export interface OutboxEventInfo {
+  kind: OutboxOpKind;
+  /** The note or check-in id. */
+  entityId: string;
+  /** The idempotency key of the queued write. */
+  key: string;
+  createdOffline: boolean;
+}
+
 export type OutboxEvent =
-  | { type: 'enqueued'; item: OutboxItem }
-  | { type: 'synced'; item: OutboxItem }
-  | { type: 'dropped'; item: OutboxItem; error: OutboxError };
+  | ({ type: 'enqueued' } & OutboxEventInfo)
+  | ({ type: 'synced' } & OutboxEventInfo)
+  | ({ type: 'dropped'; error: OutboxError } & OutboxEventInfo);
+
+/** The text-free summary of an item, for events. */
+export function eventInfoOf(item: OutboxItem): OutboxEventInfo {
+  return { kind: item.op.kind, entityId: entityIdOf(item.op), key: item.key, createdOffline: item.createdOffline };
+}
