@@ -34,6 +34,11 @@ describe('analytics property allowlist', () => {
       expect(isGlossaryEvent(e)).toBe(true);
       expect(e).not.toMatch(/safety|crisis|resource|mood|checkin|life_area/);
     }
-    expect(isGlossaryEvent('affirmation_sent')).toBe(false);
+    for (const bad of ['affirmation_sent', 'message_sent', 'note_sent', 'note', 'delivery', 'reply', 'warm_note']) {
+      expect(isGlossaryEvent(bad)).toBe(false);
+    }
+    for (const fine of ['consent_granted', 'paywall_viewed', 'board_note_created', 'warm_note_sent', 'delivery_opened']) {
+      expect(isGlossaryEvent(fine)).toBe(true);
+    }
   });
 });

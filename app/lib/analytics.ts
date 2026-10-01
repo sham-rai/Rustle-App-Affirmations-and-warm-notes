@@ -27,10 +27,17 @@ export const ANALYTICS_EVENTS = [
 ] as const;
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 
-/** Glossary prefixes (docs/00): the events that name a thing must use its prefix. */
+/**
+ * Glossary rule (docs/00): an event that names a thing uses that thing's prefix. Fails only for a
+ * non-glossary name of a glossary thing; anything else (consent_granted, paywall_viewed) passes.
+ */
+const THING_WORDS = ['note', 'delivery', 'reply', 'warm_note'] as const;
 const PREFIXES: readonly string[] = Object.values(EVENT_PREFIXES);
 export function isGlossaryEvent(event: string): boolean {
-  return event === 'app_opened' || event.startsWith('onboarding_') || PREFIXES.some((p) => event.startsWith(p));
+  if (/^(affirmation|message)(_|$)/.test(event)) return false;
+  if (PREFIXES.some((p) => event.startsWith(p))) return true;
+  // Unprefixed use of a glossary thing as the subject, for example note_sent or reply.
+  return !THING_WORDS.some((w) => event === w || event.startsWith(`${w}_`));
 }
 
 /** The closed allowlist. Add a key or a value here only with the lead's approval. */
