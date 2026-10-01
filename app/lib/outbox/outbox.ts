@@ -9,6 +9,8 @@ export interface Outbox {
   /** Pending writes, oldest first. The notes cache overlays these on server data. */
   items(): readonly OutboxItem[];
   flush(): Promise<void>;
+  /** Ends every backoff and sends now: the session arrived or refreshed, or the app came to the foreground. */
+  retryNow(): Promise<void>;
   /** Starts the worker (connectivity listener, retry timer). Returns `stop`. */
   start(): () => void;
   /** Notified after every change to the pending writes. */
@@ -61,6 +63,10 @@ export function createOutbox(deps: OutboxDeps): Outbox {
     },
     items: () => queue.items(),
     flush: () => worker.flush(),
+    retryNow() {
+      queue.retryAllNow();
+      return worker.flush();
+    },
     start: () => worker.start(),
     subscribe: (listener) => queue.subscribe(listener),
     onEvent(listener) {

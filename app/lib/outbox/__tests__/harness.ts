@@ -16,6 +16,7 @@ export function fakeSupabase() {
   const calls: string[] = [];
   const faults: Fault[] = [];
   let reachable = true;
+  let signedIn = true;
 
   function respond(label: string, apply: () => WriteResult): Promise<WriteResult> {
     calls.push(label);
@@ -28,7 +29,7 @@ export function fakeSupabase() {
   }
 
   const client = {
-    auth: { getSession: async () => ({ data: { session: { access_token: 'jwt' } } }) },
+    auth: { getSession: async () => ({ data: { session: signedIn ? { access_token: 'jwt' } : null } }) },
     from(table: Table) {
       return {
         insert(row: Row) {
@@ -61,6 +62,9 @@ export function fakeSupabase() {
     faults,
     setReachable(value: boolean) {
       reachable = value;
+    },
+    setSignedIn(value: boolean) {
+      signedIn = value;
     },
   };
 }
