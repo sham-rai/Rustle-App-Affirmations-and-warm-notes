@@ -22,7 +22,7 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 
 | ID | Ticket | State | Executor · model | Depends on | PR |
 |---|---|---|---|---|---|
-| M2-01 | Company splash and the Rustle screen with the Skia tree | PR open (PO) | subagent · opus | M1-01, M1-04 | #1 `feat/M2-01-splash-and-rustle-screen` (rebased on main after #2; conflict in package.json resolved; PO merges) |
+| M2-01 | Company splash and the Rustle screen with the Skia tree | done | subagent · opus | M1-01, M1-04 | #1, merged 2026-09-30 (not yet seen on a device: M2-06) |
 | M2-02 | Onboarding: five screens, answers held locally | ready | subagent · opus | M1-04, M1-09 | |
 | M2-03 | Onboarding complete, first note screen, seed notes, permission | ready | lead · fable | M1-02, M1-06, M1-07, M2-02 | |
 | M2-04 | Today with the first Rustle as hero, Notes board skeleton | ready | subagent · opus | M1-04, M1-08, M2-03 | |
