@@ -12,6 +12,7 @@ import { i18n, useDeviceLanguage } from '../i18n';
 import { AuthProvider, useAuth } from '../lib/auth/AuthProvider';
 import { identifyAnalyticsUser, track } from '../lib/analytics';
 import { initSentry } from '../lib/sentry';
+import { startOutbox } from '../lib/outbox';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 // Keep the splash up until the fonts are ready (M1-04) and, on a cold start, until the session is
@@ -19,6 +20,8 @@ import { isSupabaseConfigured } from '../lib/supabase';
 // account to the company splash, with nothing in between. AuthProvider creates or restores the
 // anonymous account (M1-03).
 void SplashScreen.preventAutoHideAsync();
+// Replay notes and check-ins written offline (M1-08); a no-op until Supabase is configured.
+startOutbox();
 
 // Module scope: before anything can crash. Off without a DSN.
 initSentry();
