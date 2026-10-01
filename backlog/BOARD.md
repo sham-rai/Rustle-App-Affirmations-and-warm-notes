@@ -10,7 +10,7 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 | M1-02 | Migration 1: schema, RLS, pgcrypto + Vault + views, pgTAP | done | lead · fable | M1-01 | #2, merged 2026-09-30 (144 pgTAP green in CI) |
 | M1-03 | Anonymous sign-in, Keychain / Block Store persistence, backup status | done | lead · fable | M1-01 | merged 2026-09-30 |
 | M1-04 | i18n EN/FR, design tokens, ThemeProvider, tab skeleton | done | subagent · opus | M1-01 | merged 2026-09-30 |
-| M1-05 | Sentry, PostHog, first events, cost-logging table | in progress | subagent · sonnet | M1-01, M1-02 | |
+| M1-05 | Sentry, PostHog, first events, cost-logging table | PR open (PO) | subagent · sonnet | M1-01, M1-02 | `feat/M1-05-observability` pushed 2026-10-01 after two review rounds; PO opens the PR |
 | M1-06 | LLMClient: Messages, Batches, caching, structured output, cost logging, failover hooks | ready | lead · fable | M1-01 | |
 | M1-07 | Rustle voice prompt v1 + test screen showing a real note | ready | lead drafts · subagent wires (opus) | M1-06 | |
 | M1-08 | Offline outbox for notes and check-ins | in progress | subagent · opus | M1-03 | |
