@@ -254,11 +254,19 @@ describe('offline outbox', () => {
     expect(second.outbox.items()).toEqual([]);
   });
 
-  it('drops unreadable persisted items instead of crashing', () => {
-    const first = setup({ online: false });
-    first.store.map.set(OUTBOX_STORAGE_KEY, JSON.stringify([{ key: 'x', op: { kind: 'unknown' } }]));
-    const second = setup({ online: false, store: first.store });
-    expect(second.outbox.items()).toEqual([]);
+  it('drops unreadable persisted items instead of crashing, and reports the count only', () => {
+    const store = fakeCache();
+    store.map.set(OUTBOX_STORAGE_KEY, JSON.stringify([{ key: 'x', op: { kind: 'unknown', body: 'secret' } }, 'junk']));
+    const counts: number[] = [];
+    const outbox = createOutbox({
+      store,
+      transport: createSupabaseTransport(() => null),
+      connectivity: { isOnline: async () => false, subscribe: () => () => undefined },
+      newKey: testUuid,
+      onUnreadable: (count) => counts.push(count),
+    });
+    expect(outbox.items()).toEqual([]);
+    expect(counts).toEqual([2]);
   });
 
   it('drops a permanent failure (RLS denial) with a typed error, and the writes that depend on it', async () => {

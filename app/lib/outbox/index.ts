@@ -25,6 +25,8 @@ export function getOutbox(): Outbox {
     }),
     connectivity: expoNetworkConnectivity,
     newKey: () => Crypto.randomUUID(),
+    // The count only: the unreadable items hold note text.
+    onUnreadable: (count) => console.warn(`outbox_unreadable_items:${count}`),
   });
   return outbox;
 }

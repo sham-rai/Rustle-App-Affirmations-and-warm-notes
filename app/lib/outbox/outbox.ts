@@ -33,6 +33,8 @@ export interface OutboxDeps {
   random?: () => number;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (handle: unknown) => void;
+  /** Called with a count when persisted items could not be read back. Never receives item content. */
+  onUnreadable?: (count: number) => void;
 }
 
 export function createOutbox(deps: OutboxDeps): Outbox {
@@ -41,7 +43,7 @@ export function createOutbox(deps: OutboxDeps): Outbox {
   const emit = (event: OutboxEvent) => {
     for (const listener of listeners) listener(event);
   };
-  const queue = createOutboxQueue({ store: deps.store, newKey: deps.newKey, now });
+  const queue = createOutboxQueue({ store: deps.store, newKey: deps.newKey, now, onUnreadable: deps.onUnreadable });
   const worker = createOutboxWorker({
     queue,
     transport: deps.transport,
