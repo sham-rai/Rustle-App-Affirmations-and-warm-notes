@@ -13,7 +13,7 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 | M1-05 | Sentry, PostHog, first events, cost-logging table | PR open (PO) | subagent · sonnet | M1-01, M1-02 | `feat/M1-05-observability` pushed 2026-10-01 after two review rounds; PO opens the PR |
 | M1-06 | LLMClient: Messages, Batches, caching, structured output, cost logging, failover hooks | ready | lead · fable | M1-01 | |
 | M1-07 | Rustle voice prompt v1 + test screen showing a real note | ready | lead drafts · subagent wires (opus) | M1-06 | |
-| M1-08 | Offline outbox for notes and check-ins | in progress | subagent · opus | M1-03 | |
+| M1-08 | Offline outbox for notes and check-ins | PR open (PO) | subagent · opus | M1-03 | `feat/M1-08-offline-outbox` pushed 2026-10-01 after two review rounds; PO opens the PR |
 | M1-09 | Consent screens, 18+ gate, `consents` rows | in progress | subagent · opus | M1-02, M1-04 | |
 | M1-10 | Device checklist v1 and the first status note | ready | lead · fable | all | |
 | M1-11 | Migration 1 follow-ups from the D48 review (warm_notes.body encrypted, read/opened RPC split, catalog tests) | PR open (PO) | lead · fable | M1-02 | `feat/M1-11-migration-1-follow-ups` pushed 2026-10-01; PO opens the PR, CI `db` job runs the 7 pgTAP files |
