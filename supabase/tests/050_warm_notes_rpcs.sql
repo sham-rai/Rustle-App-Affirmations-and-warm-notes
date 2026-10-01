@@ -1,4 +1,4 @@
--- warm_notes: sender-only RLS, and the two SECURITY DEFINER RPCs the public page uses (docs/07 §8).
+-- warm_notes: sender-only RLS, the decrypting view (M1-11) and the SECURITY DEFINER RPCs the public page uses (docs/07 §8).
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
@@ -74,7 +74,17 @@ select is(public.warm_note_thank('live-slug-0001-0123456789ab'), false, 'the sec
 select is(public.warm_note_thank('revoked-slug-01-0123456789ab'), false, 'a revoked note cannot be thanked');
 select pg_temp.logout();
 
-select is((select opened_count from public.warm_notes where id = 'live-slug-0001-0123456789ab'), 1, 'the page view was counted once');
+-- M1-11: reading never counts (GET RPCs must be read-only); the page reports the open separately.
+select is((select opened_count from public.warm_notes where id = 'live-slug-0001-0123456789ab'), 0, 'a read does not count as an open');
+select pg_temp.login_anon();
+select is(public.warm_note_opened('live-slug-0001-0123456789ab'), true, 'the page reports one open');
+select is(public.warm_note_opened('revoked-slug-01-0123456789ab'), false, 'a revoked note cannot be opened');
+select is(public.warm_note_opened('expired-slug-01-0123456789ab'), false, 'an expired note cannot be opened');
+select pg_temp.logout();
+select is((select opened_count from public.warm_notes where id = 'live-slug-0001-0123456789ab'), 1, 'the open was counted once');
+select ok((select position('You have got this' in encode(body_enc, 'escape')) = 0 from enc.warm_notes where id = 'live-slug-0001-0123456789ab'), 'the warm-note body is ciphertext at rest (M1-11)');
+select is((select count(*)::int from information_schema.columns where table_schema = 'enc' and table_name = 'warm_notes' and column_name = 'body'), 0, 'the base table has no plaintext body column');
+select throws_ok($$insert into public.warm_notes (id, sender_user_id, situation, body) values ('too-long-slug-00-0123456789ab', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', repeat('x', 221))$$, '23514', null, 'a body over 220 characters is rejected by the view');
 select ok((select thanked_at is not null from public.warm_notes where id = 'live-slug-0001-0123456789ab'), 'thanked_at is set');
 select is((select count(*)::int from public.jobs where type = 'warm_note_thanked' and user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'), 1, 'one push job is queued for the sender');
 
