@@ -49,6 +49,7 @@ describe('launchRoute (docs/21 §1.0–1.3)', () => {
     ['an unknown token state (the store threw) → Today', { ...fresh, auth: { status: 'failed', reason: 'server' } }, HOME_ROUTE],
     ['no account system, loading → Today', { ...fresh, accountsConfigured: false, auth: { status: 'loading' } }, HOME_ROUTE],
     ['not configured → Today', { ...fresh, auth: { status: 'not_configured' } }, HOME_ROUTE],
+    ['blocked by the 18+ gate → the gate (its block screen)', { ...fresh, auth: { status: 'failed', reason: 'blocked' } }, GATE_ROUTE],
   ];
 
   it.each(cases)('%s', (_name, input, expected) => {
@@ -71,6 +72,7 @@ describe('shouldMarkOnboardedOnLaunch', () => {
     expect(shouldMarkOnboardedOnLaunch(ready('new'))).toBe(false);
     expect(shouldMarkOnboardedOnLaunch({ status: 'loading' })).toBe(false);
     expect(shouldMarkOnboardedOnLaunch({ status: 'failed', reason: 'offline', hasStoredToken: false })).toBe(false);
+    expect(shouldMarkOnboardedOnLaunch({ status: 'failed', reason: 'blocked' })).toBe(false);
   });
 });
 

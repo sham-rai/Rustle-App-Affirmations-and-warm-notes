@@ -38,6 +38,8 @@ function byLocalFlags(introSeen: boolean, consentsComplete: boolean): LaunchRout
  * - No account and provably no stored token (a true first launch offline) → as a new account.
  * - No account but a stored token, or no answer about the token (the store threw) → Today: an
  *   existing account must never see the intro again, so unknown is treated as existing.
+ * - Blocked by the 18+ gate on this install → the gate, which shows the block screen ("/" also
+ *   checks the flag before anything else).
  */
 export function launchRoute({ auth, introSeen, consentsComplete, accountsConfigured }: LaunchInput): LaunchRoute | null {
   if (!accountsConfigured) return HOME_ROUTE;
@@ -53,6 +55,7 @@ export function launchRoute({ auth, introSeen, consentsComplete, accountsConfigu
       }
       return HOME_ROUTE;
     case 'failed':
+      if (auth.reason === 'blocked') return GATE_ROUTE;
       return auth.hasStoredToken === false ? byLocalFlags(introSeen, consentsComplete) : HOME_ROUTE;
   }
 }
@@ -71,6 +74,6 @@ export function shouldMarkOnboardedOnLaunch(auth: AuthBootstrapState): boolean {
     case 'ready':
       return auth.restoredFrom !== 'new' && auth.restoredFrom !== 'session';
     case 'failed':
-      return auth.hasStoredToken !== false;
+      return auth.reason !== 'blocked' && auth.hasStoredToken !== false;
   }
 }

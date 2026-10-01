@@ -1,10 +1,10 @@
 import { Redirect } from 'expo-router';
 import { useEffect } from 'react';
 
-import { isConsentsComplete, markConsentsComplete } from '../features/consent/block-flag';
+import { isAgeBlocked, isConsentsComplete, markConsentsComplete } from '../features/consent/block-flag';
 import { CompanySplashView } from '../features/intro/CompanySplashView';
 import { isIntroSeen, markIntroSeen } from '../features/intro/intro-seen';
-import { launchRoute, shouldMarkOnboardedOnLaunch } from '../features/intro/launch';
+import { GATE_ROUTE, launchRoute, shouldMarkOnboardedOnLaunch } from '../features/intro/launch';
 import { useAuth } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 
@@ -15,6 +15,7 @@ import { isSupabaseConfigured } from '../lib/supabase';
 // same paper and company name as the company splash, never a blank screen.
 export default function Index() {
   const auth = useAuth();
+  const blocked = isAgeBlocked();
   const route = launchRoute({
     auth,
     introSeen: isIntroSeen(),
@@ -23,12 +24,14 @@ export default function Index() {
   });
 
   useEffect(() => {
-    if (shouldMarkOnboardedOnLaunch(auth)) {
+    if (!blocked && shouldMarkOnboardedOnLaunch(auth)) {
       markIntroSeen();
       markConsentsComplete();
     }
-  }, [auth]);
+  }, [auth, blocked]);
 
+  // An install the 18+ gate blocked goes back to the block screen before anything else.
+  if (blocked) return <Redirect href={GATE_ROUTE} />;
   if (route === null) return <CompanySplashView />;
   return <Redirect href={route} />;
 }

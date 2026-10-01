@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
+import { isAgeBlocked } from '../../features/consent/block-flag';
 import { getRefreshTokenStore } from '../secure-storage/refresh-token-store';
 import { getSupabase } from '../supabase';
 import { ensureSession, type AuthBootstrapResult } from './bootstrap';
@@ -20,6 +21,16 @@ export function useAuthBootstrap(): AuthBootstrapState {
   const inFlight = useRef<Promise<AuthBootstrapResult> | null>(null);
 
   const run = useCallback(async (): Promise<void> => {
+    // An install the 18+ gate blocked never gets an account (docs/11 §5, D46): no ensureSession,
+    // so no anonymous sign-up, and no retry on the next foreground.
+    if (isAgeBlocked()) {
+      const blocked: AuthBootstrapResult = { status: 'failed', reason: 'blocked' };
+      if (mounted.current) {
+        latest.current = blocked;
+        setState(blocked);
+      }
+      return;
+    }
     inFlight.current ??= ensureSession(getSupabase(), getRefreshTokenStore())
       // A thrown error (a Keystore that cannot encrypt, a bug) must never leave the app on "loading".
       // Whether a token is stored is then unknown, so the field stays absent (never `false`): the
@@ -39,7 +50,8 @@ export function useAuthBootstrap(): AuthBootstrapState {
     mounted.current = true;
     void run();
     const subscription = AppState.addEventListener('change', (next) => {
-      if (next === 'active' && latest.current.status === 'failed') void run();
+      const last = latest.current;
+      if (next === 'active' && last.status === 'failed' && last.reason !== 'blocked') void run();
     });
     return () => {
       mounted.current = false;

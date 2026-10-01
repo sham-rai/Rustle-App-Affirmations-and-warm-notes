@@ -9,10 +9,13 @@ export type AuthBootstrapResult =
   | { status: 'not_configured' }
   /** A session exists. `restoredFrom` says how it came back (docs/07 §5 edge cases). */
   | { status: 'ready'; userId: string; isAnonymous: boolean; restoredFrom: RestoredFrom }
-  /** Nothing could be established this time; safe to retry (network, server). */
+  /**
+   * Nothing could be established this time: `offline` and `server` are safe to retry; `blocked`
+   * means the 18+ gate blocked this install (M1-09), so no account is created and none is retried.
+   */
   | {
       status: 'failed';
-      reason: 'offline' | 'server';
+      reason: 'offline' | 'server' | 'blocked';
       /**
        * True when a stored refresh token exists (Keychain, Keystore, Block Store) but could not be
        * exchanged this time: an existing account, for example a reinstall opened offline. The

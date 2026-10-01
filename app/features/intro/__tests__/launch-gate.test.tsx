@@ -12,7 +12,14 @@ import YouScreen from '../../../app/(tabs)/you';
 import RootLayout from '../../../app/_layout';
 import Index from '../../../app/index';
 import type { AuthBootstrapState } from '../../../lib/auth';
-import { isConsentsComplete, markConsentsComplete, resetConsentsComplete } from '../../consent/block-flag';
+import { deleteAnonymousAccount } from '../../../lib/supabase';
+import {
+  clearAgeBlockedForTests,
+  isConsentsComplete,
+  markAgeBlocked,
+  markConsentsComplete,
+  resetConsentsComplete,
+} from '../../consent/block-flag';
 import { isIntroSeen, markIntroSeen, resetIntroSeen } from '../intro-seen';
 
 // The cold-start gate (docs/21 §1.0): with a Supabase project configured, "/" waits for the
@@ -27,7 +34,11 @@ jest.mock('expo-splash-screen', () => ({
 jest.mock('../../../i18n/preferences');
 jest.mock('../tree/Tree', () => ({ Tree: () => null }));
 jest.mock('../FoldedNoteMark', () => ({ FoldedNoteMark: () => null }));
-jest.mock('../../../lib/supabase', () => ({ isSupabaseConfigured: () => true, getSupabase: () => null }));
+jest.mock('../../../lib/supabase', () => ({
+  isSupabaseConfigured: () => true,
+  getSupabase: () => null,
+  deleteAnonymousAccount: jest.fn(() => Promise.resolve({ serverDeleted: false, signedOut: true, localCleared: true })),
+}));
 
 // A controllable session: tests move it from loading to ready.
 let mockAuthState: AuthBootstrapState = { status: 'loading' };
@@ -48,6 +59,9 @@ jest.mock('../../../lib/auth/AuthProvider', () => {
   };
 });
 
+// Whole-router renders: a loaded machine can take longer than Jest's 5 s default.
+jest.setTimeout(30000);
+
 const routes = {
   _layout: RootLayout,
   index: Index,
@@ -66,6 +80,7 @@ beforeEach(() => {
   jest.mocked(SplashScreen.hideAsync).mockClear();
   resetIntroSeen();
   resetConsentsComplete();
+  clearAgeBlockedForTests();
   mockAuthState = { status: 'loading' };
 });
 afterEach(() => jest.useRealTimers());
@@ -106,6 +121,16 @@ describe('the launch gate', () => {
     });
     expect(router.getPathname()).toBe('/age');
     expect(isConsentsComplete()).toBe(false);
+  });
+
+  it('sends a blocked install to the block screen before the session is known', async () => {
+    markAgeBlocked();
+    const router = renderRouter(routes, { initialUrl: '/' });
+    await act(async () => {});
+    expect(router.getPathname()).toBe('/age');
+    expect(screen.getByText('Rustle is for adults')).toBeOnTheScreen();
+    // The fallback delete for an account that already exists on this install.
+    expect(deleteAnonymousAccount).toHaveBeenCalled();
   });
 
   it('sends a reinstall restored from the Keychain to Today and marks it onboarded', async () => {
