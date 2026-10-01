@@ -4,6 +4,7 @@ import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fontFamily, Text } from '../../components/Text';
+import { LinkedSentence } from '../../features/consent/LinkedSentence';
 import { FoldedNoteMark } from '../../features/intro/FoldedNoteMark';
 import { markIntroSeen } from '../../features/intro/intro-seen';
 import {
@@ -62,8 +63,8 @@ export default function RustleScreen() {
 
   const onBegin = () => {
     markIntroSeen();
-    // TODO(M1-09): Begin leads to the 18+ gate and consent; until they exist it opens Today.
-    router.replace('/today');
+    // Begin leads to the 18+ gate, then the three consents (M1-09).
+    router.replace('/age');
   };
 
   return (
@@ -124,11 +125,15 @@ export default function RustleScreen() {
           </View>
 
           <View style={{ gap: space[1] }}>
-            {/* TODO(M1-09): the crisis line with its "get help now" link (intro.crisis, split with
-                features/intro/link-text) replaces this sentence once the crisis resources exist. */}
-            <Text variant="label" color="ink2" style={styles.centred}>
-              {t('intro.notMedical')}
-            </Text>
+            {/* The crisis line, its "get help now" link opening the crisis lines (M1-09). */}
+            <LinkedSentence
+              variant="label"
+              color="ink2"
+              style={styles.centred}
+              text={t('intro.crisis')}
+              linkTestID="intro-get-help"
+              onPressLink={() => router.push('/help')}
+            />
             <Text variant="label" color="ink2" style={styles.centred}>
               {t('intro.aiDisclosure')}
             </Text>

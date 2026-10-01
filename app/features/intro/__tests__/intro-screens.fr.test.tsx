@@ -59,7 +59,10 @@ describe('the Rustle screen in French', () => {
     await showContent();
     expect(screen.getByText('Des notes qui savent ce que tu traverses.')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Commencer' })).toBeOnTheScreen();
-    expect(screen.getByText('Ce n’est pas un service médical.')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Ce n’est pas un service médical. Si tu es en crise, trouve de l’aide maintenant.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('trouve de l’aide maintenant')).toBeOnTheScreen();
     expect(screen.getByText('Rustle est une IA, et non un thérapeute ni un service de crise.')).toBeOnTheScreen();
   });
 
@@ -72,5 +75,6 @@ describe('the Rustle screen in French', () => {
         'Racontez-moi un peu. Je m’en souviendrai, et je vous laisserai un mot réconfortant quand vous en aurez besoin.',
       ),
     ).toBeOnTheScreen();
+    expect(screen.getByText('trouvez de l’aide maintenant')).toBeOnTheScreen();
   });
 });
