@@ -155,14 +155,15 @@ deliveries (id uuid pk, user_id, body text /* encrypted */, kind text,     -- DE
               reaction text null,                            -- heart|not_quite
               reaction_reason text null,                     -- too_generic|too_positive|wrong_topic|too_long|dont_mention
               memory_refs uuid[],                            -- which memory items it used
-              model text, prompt_version text, cost_micros int, created_at)
+              model text, prompt_version text, cost_micros int, created_at,
+              unique (user_id, kind, scheduled_for))         -- one Rustle per slot, however often a batch result is ingested (D48)
 
 replies (id, user_id, note_id fk, body text /* encrypted */, visible_at timestamptz,
          reaction text null, reaction_reason text null, model, prompt_version, created_at)
 
 recaps (id, user_id, period_start, period_end, cards jsonb /* encrypted */,
         helped text null,             -- 'a_lot'|'a_little'|'not_really' (the one feedback question, doc 01 §5.4)
-        created_at, viewed_at, shared bool)
+        created_at, viewed_at, shared bool, unique (user_id, period_start))
 
 warm_notes (id text pk /* short, unguessable slug */, sender_user_id, recipient_label text null,
             situation text, body text /* encrypted, follow-up migration before M5 (D48) */, card_style text,
@@ -178,8 +179,10 @@ entitlement_grants (id uuid pk, code text unique, kind text,   -- beta|creator|s
                     max_redemptions int default 1, redeemed_by uuid[], created_at, expires_at)  -- doc 09 §9
 
 -- Ops
-jobs (id, type, user_id, payload jsonb, run_at, status, attempts, last_error)
-push_tokens (id, user_id, token, platform, updated_at)
+jobs (id, type, user_id, payload jsonb, idempotency_key text unique null,   -- e.g. 'seed_notes:<user>:<date>'; insert ... on conflict do nothing (D48)
+      run_at, status, lease_until timestamptz null, locked_by text null,      -- a running job past its lease was abandoned and may be re-claimed (§2.1)
+      attempts, last_error)
+push_tokens (id, user_id, token unique, platform, updated_at)            -- a device token belongs to one account (D48)
 safety_events (id, user_id, note_id, level, action_taken, created_at)   -- minimal, for audit
 ```
 

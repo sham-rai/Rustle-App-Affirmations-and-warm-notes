@@ -21,14 +21,22 @@
 --      (Add a `key_version smallint default 1` column to the enc tables in that migration
 --      first, and make enc.decrypt_text() pick the key by version during the rollover.)
 --   3. Rename the secrets, drop the old one, drop the version branch from decrypt_text().
---   Because pgp_sym_encrypt salts every value, re-encryption is safe to run twice.
+--   The `where key_version = 1` filter is what makes a re-run safe: a value already moved to the
+--   new key is skipped. Keep the old key until the last backup that holds old-key ciphertext has
+--   aged out (the 30-day purge window), then drop it.
+--   Cipher: AES-256 with a salted, single-pass key derivation (`cipher-algo=aes256, s2k-mode=1`);
+--   the key is 256 random bits, so OpenPGP's slow iterated derivation would add nothing. Decrypt
+--   reads the algorithm from the packet header, so changing these options never breaks old rows.
 --
 -- Key escrow (operations)
 --   Vault secrets do not travel with pg_dump, PITR into another project or a preview branch.
---   At creation the PO copies the secret's value into the company password manager. Restoring
---   data into a fresh project means re-creating `rustle_column_key` with that same value BEFORE
---   the restore; a project that gets a new random key cannot read any existing ciphertext, and
---   the views then raise "Wrong key or corrupt data" instead of returning rows.
+--   At creation the PO copies the secret's value into the company password manager. This
+--   migration creates a fresh random key on any project that has none, so a restore into a new
+--   project goes: run the migrations, then `vault.update_secret(<id>, <escrowed value>)` on
+--   `rustle_column_key`, then restore the data. A project left with its own random key cannot
+--   read any existing ciphertext, and the views then raise "Wrong key or corrupt data" instead of
+--   returning rows. If the secret is missing altogether, enc.column_key() raises rather than
+--   letting the views return blank text.
 --
 -- Deletion
 --   Everything hangs off public.users(id) with ON DELETE CASCADE, and public.users hangs
@@ -71,15 +79,24 @@ $$;
 
 create or replace function enc.column_key()
 returns text
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
-  select decrypted_secret
+declare
+  k text;
+begin
+  select decrypted_secret into k
   from vault.decrypted_secrets
   where name = 'rustle_column_key'
-  limit 1
+  limit 1;
+  if k is null then
+    raise exception 'rustle_column_key is missing from Vault; see the escrow note in migration 1'
+      using errcode = '55000';
+  end if;
+  return k;
+end
 $$;
 revoke all on function enc.column_key() from public, anon, authenticated, service_role;
 
@@ -92,7 +109,7 @@ set search_path = ''
 as $$
   select case
     when plain is null then null
-    else extensions.pgp_sym_encrypt(plain, enc.column_key())
+    else extensions.pgp_sym_encrypt(plain, enc.column_key(), 'cipher-algo=aes256, s2k-mode=1')
   end
 $$;
 
@@ -193,8 +210,12 @@ create table public.profiles (
   simple_mode        boolean not null default false,
   app_lock           boolean not null default false,
   reply_default      text not null default 'reply' check (reply_default in ('reply', 'listen')),
+  note_language      text check (note_language in ('en', 'fr')),      -- null = the UI language (D48)
+  address            text check (address in ('tu', 'vous')),          -- French register for every composer (D48)
   updated_at         timestamptz not null default now()
 );
+comment on column public.profiles.note_language is 'Language the Rustles are written in; null means the user''s UI language (D48).';
+comment on column public.profiles.address is 'tu or vous; carried into every prompt for a French user (D48). Null for English.';
 
 create table public.delivery_prefs (
   user_id      uuid primary key default auth.uid() references public.users (id) on delete cascade,
@@ -250,6 +271,7 @@ create table public.key_dates (
   created_at     timestamptz not null default now()
 );
 create index key_dates_user_date_idx on public.key_dates (user_id, date);
+create index key_dates_source_note_idx on public.key_dates (source_note_id);
 
 -- ---------------------------------------------------------------------------
 -- 4. Memory
@@ -296,9 +318,14 @@ create table enc.deliveries (
   model           text,
   prompt_version  text,
   cost_micros     integer,
-  created_at      timestamptz not null default now()
+  created_at      timestamptz not null default now(),
+  -- Ingesting a batch result twice, or two planners racing, never gives the user two Rustles for
+  -- one slot: the writer upserts on this key (docs/07 §2.1, idempotent jobs).
+  constraint deliveries_one_per_slot unique (user_id, kind, scheduled_for)
 );
 create index deliveries_user_scheduled_idx on enc.deliveries (user_id, scheduled_for desc);
+-- The dispatcher's "due for push" scan.
+create index deliveries_due_idx on enc.deliveries (scheduled_for) where delivered_at is null;
 
 create table enc.replies (
   id              uuid primary key default gen_random_uuid(),
@@ -313,6 +340,7 @@ create table enc.replies (
   created_at      timestamptz not null default now()
 );
 create index replies_user_note_idx on enc.replies (user_id, note_id);
+create index replies_note_idx on enc.replies (note_id);   -- the cascade from a note delete
 
 create table enc.recaps (
   id           uuid primary key default gen_random_uuid(),
@@ -323,12 +351,16 @@ create table enc.recaps (
   helped       text check (helped in ('a_lot', 'a_little', 'not_really')),
   created_at   timestamptz not null default now(),
   viewed_at    timestamptz,
-  shared       boolean not null default false
+  shared       boolean not null default false,
+  constraint recaps_period_order check (period_end >= period_start),
+  constraint recaps_one_per_period unique (user_id, period_start)
 );
 create index recaps_user_period_idx on enc.recaps (user_id, period_start desc);
 
 create table public.warm_notes (
-  id                text primary key check (char_length(id) between 10 and 64),   -- short, unguessable slug
+  -- The slug is the only thing between the public page and the note: at least 22 base64url
+  -- characters (about 128 random bits) so it cannot be enumerated; the server mints it (M5).
+  id                text primary key check (id ~ '^[A-Za-z0-9_-]{22,64}$'),
   sender_user_id    uuid not null default auth.uid() references public.users (id) on delete cascade,
   recipient_label   text,
   situation         text not null,
@@ -373,19 +405,31 @@ create table public.entitlement_grants (
 -- ---------------------------------------------------------------------------
 -- 7. Ops
 -- ---------------------------------------------------------------------------
+-- Short, idempotent, resumable jobs (docs/07 §2.1). The dispatcher claims `queued` rows whose
+-- run_at has passed with FOR UPDATE SKIP LOCKED, sets status = 'running' and a lease_until a few
+-- minutes out, and marks done or failed (clearing lease_until). A `running` row whose lease has
+-- expired was abandoned by a crashed run and may be claimed again. `idempotency_key` (for example
+-- 'seed_notes:<user_id>:<date>') lets a scheduler enqueue the same job twice without creating it
+-- twice: insert ... on conflict (idempotency_key) do nothing.
 create table public.jobs (
-  id         uuid primary key default gen_random_uuid(),
-  type       text not null,
-  user_id    uuid references public.users (id) on delete cascade,
-  payload    jsonb not null default '{}'::jsonb,   -- IDs and parameters only, never note text
-  run_at     timestamptz not null default now(),
-  status     text not null default 'queued' check (status in ('queued', 'running', 'done', 'failed')),
-  attempts   integer not null default 0,
-  last_error text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id              uuid primary key default gen_random_uuid(),
+  type            text not null,
+  user_id         uuid references public.users (id) on delete cascade,
+  payload         jsonb not null default '{}'::jsonb,   -- IDs and parameters only, never note text
+  idempotency_key text unique,
+  run_at          timestamptz not null default now(),
+  status          text not null default 'queued' check (status in ('queued', 'running', 'done', 'failed')),
+  lease_until     timestamptz,
+  locked_by       text,
+  attempts        integer not null default 0,
+  last_error      text,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  constraint jobs_lease_only_while_running check (status = 'running' or lease_until is null)
 );
-create index jobs_claim_idx on public.jobs (status, run_at) where status = 'queued';
+create index jobs_claim_idx on public.jobs (run_at) where status = 'queued';
+create index jobs_reclaim_idx on public.jobs (lease_until) where status = 'running';
+create index jobs_user_idx on public.jobs (user_id);
 
 create table public.push_tokens (
   id         uuid primary key default gen_random_uuid(),
@@ -393,7 +437,9 @@ create table public.push_tokens (
   token      text not null,
   platform   text not null check (platform in ('ios', 'android')),
   updated_at timestamptz not null default now(),
-  unique (user_id, token)
+  -- A device token belongs to exactly one account: signing into another account on the same phone
+  -- moves it (upsert on token), so the previous account's Rustles never reach that device.
+  unique (token)
 );
 
 create table public.safety_events (
@@ -405,6 +451,7 @@ create table public.safety_events (
   created_at   timestamptz not null default now()
 );
 create index safety_events_user_idx on public.safety_events (user_id, created_at desc);
+create index safety_events_note_idx on public.safety_events (note_id);
 
 -- Per-call cost log (docs/07 §7; the writer lives in M1-05). No prompt or output text, ever.
 create table public.llm_calls (
@@ -427,6 +474,7 @@ create table public.llm_calls (
 );
 create index llm_calls_created_idx on public.llm_calls (created_at desc);
 create index llm_calls_step_created_idx on public.llm_calls (step, created_at desc);
+create index llm_calls_user_idx on public.llm_calls (user_id);   -- the set-null on account deletion
 
 -- ---------------------------------------------------------------------------
 -- 8. Decrypting views (security_invoker) with INSTEAD OF triggers
@@ -746,7 +794,15 @@ alter table public.llm_calls          enable row level security;
 -- ---------------------------------------------------------------------------
 revoke all on all tables in schema public from anon;
 revoke all on all sequences in schema public from anon;
+-- And nothing in the future either: Supabase's default privileges would hand anon every new table.
+alter default privileges for role postgres in schema public revoke all on tables from anon;
+alter default privileges for role postgres in schema public revoke all on sequences from anon;
+alter default privileges for role postgres in schema public revoke all on functions from anon;
 
+-- The six base tables. Users need full column rights here because the INSTEAD OF triggers run as
+-- the caller and assign every column; what a user may actually change is enforced by the column
+-- grants on the views below, which are the only way in: the `enc` schema is not in PostgREST's
+-- exposed schemas (supabase/config.toml, checked by scripts/check-api-schemas.ts in `npm run lint`).
 grant select, insert, update, delete on enc.notes, enc.memory_items, enc.memory_summary, enc.deliveries, enc.replies, enc.recaps
   to authenticated, service_role;
 

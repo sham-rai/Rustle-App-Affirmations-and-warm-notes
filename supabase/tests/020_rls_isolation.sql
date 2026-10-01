@@ -55,7 +55,7 @@ insert into public.deliveries (id, user_id, body, kind, scheduled_for) values ('
 insert into public.replies (id, user_id, note_id, body) values ('10000000-0000-4000-8000-000000000007', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '10000000-0000-4000-8000-000000000002', 'A private note back');
 insert into public.recaps (id, user_id, period_start, period_end, cards) values ('10000000-0000-4000-8000-000000000008', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-09-01', '2026-09-30', '[{"t":"card"}]');
 insert into public.subscriptions (user_id, status) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'active');
-insert into public.warm_notes (id, sender_user_id, situation, body) values ('warmnote-slug-a', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'A warm note');
+insert into public.warm_notes (id, sender_user_id, situation, body) values ('warmnote-slug-a-0123456789ab', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'exams', 'A warm note');
 
 -- A reads everything back through the same paths.
 select pg_temp.login('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
@@ -124,7 +124,7 @@ with u as (update public.replies set reaction = 'heart' where id = '10000000-000
   select is((select count(*)::int from u), 0, 'B cannot update A replies');
 with u as (update public.recaps set shared = true where id = '10000000-0000-4000-8000-000000000008' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A recaps');
-with u as (update public.warm_notes set revoked = true where id = 'warmnote-slug-a' returning 1)
+with u as (update public.warm_notes set revoked = true where id = 'warmnote-slug-a-0123456789ab' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A warm_notes');
 with u as (update public.push_tokens set token = 'x' where id = '10000000-0000-4000-8000-000000000009' returning 1)
   select is((select count(*)::int from u), 0, 'B cannot update A push_tokens');
@@ -148,7 +148,7 @@ with d as (delete from public.replies where id = '10000000-0000-4000-8000-000000
   select is((select count(*)::int from d), 0, 'B cannot delete A replies');
 with d as (delete from public.recaps where id = '10000000-0000-4000-8000-000000000008' returning 1)
   select is((select count(*)::int from d), 0, 'B cannot delete A recaps');
-with d as (delete from public.warm_notes where id = 'warmnote-slug-a' returning 1)
+with d as (delete from public.warm_notes where id = 'warmnote-slug-a-0123456789ab' returning 1)
   select is((select count(*)::int from d), 0, 'B cannot delete A warm_notes');
 with d as (delete from public.push_tokens where id = '10000000-0000-4000-8000-000000000009' returning 1)
   select is((select count(*)::int from d), 0, 'B cannot delete A push_tokens');
