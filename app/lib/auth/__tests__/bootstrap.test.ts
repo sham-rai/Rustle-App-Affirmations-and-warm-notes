@@ -94,7 +94,7 @@ describe('ensureSession', () => {
       session: null,
       refresh: () => ({ error: new AuthApiError('Too many requests', 429, 'over_request_rate_limit') }),
     });
-    await expect(ensureSession(client, store)).resolves.toEqual({ status: 'failed', reason: 'server' });
+    await expect(ensureSession(client, store)).resolves.toEqual({ status: 'failed', reason: 'server', hasStoredToken: true });
     expect(calls.signInAnonymously).toBe(0);
     await expect(store.load()).resolves.toMatchObject({ token: 'rt-keep' });
   });
@@ -106,7 +106,7 @@ describe('ensureSession', () => {
       session: null,
       refresh: () => ({ error: new AuthRetryableFetchError('Network request failed', 0) }),
     });
-    await expect(ensureSession(client, store)).resolves.toEqual({ status: 'failed', reason: 'offline' });
+    await expect(ensureSession(client, store)).resolves.toEqual({ status: 'failed', reason: 'offline', hasStoredToken: true });
     expect(calls.signInAnonymously).toBe(0);
     await expect(store.load()).resolves.toMatchObject({ token: 'rt-keep' });
   });
@@ -116,6 +116,10 @@ describe('ensureSession', () => {
       session: null,
       anonymous: { error: new AuthRetryableFetchError('Network request failed', 0) },
     });
-    await expect(ensureSession(client, tokenStore())).resolves.toEqual({ status: 'failed', reason: 'offline' });
+    await expect(ensureSession(client, tokenStore())).resolves.toEqual({
+      status: 'failed',
+      reason: 'offline',
+      hasStoredToken: false,
+    });
   });
 });

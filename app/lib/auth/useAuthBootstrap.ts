@@ -22,6 +22,8 @@ export function useAuthBootstrap(): AuthBootstrapState {
   const run = useCallback(async (): Promise<void> => {
     inFlight.current ??= ensureSession(getSupabase(), getRefreshTokenStore())
       // A thrown error (a Keystore that cannot encrypt, a bug) must never leave the app on "loading".
+      // Whether a token is stored is then unknown, so the field stays absent (never `false`): the
+      // launch route treats unknown as an existing account and never replays the intro (M2-01).
       .catch((): AuthBootstrapResult => ({ status: 'failed', reason: 'server' }))
       .finally(() => {
         inFlight.current = null;

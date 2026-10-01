@@ -2,7 +2,7 @@
 id: M2-01
 title: Company splash and the Rustle screen with the Skia tree
 milestone: M2
-state: ready
+state: PR open
 executor: subagent
 model: opus
 owner_files: [app/app/(onboarding)/splash.tsx, app/app/(onboarding)/rustle.tsx, app/features/intro/**, app/assets/fonts/**]
@@ -32,8 +32,23 @@ The first launch, and a launch after sign-out, shows the company splash for two 
 - none yet
 
 ## Report (filled by the executor)
-- Summary:
-- Files touched:
-- Commands run and results:
-- Criteria met / not verified:
+- Summary: `(onboarding)` route group with `splash.tsx` (DreamTeam Co. on paper, fade out, Rustle screen at 2 s) and `rustle.tsx` (tree, mark and wordmark from the first frame; the stage fades in from the splash; at 1 s headline, sub, Begin and the footer ("Not a medical service." plus the AI disclosure) fade up together in 400 ms, rising 8 pt, fades only under reduce-motion). `/` waits for the session with the native splash up (capped at 4 s); behind it and after the cap it shows the same paper and company name as the splash, never a blank screen. A freshly created anonymous account, or a first launch offline with no stored refresh token, goes to the splash; a restored session, or a failed refresh of a stored token (reinstall offline), goes to Today. An MMKV flag (`rustle.intro` / `intro.seen`) is set on Begin and on any restored-session launch. The tree module is `app/features/intro/tree/` (maths, draw, `Tree` with `intensity: 'full' | 'quiet'` for M1-09 and a required `reduceMotion` prop from the screen's live hook). Branches and leaves go into one Skia Picture per frame on the UI thread. Paints and the leaf path are made once per theme, and the frame callback is memoised.
+- Files touched (owner files): `app/app/(onboarding)/_layout.tsx`, `splash.tsx`, `rustle.tsx`; `app/features/intro/**` (tree/maths.ts, tree/draw.ts, tree/Tree.tsx, FoldedNoteMark.tsx, CompanySplashView.tsx, intro-seen.ts, launch.ts, timing.ts, link-text.ts, useReduceMotion.ts, index.ts, 6 test files); `app/i18n/en.json`, `fr.json` (new `intro` block only).
+- Files touched outside the owner files, and why:
+  - `app/app.json` (lead, d8ad131): native splash on paper in light and dark.
+  - `app/app/_layout.tsx`: registers the route group and holds the native splash until the launch route is known.
+  - `app/app/index.tsx`: the launch redirect.
+  - `app/lib/auth/bootstrap.ts`, `useAuthBootstrap.ts`, `__tests__/bootstrap.test.ts`: `hasStoredToken` on the failed state, so a reinstall opened offline never replays the intro.
+  - `scripts/check-app-config.ts` and `package.json`: `check:app-config` in `lint` keeps the app.json splash colours equal to `color.paper`.
+- Commands run and results: `npm run typecheck` pass · `npm run lint` pass (eslint, check-strings, check-contrast, check-app-config) · `npm test` pass (app 19 suites / 102 tests, shared 2 / 22). The existing root-layout test is unchanged and passes.
+- Criteria met / not verified: §1.0 and §1.1 are met in code and in the tests (EN, FR tu, FR vous; fake-timer timings; Begin → Today; the rendered launch gate: native splash held while loading, new account → splash, restored → Today, 4 s cap; launch routing incl. a stored token that failed to refresh). The crisis link and "I already have an account" are deliberately absent (see deviations), so §1.1 is complete only once M1-09 and account linking add them. NOT verified: anything on a device. That includes the animation, the frame rate, how the tree feels, the Skia objects shared with the UI thread, the placeholder mark, French at the largest text size, and the native-splash hand-off. The native splash is now on paper in light and dark via `app.json`, but it needs the first native build, and its image is still the Expo template `splash-icon.png` in both modes.
+- Second review round (lead, 2026-09-30, from an independent read of the branch): (1) when the token store itself throws during bootstrap, the catch path used to report `hasStoredToken: false` as a fact and the launch route then showed the intro; an existing account could see it again. The catch now leaves the field absent, and the route treats unknown as an existing account (Today). New unit case in `launch.test.ts`. (2) The splash and Rustle-screen timing tests imported the constants they were checking, so they could not fail on a wrong value; they now pin 2000 / 1000 / 400 as literals, check the splash at 1999 ms and the headline at 999 ms. (3) The comment in `tree/draw.ts` claimed nothing is allocated per frame; it now says what is (the picture, pose arrays and leaf placements) and points at the follow-up ticket that measures it on a device. `npm run typecheck` 0 · `npm run lint` 0 · `npm test` 0 (app 19 suites / 104 tests, shared 22).
 - Deviations and why:
+  1. The style board's intro example is not in the repository. The tree maths is written from docs/05 §2 and docs/20 §6 and kept in one commented file (`tree/maths.ts`: TREE_SHAPE, WIND, FALL) to align with the board later.
+  2. The folded-note mark is a placeholder Skia drawing (no artwork exists yet).
+  3. No dead controls. The "get help now" link waits for the crisis resources (TODO(M1-09); `intro.crisis` is kept, and `link-text.ts` splits it). "I already have an account" waits for account linking (TODO(M2 account linking); `intro.haveAccount` is kept). Begin opens Today until the age gate exists (TODO(M1-09)).
+  4. With no Supabase project configured (tests, builds without `.env.local`), `/` goes to Today, as the existing root-layout test requires; such builds never show the intro.
+- Edge cases:
+  - No sign-out path exists yet: `resetIntroSeen()` is exported with TODO(M2 account linking) for the sign-out to call.
+  - After an account is deleted (the blocked minor in M1-09, delete account later), the caller of `deleteAnonymousAccount()` must call `resetIntroSeen()`. Otherwise the flag stays set and a fresh account lands on Today without the intro.
+  - A reinstall opened offline or during a server error keeps its Keychain / Block Store token, so it goes to Today (`hasStoredToken`) and runs in its cached or empty state until the refresh succeeds.

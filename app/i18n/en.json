@@ -6,6 +6,17 @@
     "errorSaved": "Something went wrong. Your note is saved; I’ll try again in a moment.",
     "notNow": "Not now"
   },
+  "intro": {
+    "aiDisclosure": "Rustle is AI, not a therapist or a crisis service.",
+    "company": "DreamTeam Co.",
+    "crisis": "Not a medical service. If you’re in crisis, <link>get help now</link>.",
+    "haveAccount": "I already have an account",
+    "headline": "Notes that know what you’re going through.",
+    "notMedical": "Not a medical service.",
+    "sub": "Tell me a little. I’ll remember, and leave you something kind when you need it.",
+    "wordmark": "rustle",
+    "wordmarkLabel": "Rustle"
+  },
   "settings": {
     "backup": {
       "accountId": "Account {{id}}",

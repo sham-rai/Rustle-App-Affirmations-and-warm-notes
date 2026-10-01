@@ -10,7 +10,16 @@ export type AuthBootstrapResult =
   /** A session exists. `restoredFrom` says how it came back (docs/07 §5 edge cases). */
   | { status: 'ready'; userId: string; isAnonymous: boolean; restoredFrom: RestoredFrom }
   /** Nothing could be established this time; safe to retry (network, server). */
-  | { status: 'failed'; reason: 'offline' | 'server' };
+  | {
+      status: 'failed';
+      reason: 'offline' | 'server';
+      /**
+       * True when a stored refresh token exists (Keychain, Keystore, Block Store) but could not be
+       * exchanged this time: an existing account, for example a reinstall opened offline. The
+       * first-launch intro must not replay for it (M2-01). Absent means unknown.
+       */
+      hasStoredToken?: boolean;
+    };
 
 const DEAD_REFRESH_TOKEN_CODES = new Set(['refresh_token_not_found', 'refresh_token_already_used', 'session_not_found']);
 
@@ -52,14 +61,14 @@ export async function ensureSession(
       return { status: 'ready', userId: user.id, isAnonymous: user.is_anonymous === true, restoredFrom: stored.source };
     }
     if (refreshed.error && isAuthRetryableFetchError(refreshed.error)) {
-      return { status: 'failed', reason: 'offline' };
+      return { status: 'failed', reason: 'offline', hasStoredToken: true };
     }
     if (refreshed.error && isDeadRefreshToken(refreshed.error)) {
       // The token itself is dead (revoked, already rotated, unknown). Forget it and start again.
       await refreshTokens.clear();
     } else {
       // Anything else (429, 5xx, a misconfigured project) keeps the token; a retry may succeed.
-      return { status: 'failed', reason: 'server' };
+      return { status: 'failed', reason: 'server', hasStoredToken: true };
     }
   }
 
@@ -67,6 +76,7 @@ export async function ensureSession(
   if (created.error || !created.data.session) {
     return {
       status: 'failed',
+      hasStoredToken: false,
       reason: created.error && isAuthRetryableFetchError(created.error) ? 'offline' : 'server',
     };
   }

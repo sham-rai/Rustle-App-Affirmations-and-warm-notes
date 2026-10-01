@@ -15,11 +15,12 @@
     "typecheck": "npm run typecheck --workspaces --if-present && tsc -p scripts",
     "test": "npm run test --workspaces --if-present",
     "test:db": "supabase test db",
-    "lint": "npm run lint --workspaces --if-present && npm run check:strings && npm run check:contrast && npm run check:enums && npm run check:api-schemas",
+    "lint": "npm run lint --workspaces --if-present && npm run check:strings && npm run check:contrast && npm run check:enums && npm run check:api-schemas && npm run check:app-config",
     "check:strings": "tsx scripts/check-strings.ts",
     "check:contrast": "tsx scripts/check-contrast.ts",
     "check:enums": "tsx scripts/check-enums.ts",
     "check:api-schemas": "tsx scripts/check-api-schemas.ts",
+    "check:app-config": "tsx scripts/check-app-config.ts",
     "eval": "npm run eval --workspace evals",
     "prepare": "husky"
   },
