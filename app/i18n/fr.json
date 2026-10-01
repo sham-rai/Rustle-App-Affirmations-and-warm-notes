@@ -98,6 +98,8 @@
       "IE": "Irlande",
       "US": "États-Unis"
     },
+    "dialIt": "Cet appareil ne peut pas faire l’appel. Compose le {{number}} à partir de n’importe quel téléphone.",
+    "dialIt_vous": "Cet appareil ne peut pas faire l’appel. Composez le {{number}} à partir de n’importe quel téléphone.",
     "lines": {
       "belgiumCps": "Centre de Prévention du Suicide",
       "canada988": "Ligne d’aide en cas de crise de suicide, appel ou texto",
@@ -112,7 +114,9 @@
       "samaritans": "Samaritans",
       "sosAmitie": "SOS Amitié, écoute et clavardage"
     },
-    "open": "Ouvrir {{name}}"
+    "open": "Ouvrir {{name}}",
+    "visitIt": "Ouvre {{address}} dans un navigateur.",
+    "visitIt_vous": "Ouvrez {{address}} dans un navigateur."
   },
   "settings": {
     "backup": {

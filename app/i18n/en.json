@@ -77,6 +77,7 @@
       "IE": "Ireland",
       "US": "United States"
     },
+    "dialIt": "This device can’t place the call. Dial {{number}} from any phone.",
     "lines": {
       "belgiumCps": "Centre de Prévention du Suicide",
       "canada988": "Suicide Crisis Helpline, call or text",
@@ -91,7 +92,8 @@
       "samaritans": "Samaritans",
       "sosAmitie": "SOS Amitié, listening line and chat"
     },
-    "open": "Open {{name}}"
+    "open": "Open {{name}}",
+    "visitIt": "Open {{address}} in a browser."
   },
   "settings": {
     "backup": {
