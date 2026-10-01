@@ -6,10 +6,10 @@ import { Text } from '../../components/Text';
 import { useTheme } from '../../hooks/useTheme';
 import { useT } from '../../i18n/useT';
 import { getSupabase } from '../../lib/supabase';
-import { Button } from './Button';
+import { Button } from '../../components/Button';
 import { leaveOnboarding } from './leave';
 import { OnboardingPage } from './OnboardingPage';
-import { markConsentsComplete } from './block-flag';
+import { markConsentsComplete } from './onboarding-flags';
 import { CONSENT_KINDS, recordConsent, type ConsentKind } from './records';
 
 const COPY = {

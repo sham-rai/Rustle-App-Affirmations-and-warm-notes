@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { Text } from '../../components/Text';
 import { useTheme } from '../../hooks/useTheme';
 import { useT } from '../../i18n/useT';
-import { Button } from './Button';
+import { Button } from '../../components/Button';
 import { HelpLineList } from './HelpLineList';
 import { HelpLinesFooter } from './HelpLinesFooter';
 import { OnboardingPage } from './OnboardingPage';

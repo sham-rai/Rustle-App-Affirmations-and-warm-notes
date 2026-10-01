@@ -1,6 +1,6 @@
 import { resetIntroSeen } from '../intro/intro-seen';
 import { deleteAnonymousAccount } from '../../lib/supabase';
-import { resetConsentsComplete } from './block-flag';
+import { resetConsentsComplete } from './onboarding-flags';
 
 /**
  * Ends onboarding without keeping anything (docs/21 §1.2–1.3): an under-18 block, or a declined

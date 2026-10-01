@@ -17,7 +17,7 @@ import Index from '../../../app/index';
 import YouScreen from '../../../app/(tabs)/you';
 import { isIntroSeen, markIntroSeen } from '../../intro/intro-seen';
 import { CONTENT_DELAY_MS, CONTENT_FADE_MS } from '../../intro/timing';
-import { clearAgeBlockedForTests, isAgeBlocked, isConsentsComplete, markConsentsComplete, resetConsentsComplete } from '../block-flag';
+import { clearAgeBlockedForTests, isAgeBlocked, isConsentsComplete, markConsentsComplete, resetConsentsComplete } from '../onboarding-flags';
 import { fake, USER_ID } from './fake-supabase';
 
 // An English (Canada) device; fonts load at once; Skia is stood in for (its maths is tested elsewhere).

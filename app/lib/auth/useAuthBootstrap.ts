@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { isAgeBlocked } from '../../features/consent/block-flag';
+import { isAgeBlocked } from '../../features/consent/onboarding-flags';
 import { getRefreshTokenStore } from '../secure-storage/refresh-token-store';
 import { getSupabase } from '../supabase';
 import { ensureSession, type AuthBootstrapResult } from './bootstrap';

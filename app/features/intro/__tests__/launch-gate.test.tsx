@@ -19,7 +19,7 @@ import {
   markAgeBlocked,
   markConsentsComplete,
   resetConsentsComplete,
-} from '../../consent/block-flag';
+} from '../../consent/onboarding-flags';
 import { isIntroSeen, markIntroSeen, resetIntroSeen } from '../intro-seen';
 
 // The cold-start gate (docs/21 §1.0): with a Supabase project configured, "/" waits for the

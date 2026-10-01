@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fontFamily, Text } from '../../components/Text';
+import { Button } from '../../components/Button';
+import { Text } from '../../components/Text';
 import { LinkedSentence } from '../../features/consent/LinkedSentence';
 import { FoldedNoteMark } from '../../features/intro/FoldedNoteMark';
 import { markIntroSeen } from '../../features/intro/intro-seen';
@@ -21,7 +22,6 @@ import { useT } from '../../i18n/useT';
 
 const WORDMARK_SIZE = 44;
 const WORDMARK_TRACKING = 1.5;
-const PRIMARY_HEIGHT = 52;
 
 /**
  * Beats 2 and 3 of the first launch (docs/05 §2, docs/21 §1.1). The tree, the mark and the
@@ -31,7 +31,7 @@ const PRIMARY_HEIGHT = 52;
 export default function RustleScreen() {
   const router = useRouter();
   const { t } = useT();
-  const { colors, space, radius } = useTheme();
+  const { colors, space } = useTheme();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
 
@@ -109,18 +109,7 @@ export default function RustleScreen() {
           </View>
 
           <View style={{ gap: space[2] }}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={onBegin}
-              style={({ pressed }) => [
-                styles.primary,
-                { backgroundColor: pressed ? colors.sageDeep : colors.sage, borderRadius: radius.chip },
-              ]}
-            >
-              <Text variant="body" color="card" style={{ fontFamily: fontFamily.sansMedium }}>
-                {t('common.begin')}
-              </Text>
-            </Pressable>
+            <Button label={t('common.begin')} onPress={onBegin} />
             {/* TODO(M2 account linking): "I already have an account" (intro.haveAccount) goes here. */}
           </View>
 
@@ -151,5 +140,4 @@ const styles = StyleSheet.create({
   wordmark: { fontSize: WORDMARK_SIZE, lineHeight: WORDMARK_SIZE * 1.25, letterSpacing: WORDMARK_TRACKING },
   content: { width: '100%', maxWidth: 480, alignSelf: 'center' },
   centred: { textAlign: 'center' },
-  primary: { minHeight: PRIMARY_HEIGHT, alignItems: 'center', justifyContent: 'center' },
 });

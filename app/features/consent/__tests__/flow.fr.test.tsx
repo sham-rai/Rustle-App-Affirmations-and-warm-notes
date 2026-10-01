@@ -12,7 +12,7 @@ import TabLayout from '../../../app/(tabs)/_layout';
 import TodayScreen from '../../../app/(tabs)/today';
 import Index from '../../../app/index';
 import { setAddress } from '../../../i18n/preferences';
-import { clearAgeBlockedForTests } from '../block-flag';
+import { clearAgeBlockedForTests } from '../onboarding-flags';
 import { fake } from './fake-supabase';
 
 // A French (Quebec) device: "tu" by default, "vous" when chosen, never mixed.

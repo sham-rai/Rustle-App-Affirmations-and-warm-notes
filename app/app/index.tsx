@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useEffect } from 'react';
 
-import { isAgeBlocked, isConsentsComplete, markConsentsComplete } from '../features/consent/block-flag';
+import { isAgeBlocked, isConsentsComplete, markConsentsComplete } from '../features/consent/onboarding-flags';
 import { CompanySplashView } from '../features/intro/CompanySplashView';
 import { isIntroSeen, markIntroSeen } from '../features/intro/intro-seen';
 import { GATE_ROUTE, launchRoute, shouldMarkOnboardedOnLaunch } from '../features/intro/launch';

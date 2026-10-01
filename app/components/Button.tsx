@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 
-import { fontFamily, Text } from '../../components/Text';
-import { useTheme } from '../../hooks/useTheme';
+import { fontFamily, Text } from './Text';
+import { useTheme } from '../hooks/useTheme';
 
 // docs/20 §7.5: the primary is sage with white text; the secondary is ink on paper with a line
 // border. Both are 52 pt tall, full width, in the same type: "Not now" is never the smaller choice.

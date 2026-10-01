@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState, type AppStateStatus } from 'react-native';
 
-import { clearAgeBlockedForTests, markAgeBlocked } from '../../../features/consent/block-flag';
+import { clearAgeBlockedForTests, markAgeBlocked } from '../../../features/consent/onboarding-flags';
 import { getSupabase } from '../../supabase';
 import { useAuthBootstrap } from '../useAuthBootstrap';
 
