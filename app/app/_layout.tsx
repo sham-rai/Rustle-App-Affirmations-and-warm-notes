@@ -9,6 +9,8 @@ import { ThemeProvider } from '../components/ThemeProvider';
 import { useTheme } from '../hooks/useTheme';
 import { i18n, useDeviceLanguage } from '../i18n';
 import { AuthProvider, useAuth } from '../lib/auth/AuthProvider';
+import { track } from '../lib/analytics';
+import { initSentry } from '../lib/sentry';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 // Keep the splash up until the fonts are ready (M1-04) and, on a cold start, until the session is
@@ -16,6 +18,10 @@ import { isSupabaseConfigured } from '../lib/supabase';
 // account to the company splash, with nothing in between. AuthProvider creates or restores the
 // anonymous account (M1-03).
 void SplashScreen.preventAutoHideAsync();
+
+// Module scope: once per cold start, before anything can crash. Both SDKs are off without their key.
+initSentry();
+track('app_opened', { source: 'icon' });
 
 /** Never hold the native splash longer than this, even if the session is slow to come back. */
 const MAX_NATIVE_SPLASH_MS = 4000;
