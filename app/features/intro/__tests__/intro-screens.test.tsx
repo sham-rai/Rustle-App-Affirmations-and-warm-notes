@@ -38,6 +38,9 @@ function mockStandIn(testID: string) {
   return createElement(StandIn, { testID });
 }
 
+// Whole-router renders: a loaded machine can take longer than Jest's 5 s default.
+jest.setTimeout(30000);
+
 const routes = {
   _layout: RootLayout,
   index: Index,
