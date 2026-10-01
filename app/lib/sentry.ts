@@ -5,7 +5,10 @@ import * as Sentry from '@sentry/react-native';
  * long string never leave the device. Off when the DSN is empty.
  */
 
-/** Longest string a Sentry event may carry; a note or a reply is always longer than this. */
+/**
+ * The real rule is that no code path ever attaches content (notes, replies, memory) to an event.
+ * This scrubber is defence in depth; the length bound is only a backstop for long strings.
+ */
 export const MAX_STRING_LENGTH = 200;
 const REDACTED = '[scrubbed]';
 
@@ -29,6 +32,8 @@ export function scrubEvent<T extends Sentry.ErrorEvent>(event: T): T {
     delete scrubbed.request.query_string;
   }
   delete scrubbed.user;
+  // The one place free text would land if someone attached it; nothing we need lives here.
+  delete scrubbed.extra;
   // Breadcrumbs keep their category and level; their data and messages are dropped.
   if (scrubbed.breadcrumbs) {
     scrubbed.breadcrumbs = scrubbed.breadcrumbs.map((b) => ({
