@@ -1,4 +1,4 @@
-import { EVENT_PREFIXES } from '@rustle/shared';
+import { DELIVERY_INTENTS, EVENT_PREFIXES } from '@rustle/shared';
 import PostHog from 'posthog-react-native';
 import { Platform } from 'react-native';
 
@@ -42,7 +42,7 @@ export const ALLOWED_PROPERTIES = {
   platform: ['ios', 'android'],
   entitlement_state: ['premium', 'welcome_week', 'door_open'],
   slot: ['morning', 'midday', 'evening', 'before_sleep'],
-  delivery_kind: ['daily', 'date_eve', 'date_day', 'follow_up', 'quiet_presence', 'win_celebration', 'first', 'seed', 'reengage'],
+  delivery_kind: DELIVERY_INTENTS,
   reaction: ['heart', 'not_quite'],
   source: ['push', 'widget', 'deeplink', 'icon', 'local'],
 } as const;
