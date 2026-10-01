@@ -30,8 +30,10 @@ export type TreeColors = { readonly ink: string; readonly sage: string };
 
 /**
  * The Skia objects every frame reuses: made once per theme (makeTreeKit, JS thread) and only
- * mutated (stroke width, alpha) while recording on the UI thread. Nothing is allocated per frame
- * except the pose arrays.
+ * mutated (stroke width, alpha) while recording on the UI thread. Each frame still allocates its
+ * SkPicture, the pose arrays and the leaf placements; that is fine for a three-second screen and
+ * is measured on a device in the follow-up ticket (M2-01 review) before the tree is reused anywhere
+ * longer-lived.
  */
 export type TreeKit = {
   readonly branchPaint: SkPaint;

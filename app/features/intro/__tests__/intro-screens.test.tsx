@@ -12,6 +12,12 @@ import Index from '../../../app/index';
 import { isIntroSeen, resetIntroSeen } from '../intro-seen';
 import { CONTENT_DELAY_MS, CONTENT_FADE_MS, SPLASH_MS } from '../timing';
 
+// docs/20 §6 pins the sequence: 2 s splash, 1 s hold, 400 ms fade-up. Literals here, so a changed
+// constant fails this file instead of silently moving the test with it.
+const SPLASH = 2000;
+const HOLD = 1000;
+const FADE = 400;
+
 // An English device; fonts load at once. Skia needs its native module, so the tree and the mark
 // are stood in for by plain views here (their maths is tested in tree-maths.test.ts).
 const EN_CA = [{ languageCode: 'en', languageTag: 'en-CA', regionCode: 'CA' }];
@@ -63,15 +69,23 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
+describe('the timing constants (docs/20 §6)', () => {
+  it('are 2 s, 1 s and 400 ms', () => {
+    expect(SPLASH_MS).toBe(SPLASH);
+    expect(CONTENT_DELAY_MS).toBe(HOLD);
+    expect(CONTENT_FADE_MS).toBe(FADE);
+  });
+});
+
 describe('the company splash (docs/21 §1.0)', () => {
-  it('shows the placeholder company name, then after about 2 s opens the Rustle screen', async () => {
+  it('shows the placeholder company name, then after 2 s opens the Rustle screen', async () => {
     const router = await renderAt('/splash');
     expect(screen.getByText('DreamTeam Co.')).toBeOnTheScreen();
 
-    advance(SPLASH_MS - 100);
+    advance(SPLASH - 1);
     expect(router.getPathname()).toBe('/splash');
 
-    advance(200);
+    advance(1);
     expect(router.getPathname()).toBe('/rustle');
   });
 });
@@ -88,7 +102,11 @@ describe('the Rustle screen (docs/21 §1.1)', () => {
     expect(screen.queryByText(headline)).toBeNull();
     expect(screen.getByText(headline, { includeHiddenElements: true })).toBeOnTheScreen();
 
-    advance(CONTENT_DELAY_MS + CONTENT_FADE_MS);
+    // Still hidden right up to the end of the hold.
+    advance(HOLD - 1);
+    expect(screen.queryByText(headline)).toBeNull();
+
+    advance(1 + FADE);
 
     expect(screen.getByText(headline)).toBeOnTheScreen();
     expect(
@@ -104,7 +122,7 @@ describe('the Rustle screen (docs/21 §1.1)', () => {
 
   it('Begin marks the intro seen and, until the age gate exists, opens Today', async () => {
     const router = await renderAt('/rustle');
-    advance(CONTENT_DELAY_MS + CONTENT_FADE_MS);
+    advance(HOLD + FADE);
 
     fireEvent.press(screen.getByRole('button', { name: 'Begin' }));
 

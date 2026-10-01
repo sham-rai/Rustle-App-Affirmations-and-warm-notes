@@ -44,6 +44,10 @@ describe('launchRoute (docs/21 §1.0)', () => {
     );
   });
 
+  it('treats an unknown token state (the store threw) as an existing account', () => {
+    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'server' } })).toBe(HOME_ROUTE);
+  });
+
   it('counts a restored session as seen', () => {
     expect(shouldMarkSeenOnLaunch(ready('session'))).toBe(true);
     expect(shouldMarkSeenOnLaunch(ready('new'))).toBe(false);
