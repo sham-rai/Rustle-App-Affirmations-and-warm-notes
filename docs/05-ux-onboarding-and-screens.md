@@ -52,7 +52,7 @@ Micro-copy between screens reflects back what the user said ("Thank you for trus
 
 **Variant to test** (doc 12 §6): screens 1–3 → first note → "does this feel right?" → screens 4–5 framed as "make it yours" → notification permission. The first note is then written in the neutral gentle register and tone/avoid shape the second note onward.
 
-**Language:** English and French at launch, with **Canadian French (fr-CA) as the primary French variant** (D25); France-French wording is reviewed before the European launch. Detect the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French UI). Notes are written in whatever language the user writes in. French notes default to **"tu"**, the warm, informal register that friends use; a setting lets the user switch to "vous" (some users aged 45+ may prefer it, and it's asked about on onboarding screen 4 for French users).
+**Language:** English and French at launch, with **Canadian French (fr-CA) as the primary French variant** (D25); France-French wording is reviewed before the European launch. Detect the device locale (fr-FR, fr-CA, fr-BE, fr-CH → French UI). Rustles are written in the language set in Settings ("Notes written in", `profiles.note_language`), which defaults to the UI language (D48). French notes default to **"tu"**, the warm, informal register that friends use; a setting lets the user switch to "vous" (some users aged 45+ may prefer it, and it's asked about on onboarding screen 4 for French users).
 
 **Age gate (18+):** a date-of-birth picker (or "I'm 18 or older" confirmation) on the consent screen before onboarding. Under 18 → a kind "Rustle is for adults. Here are resources for younger people" screen with localised youth helplines. See the risks doc §5.
 
@@ -61,7 +61,7 @@ Micro-copy between screens reflects back what the user said ("Thank you for trus
 - A 2–4 second "writing your first note…" animation (paper and pen). The real LLM call happens here, with a pre-generated fallback ready.
 - The note is displayed large, in the chosen theme. It **must reference something specific** from screens 1–2 (for example *"Mia, three weeks until your finals, and you're already here, taking care of yourself. That's the kind of person who makes it through. 🌿"*).
 - Below it: ❤️ "This feels right" / ↻ "Not quite" (feedback for tone calibration).
-- Then: **"Want me to leave notes like this at 8:00 and 21:30?"** (the times of the chosen slots) → system notification permission prompt. *Asking after the value moment roughly doubles opt-in rates compared with asking on launch.*
+- Then: **"Want me to leave notes like this at 8:00 and 21:30?"** (the times of the chosen slots) → system notification permission prompt. *Asking after the value moment roughly doubles opt-in rates compared with asking on launch.* When onboarding text was classified `elevated` or `crisis`, the permission is not asked in that session; it is asked, with the same pre-prompt, at the first app open on day 2 or later (D48).
 
 ### Paywall
 
@@ -79,7 +79,7 @@ Shown after the first note and notification permission, never in a session where
 - **"Earlier today / this week":** a small scroll of previous notes.
 - **Check-in card** (2–4×/week, when due): "How's today?" with the five abstract marks (doc 20 §7.4) plus an optional line. Takes 10 seconds.
 - **Date-aware banner:** "Tomorrow: your interview. I'll be with you in the morning."
-- **Gentle footer:** "Today you showed up for yourself 12 times this month."
+- **Gentle footer:** "days you showed up" as leaf marks, without a count (doc 21 §4.3).
 
 ## 5. Notes board
 
@@ -87,7 +87,7 @@ Shown after the first note and notification permission, never in a session where
 - **+ New note**: a sheet with a text field, 🎤 (V2), mood tag (optional), and the 🤫 "Just listen, no reply" toggle.
 - **Rustle's reply** appears as a small handwritten-style note *attached* to the user's note (like a note stuck onto another), with a soft push: "Rustle left a note on what you wrote."
 - **The first note back is a small event:** the reply slides in and *sticks* onto the note (doc 20 §6), and a one-time line appears under it: *"I'll sometimes leave a note back. Turn on 'Just listen' if you'd rather I didn't."* Door-open users see, on their second note of the week, a quiet card in the same place: *"I read this. Want a note back on everything you write?"* (doc 09 §3).
-- Long-press: Pin · Hide from recaps · Forget this · Edit · Delete.
+- Long-press: Pin · Hide from recaps · Forget this · Edit · Delete · Report this note.
 - Search, and filter by life area / month.
 - Empty state: "This is your space. Put anything here: a fear, a win, a random thought. I'll remember."
 
@@ -97,11 +97,12 @@ Order matters: the first two rows carry visual weight; account and help sit at t
 
 - **What Rustle remembers:** a readable list of memory items grouped by People · Dates · Situations · Things that help · Things to avoid. Each can be edited or deleted. Toggle: "Pause memory".
 - **Your journey:** the monthly recap entry point, and "Look how far you've come" (unlocked at day 30, shown as a countdown before that).
-- **Notes delivery:** slots and their times (premium; shown disabled with one line in door-open), quiet hours, "adapt to me" (AI adjusts timing), weekend mode, quiet season on/off.
+- **Notes delivery:** slots and their times (premium; shown disabled with one line in door-open), quiet hours, "adapt to me" (AI adjusts timing; V1.1, D48), weekend mode, quiet season on/off.
 - **Focus areas:** life areas with weights ("more about my recovery, less about work").
 - **Tone:** re-pick tone and avoid-list.
+- **Language:** "Notes written in" (English or French; defaults to the app language, `profiles.note_language`, D48) and, for French, tu or vous.
 - **Themes & widget:** themes, fonts, widget styles.
-- **Account & data:** sign in / link account, backup status, export (JSON + PDF), delete account, privacy, consents, subscription (with a clear « Résilier mon abonnement » entry that deep-links to the store), redeem a code.
+- **Account & data:** sign in / link account, backup status, export (JSON; PDF in V1.1), delete account, privacy, consents, subscription (with a clear « Résilier mon abonnement » entry that deep-links to the store), redeem a code.
 - **Help:** crisis resources (localised), FAQ, contact.
 - **About:** the company name (DreamTeam Co., placeholder until registration) beside "Made in Ontario, Canada 🍁 · Your notes are stored in Canada", the AI disclosure ("Rustle is AI, not a therapist or a crisis service"), version, licences.
 
@@ -170,4 +171,4 @@ Onboarding is designed in detail; D7 retention depends on what follows it. Two p
 | **6** | Normal rhythm. First **win celebration** if the extractor found one. | Same. |
 | **7** | A small **"one week"** Rustle: one thing they said on day 1, one thing that happened since. Trial ends; premium continues. | The "one week" Rustle, then the **day-7 paywall** (doc 09 §3). "Not now" again → door open: seed nothing, one presence Rustle a week, key dates, one note back a week. |
 
-Rules for the week: no more than one prompt of any kind (backup, paywall, permission) per day; nothing in a session that opened from a heavy note; the check-in card appears at most twice; and the door-open transition on day 7 is stated in one calm sentence, never as a loss.
+Rules for the week: no more than one prompt of any kind (backup, paywall, permission) per day, with one exception: the first session holds both the permission pre-prompt and the first paywall, in that order (doc 21 §2.9, §13.1); nothing in a session that opened from a heavy note; the check-in card appears at most twice; and the door-open transition on day 7 is stated in one calm sentence, never as a loss.

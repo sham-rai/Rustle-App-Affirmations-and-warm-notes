@@ -26,6 +26,8 @@ A test crash reaches Sentry with bodies scrubbed, `app_opened` reaches PostHog w
 - PostHog in the EU cloud with IP anonymisation; Sentry request bodies scrubbed
 - The `llm_calls` table is created by M1-02 (the lead writes migrations); this ticket writes the code that logs to it
 - No `safety_level_detected` event: safety levels never go to PostHog (docs/12 §4, D46)
+- Events carry no life area, mood or safety property (D48): no `life_areas`, `mood` or check-in value, no `crisis_screen_shown` or `resource_tapped`, no safety kind on `note_reported`
+- Pre-approved properties (the lead approved these; anything else needs the lead first): screen or step name, locale, platform, app version, entitlement state, slot name, delivery kind, reaction value (heart / not_quite), source (push / widget / deep link)
 
 ## Questions for the PO
 - none yet

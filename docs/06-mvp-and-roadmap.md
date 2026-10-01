@@ -30,7 +30,7 @@ MVP success criteria (closed beta → soft launch):
 4. **Today** screen: current note, recent notes, ❤️ / "not quite", check-in card
 5. **Notes board**: create/edit/delete/pin notes, the "just listen" toggle, **Rustle replies** (delayed, one per note)
 6. Memory engine: extraction, summary, key dates, "What Rustle remembers" (view/delete)
-7. Daily note generation (nightly batch two days ahead + real-time refresh), seed notes for the first 48 h, and delivery (opaque push + iOS Notification Service Extension + local backup)
+7. Daily note generation (nightly batch two days ahead + real-time refresh), seed notes for the first 48 h, **date follow-up notes** ("how did it go?", D48), and delivery (opaque push + iOS Notification Service Extension + local backup)
 8. Delivery settings: slots and their times (up to four a day), quiet hours, lock-screen privacy (default on for sensitive life areas), **app lock (Face ID / PIN)**
 9. Safety gate + crisis flow + localised resources (US, UK, IE, CA, AU, FR, BE, CH at launch)
 10. **Share card** (Stories/image) with a sensitive-content check
@@ -48,8 +48,8 @@ MVP success criteria (closed beta → soft launch):
 - Android widget and the large iOS widget
 - More themes plus widget styles
 - Tone learning from reactions; adaptive timing
-- Date follow-up notes ("how did it go?")
 - PDF export
+- Account merge when a linked identity already owns another Rustle account (the MVP offers "Switch" only, D48)
 - **Chapter pass** (non-renewing 6-week purchase, timed to the first exam season, doc 09 §4)
 - Quiet-season downgrade offer at cancellation (doc 09 §7)
 - Gift subscriptions (needs web checkout, doc 07 §9)
@@ -86,7 +86,7 @@ You'll build Rustle yourself with Claude (Claude Code for the coding, Claude for
 | Engineering (app, backend, AI, widget) | **You + Claude Code** | TypeScript everywhere (Expo + Supabase + Node) is ideal for AI-assisted development: one language, huge training data, strong typing that catches mistakes |
 | Brand & key screens | Freelance designer (2–4 weeks) | Logo, palette, 6–8 key screens in Figma. Claude can build the rest from the design system. ~€2–5k |
 | Code & security review | Senior freelance dev (a few hours, twice) | **Strongly recommended**: the app handles intimate data. Review auth, RLS and encryption before beta and before launch. ~€1–2k |
-| Legal | Privacy/consumer lawyer (hours) | ToS, privacy policy, consent screens, GDPR/Quebec Law 25 review. ~€1.5–4k |
+| Legal | **No lawyer for now (D48)**; a privacy/consumer lawyer before public launch if budget allows, and may review everything later (~€1.5–4k) | Until then the lead drafts the privacy policy, terms and consent copy from the real data flows (doc 07, doc 11 §4); the founder reads and owns them as privacy officer under Quebec Law 25; the closed beta is invite-only, Canada only, under a short beta agreement; the docs state plainly that no legal review has happened |
 | Safety | Clinical psychologist advisor (a few hours/month) | Reviews crisis copy, prompts and marketing claims. ~€150–400/month |
 | Translation quality | Native French reviewer (fr-CA first, then fr-FR) | Review UI copy and a sample of AI notes each week in beta. ~€300–800 |
 
@@ -94,7 +94,7 @@ You'll build Rustle yourself with Claude (Claude Code for the coding, Claude for
 
 **Running costs before traction (< 5k MAU):** Supabase Pro $25+, Claude subscription $20–200, LLM API ~$0.2–1 per active user/month, RevenueCat free up to $2.5k monthly revenue, PostHog/Sentry free tiers, domain and email ~$20/month. **≈ $100–500/month.**
 
-**One-off budget:** €5–12k (designer, reviews, lawyer, trademark, French review), plus a marketing budget (see doc 10).
+**One-off budget:** €5–12k (designer, reviews, trademark, French review, and a lawyer before public launch if budget allows), plus a marketing budget (see doc 10).
 
 ## 4. Timeline (founder + Claude)
 

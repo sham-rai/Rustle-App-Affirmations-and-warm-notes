@@ -44,3 +44,4 @@ One sentence.
 - IDs: `<milestone>-<two digits>`; the branch is `feat/<id>-<slug>`.
 - A ticket touches only its `owner_files`; shared files (migrations, `en.json`/`fr.json`, tokens, `CLAUDE.md`) are owned by one ticket at a time.
 - The lead moves states and keeps `BOARD.md` current; the PO marks `done` by merging the PR.
+- Ticket state changes to `BOARD.md` are committed by the lead directly on `main` (board-only commits), so the board never lags behind a branch; everything else goes through a PR (D48).
