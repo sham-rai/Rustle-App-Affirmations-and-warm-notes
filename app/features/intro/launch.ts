@@ -45,6 +45,8 @@ export function launchRoute({ auth, introSeen, consentsComplete, accountsConfigu
       return HOME_ROUTE;
     case 'ready':
       if (auth.restoredFrom === 'new') return introSeen ? GATE_ROUTE : INTRO_ROUTE;
+      // This install's own cache with the intro never passed: the app was killed before Begin.
+      if (auth.restoredFrom === 'session' && !introSeen) return INTRO_ROUTE;
       return CHECK_SERVER;
     case 'failed':
       if (auth.reason === 'blocked') return GATE_ROUTE;

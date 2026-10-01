@@ -23,7 +23,7 @@ describe('launchRoute (docs/21 §1.0–1.3)', () => {
     ['loading, not onboarded → wait', { ...fresh, auth: { status: 'loading' } }, null],
     ['a new account → the intro', { ...fresh, auth: ready('new') }, INTRO_ROUTE],
     ['a new account after the intro was seen → the gate', { ...afterBegin, auth: ready('new') }, GATE_ROUTE],
-    ['a cached session, flags unset → ask the server', { ...fresh, auth: ready('session') }, CHECK_SERVER],
+    ['a cached session, intro never passed (killed before Begin) → the intro', { ...fresh, auth: ready('session') }, INTRO_ROUTE],
     ['a cached session, intro seen → ask the server', { ...afterBegin, auth: ready('session') }, CHECK_SERVER],
     ['a Keychain restore → ask the server', { ...fresh, auth: ready('keychain') }, CHECK_SERVER],
     ['a Keystore restore → ask the server', { ...fresh, auth: ready('keystore') }, CHECK_SERVER],
