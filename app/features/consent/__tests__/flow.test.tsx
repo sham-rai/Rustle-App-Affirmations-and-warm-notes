@@ -17,7 +17,7 @@ import Index from '../../../app/index';
 import YouScreen from '../../../app/(tabs)/you';
 import { isIntroSeen, markIntroSeen } from '../../intro/intro-seen';
 import { CONTENT_DELAY_MS, CONTENT_FADE_MS } from '../../intro/timing';
-import { clearAgeBlockedForTests, isAgeBlocked } from '../block-flag';
+import { clearAgeBlockedForTests, isAgeBlocked, isConsentsComplete, markConsentsComplete, resetConsentsComplete } from '../block-flag';
 import { fake, USER_ID } from './fake-supabase';
 
 // An English (Canada) device; fonts load at once; Skia is stood in for (its maths is tested elsewhere).
@@ -79,6 +79,7 @@ const thisYear = new Date().getFullYear();
 beforeEach(() => {
   fake.reset();
   clearAgeBlockedForTests();
+  resetConsentsComplete();
   markIntroSeen();
 });
 
@@ -198,7 +199,9 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
     expect(router.getPathname()).toBe('/consent/special-category');
 
     expect(screen.getByText('The personal things you share')).toBeOnTheScreen();
+    expect(isConsentsComplete()).toBe(false);
     await press('I agree');
+    expect(isConsentsComplete()).toBe(true);
     expect(router.getPathname()).toBe('/today');
 
     expect(fake.writes).toEqual([
@@ -210,6 +213,7 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
   });
 
   it('declining AI processing deletes the account, resets the intro, then says goodbye kindly', async () => {
+    markConsentsComplete(); // as if left over: leaving must clear it
     const router = await renderAt('/consent/ai');
     expect(screen.getByText('If you’d rather not, Rustle stops here and keeps nothing.')).toBeOnTheScreen();
 
@@ -217,6 +221,7 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
 
     expect(fake.deleteAnonymousAccount).toHaveBeenCalledTimes(1);
     expect(isIntroSeen()).toBe(false);
+    expect(isConsentsComplete()).toBe(false);
     expect(fake.writes).toEqual([]);
     expect(router.getPathname()).toBe('/consent/goodbye');
     expect(screen.getByText('That’s all right')).toBeOnTheScreen();
@@ -229,6 +234,14 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
     await press('I agree');
     expect(router.getPathname()).toBe('/consent/terms');
     expect(screen.getByText('Something went wrong. Nothing was saved; try again in a moment.')).toBeOnTheScreen();
+  });
+
+  it('a failed write on the last consent does not mark the consents complete', async () => {
+    fake.failWrites = true;
+    const router = await renderAt('/consent/special-category');
+    await press('I agree');
+    expect(router.getPathname()).toBe('/consent/special-category');
+    expect(isConsentsComplete()).toBe(false);
   });
 
   it('"Not now" is the same size as "I agree" (docs/20 §7.5)', async () => {

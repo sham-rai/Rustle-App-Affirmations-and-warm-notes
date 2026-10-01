@@ -2,6 +2,7 @@ import { act, renderRouter, screen } from 'expo-router/testing-library';
 import * as SplashScreen from 'expo-splash-screen';
 
 import OnboardingLayout from '../../../app/(onboarding)/_layout';
+import AgeScreen from '../../../app/(onboarding)/age';
 import RustleScreen from '../../../app/(onboarding)/rustle';
 import CompanySplash from '../../../app/(onboarding)/splash';
 import TabLayout from '../../../app/(tabs)/_layout';
@@ -11,7 +12,8 @@ import YouScreen from '../../../app/(tabs)/you';
 import RootLayout from '../../../app/_layout';
 import Index from '../../../app/index';
 import type { AuthBootstrapState } from '../../../lib/auth';
-import { resetIntroSeen } from '../intro-seen';
+import { isConsentsComplete, markConsentsComplete, resetConsentsComplete } from '../../consent/block-flag';
+import { isIntroSeen, markIntroSeen, resetIntroSeen } from '../intro-seen';
 
 // The cold-start gate (docs/21 §1.0): with a Supabase project configured, "/" waits for the
 // session with the native splash up, then sends a freshly created account to the company splash.
@@ -52,6 +54,7 @@ const routes = {
   '(onboarding)/_layout': OnboardingLayout,
   '(onboarding)/splash': CompanySplash,
   '(onboarding)/rustle': RustleScreen,
+  '(onboarding)/age': AgeScreen,
   '(tabs)/_layout': TabLayout,
   '(tabs)/today': TodayScreen,
   '(tabs)/notes': NotesScreen,
@@ -62,6 +65,7 @@ beforeEach(() => {
   jest.useFakeTimers();
   jest.mocked(SplashScreen.hideAsync).mockClear();
   resetIntroSeen();
+  resetConsentsComplete();
   mockAuthState = { status: 'loading' };
 });
 afterEach(() => jest.useRealTimers());
@@ -84,12 +88,34 @@ describe('the launch gate', () => {
     expect(router.getPathname()).toBe('/splash');
   });
 
-  it('sends a restored session straight to Today', async () => {
+  it('sends an onboarded install’s restored session straight to Today', async () => {
+    markIntroSeen();
+    markConsentsComplete();
     const router = renderRouter(routes, { initialUrl: '/' });
     await act(async () => {
       setAuth({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom: 'session' });
     });
     expect(router.getPathname()).toBe('/today');
+  });
+
+  it('sends a session that stopped between Begin and the last consent back to the age gate', async () => {
+    markIntroSeen();
+    const router = renderRouter(routes, { initialUrl: '/' });
+    await act(async () => {
+      setAuth({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom: 'session' });
+    });
+    expect(router.getPathname()).toBe('/age');
+    expect(isConsentsComplete()).toBe(false);
+  });
+
+  it('sends a reinstall restored from the Keychain to Today and marks it onboarded', async () => {
+    const router = renderRouter(routes, { initialUrl: '/' });
+    await act(async () => {
+      setAuth({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom: 'keychain' });
+    });
+    expect(router.getPathname()).toBe('/today');
+    expect(isIntroSeen()).toBe(true);
+    expect(isConsentsComplete()).toBe(true);
   });
 
   it('hides the native splash after the cap even if the session never comes back', async () => {

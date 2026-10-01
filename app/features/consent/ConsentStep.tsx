@@ -9,7 +9,8 @@ import { getSupabase } from '../../lib/supabase';
 import { Button } from './Button';
 import { leaveOnboarding } from './leave';
 import { OnboardingPage } from './OnboardingPage';
-import { recordConsent, type ConsentKind } from './records';
+import { markConsentsComplete } from './block-flag';
+import { CONSENT_KINDS, recordConsent, type ConsentKind } from './records';
 
 const COPY = {
   terms: 'terms',
@@ -37,8 +38,13 @@ export function ConsentStep({ kind, next }: { kind: ConsentKind; next: Href }) {
   const onAgree = async () => {
     setPhase('saving');
     const result = await recordConsent(getSupabase(), kind, language);
-    if (result.ok) router.replace(next);
-    else setPhase('error');
+    if (!result.ok) {
+      setPhase('error');
+      return;
+    }
+    // The last consent's row is written: from now on a restored session skips the gate.
+    if (kind === CONSENT_KINDS[CONSENT_KINDS.length - 1]) markConsentsComplete();
+    router.replace(next);
   };
 
   const onDecline = async () => {

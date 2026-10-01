@@ -1,22 +1,32 @@
 import { Redirect } from 'expo-router';
 import { useEffect } from 'react';
 
+import { isConsentsComplete, markConsentsComplete } from '../features/consent/block-flag';
 import { CompanySplashView } from '../features/intro/CompanySplashView';
 import { isIntroSeen, markIntroSeen } from '../features/intro/intro-seen';
-import { launchRoute, shouldMarkSeenOnLaunch } from '../features/intro/launch';
+import { launchRoute, shouldMarkOnboardedOnLaunch } from '../features/intro/launch';
 import { useAuth } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 
-// "/" opens on Today, or on the company splash and the Rustle screen for a freshly created
-// account (docs/05 §2, D46). While the session is still being established the native splash stays
+// "/" opens on Today, on the company splash and the Rustle screen for a freshly created account,
+// or on the 18+ gate for an install that stopped between Begin and the last consent (docs/05 §2,
+// docs/21 §1.0–1.3, D46). While the session is still being established the native splash stays
 // up (see the root layout, capped at a few seconds); behind it, and after the cap, "/" shows the
 // same paper and company name as the company splash, never a blank screen.
 export default function Index() {
   const auth = useAuth();
-  const route = launchRoute({ auth, introSeen: isIntroSeen(), accountsConfigured: isSupabaseConfigured() });
+  const route = launchRoute({
+    auth,
+    introSeen: isIntroSeen(),
+    consentsComplete: isConsentsComplete(),
+    accountsConfigured: isSupabaseConfigured(),
+  });
 
   useEffect(() => {
-    if (shouldMarkSeenOnLaunch(auth)) markIntroSeen();
+    if (shouldMarkOnboardedOnLaunch(auth)) {
+      markIntroSeen();
+      markConsentsComplete();
+    }
   }, [auth]);
 
   if (route === null) return <CompanySplashView />;
