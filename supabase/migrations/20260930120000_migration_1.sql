@@ -254,6 +254,7 @@ create table public.checkins (
   user_id    uuid not null default auth.uid() references public.users (id) on delete cascade,
   mood       smallint not null check (mood between 1 and 5),
   energy     smallint check (energy between 1 and 5),
+  -- limit:checkins_line_max_chars 280
   line       text check (char_length(line) <= 280),
   created_at timestamptz not null default now()
 );

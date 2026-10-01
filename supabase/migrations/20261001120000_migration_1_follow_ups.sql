@@ -23,6 +23,7 @@ alter table public.warm_notes set schema enc;
 alter table enc.warm_notes drop column body;
 alter table enc.warm_notes add column body_enc bytea not null;
 -- 220 characters of UTF-8 (4 bytes each at most) plus the OpenPGP packet overhead.
+-- limit:warm_notes_body_max_chars 220
 alter table enc.warm_notes add constraint warm_notes_body_enc_len check (octet_length(body_enc) <= 2048);
 
 -- The base table is reached only through the view and the RPCs below: full rights for the two
@@ -186,8 +187,10 @@ alter table public.users
 -- ---------------------------------------------------------------------------
 -- 4. A length cap on notes.body
 -- ---------------------------------------------------------------------------
--- 2 000 characters of plaintext (the client's input limit); the ciphertext cap on the base table
--- (4 bytes per character plus the packet overhead) holds even for a service-role writer.
+-- 2 000 characters of plaintext (the client's input limit, packages/shared/limits.ts, D49); the
+-- ciphertext cap on the base table (4 bytes per character plus the packet overhead) holds even
+-- for a service-role writer.
+-- limit:notes_body_max_chars 2000
 alter table enc.notes add constraint notes_body_enc_len check (octet_length(body_enc) <= 9216);
 
 create or replace function public.notes_insert() returns trigger language plpgsql set search_path = '' as $$

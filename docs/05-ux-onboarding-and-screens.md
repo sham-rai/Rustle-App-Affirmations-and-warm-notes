@@ -84,7 +84,7 @@ Shown after the first note and notification permission, never in a session where
 ## 5. Notes board
 
 - A **grid of sticky notes** (warm paper textures, user-choosable colours), with the newest first. Alternative list view.
-- **+ New note**: a sheet with a text field, 🎤 (V2), mood tag (optional), and the 🤫 "Just listen, no reply" toggle.
+- **+ New note**: a sheet with a text field, 🎤 (V2), mood tag (optional), and the 🤫 "Just listen, no reply" toggle. A note holds up to 2 000 characters (`NOTE_BODY_MAX_CHARS` in `packages/shared/limits.ts`, D49): a quiet counter appears under the field from 1 800, never a red error; the database enforces the same cap. A check-in line is 280.
 - **Rustle's reply** appears as a small handwritten-style note *attached* to the user's note (like a note stuck onto another), with a soft push: "Rustle left a note on what you wrote."
 - **The first note back is a small event:** the reply slides in and *sticks* onto the note (doc 20 §6), and a one-time line appears under it: *"I'll sometimes leave a note back. Turn on 'Just listen' if you'd rather I didn't."* Door-open users see, on their second note of the week, a quiet card in the same place: *"I read this. Want a note back on everything you write?"* (doc 09 §3).
 - Long-press: Pin · Hide from recaps · Forget this · Edit · Delete · Report this note.

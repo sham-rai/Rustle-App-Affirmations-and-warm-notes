@@ -93,7 +93,7 @@
 ## 11. Send a warm note (doc 05 §10, doc 07 §4.5, doc 08 §5.9)
 1. Situation chips + optional line → three drafts in one call → edit → re-moderation of the edited text (a failed check does not publish) → card style → system share sheet with link and image.
 2. `POST /warm-notes` requires App Attest / Play Integrity and is rate-limited; unlimited for every entitlement state within the abuse limits.
-3. The web page renders server-side with an OG image, is `noindex`, unguessable, expires 30 days after creation, can be revoked, shows a "Need support now?" link, has a report link, and carries only a page-view counter.
+3. The web page renders server-side with an OG image, is `noindex`, unguessable, expires 30 days after creation, can be revoked, shows a "Need support now?" link, has a report link, and carries only a page-view counter, reported by the page once after a successful read (`warm_note_opened`), never by the server route (D49).
 4. The recipient's one-tap ❤️ sets `thanked_at` once and sends the sender a single push; there is no text reply.
 5. The install CTA deep-links with referral attribution and logs `warm_note_install`.
 
