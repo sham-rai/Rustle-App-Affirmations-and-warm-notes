@@ -1,7 +1,10 @@
+import { fakeCache } from '../../secure-storage/__tests__/fakes';
+import { createOutbox } from '../outbox';
 import { OUTBOX_STORAGE_KEY } from '../queue';
-import type { NoteFields, OutboxOp } from '../types';
+import { createSupabaseTransport, supabaseOutboxDb } from '../transport';
+import type { Connectivity, NoteFields, OutboxOp } from '../types';
 import { BACKOFF_BASE_MS, BACKOFF_MAX_MS, backoffMs } from '../worker';
-import { idle, setup, testUuid } from './harness';
+import { fakeClock, fakeSupabase, idle, setup, testUuid } from './harness';
 
 const fields = (body: string): NoteFields => ({
   body,
@@ -318,6 +321,39 @@ describe('offline outbox', () => {
     clock.advance(BACKOFF_MAX_MS);
     await idle(outbox);
     expect(server.tables.notes.get(noteId)).toMatchObject({ body: 'edit' });
+  });
+});
+
+describe('connectivity race', () => {
+  it('a change event during the isOnline() read wins over the older value', async () => {
+    const server = fakeSupabase();
+    const clock = fakeClock();
+    const reads: ((value: boolean) => void)[] = [];
+    let listener: (online: boolean) => void = () => undefined;
+    const connectivity: Connectivity = {
+      isOnline: () => new Promise<boolean>((resolve) => reads.push(resolve)),
+      subscribe(next) {
+        listener = next;
+        return () => undefined;
+      },
+    };
+    const outbox = createOutbox({
+      store: fakeCache(),
+      transport: createSupabaseTransport(() => supabaseOutboxDb(server.client)),
+      connectivity,
+      newKey: testUuid,
+      now: clock.now,
+      setTimer: clock.setTimer,
+      clearTimer: clock.clearTimer,
+    });
+    outbox.start(); // the first run waits on isOnline()
+    listener(true); // the connection comes back while that read is in flight
+    reads[0]?.(false); // the read then answers with the older state
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // The event's `true` stood, so a write now is not marked offline.
+    expect(outbox.enqueue(createOp(testUuid()))?.createdOffline).toBe(false);
+    for (const read of reads) read(true);
   });
 });
 

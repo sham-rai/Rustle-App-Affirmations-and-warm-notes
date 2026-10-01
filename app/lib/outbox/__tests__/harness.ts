@@ -81,6 +81,10 @@ export function fakeConnectivity(initial: boolean) {
   };
   return {
     connectivity,
+    /** Changes what `isOnline()` answers without any change event, as a missed event would. */
+    setSilently(value: boolean) {
+      online = value;
+    },
     set(value: boolean) {
       online = value;
       for (const listener of listeners) listener(value);

@@ -43,6 +43,8 @@ export function createOutboxWorker(deps: Deps): OutboxWorker {
   const setTimer = deps.setTimer ?? ((fn: () => void, ms: number) => setTimeout(fn, ms));
   const clearTimer = deps.clearTimer ?? ((handle: unknown) => clearTimeout(handle as ReturnType<typeof setTimeout>));
   let online: boolean | undefined;
+  /** Bumped by every connectivity event, so an older `isOnline()` read never overwrites it. */
+  let connectivityVersion = 0;
   let running: Promise<void> | null = null;
   let rerun = false;
   let timer: unknown = null;
@@ -70,9 +72,37 @@ export function createOutboxWorker(deps: Deps): OutboxWorker {
     }
   }
 
+  /**
+   * Re-reads connectivity at the start of every run: a stale `false` (Android's reachability probe
+   * lagging, a change missed while suspended) must not block a foreground or session retry. A
+   * change event that arrives during the await is newer than the value read, so it wins.
+   */
+  async function refreshOnline(): Promise<void> {
+    const version = connectivityVersion;
+    let value: boolean;
+    try {
+      value = await deps.connectivity.isOnline();
+    } catch {
+      value = true; // let the request decide
+    }
+    if (version === connectivityVersion) online = value;
+  }
+
+  async function canSend(): Promise<boolean> {
+    try {
+      return await deps.transport.canSend();
+    } catch {
+      return false;
+    }
+  }
+
   async function drain(): Promise<void> {
-    if (online === undefined) online = await deps.connectivity.isOnline();
+    await refreshOnline();
     while (online) {
+      if (!deps.queue.nextReady(deps.now())) break;
+      // No session yet (first launch offline) or not configured: stop without counting an attempt,
+      // so `attempts > 0` keeps meaning "the server may have it". The session trigger restarts us.
+      if (!(await canSend())) break;
       const next = deps.queue.nextReady(deps.now());
       if (!next) break;
       const sent = deps.queue.markAttempt(next.key);
@@ -121,6 +151,7 @@ export function createOutboxWorker(deps: Deps): OutboxWorker {
       stopped = false;
       const unsubscribe = deps.connectivity.subscribe((next) => {
         const cameBack = next && online !== true;
+        connectivityVersion += 1;
         online = next;
         if (cameBack) {
           deps.queue.retryAllNow();

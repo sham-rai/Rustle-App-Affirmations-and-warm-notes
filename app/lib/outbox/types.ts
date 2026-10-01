@@ -132,6 +132,8 @@ export type SendResult =
 
 /** Sends one queued write to the server. Implemented over Supabase in transport.ts. */
 export interface OutboxTransport {
+  /** True when a send can reach the server as this user: configured, with a session. */
+  canSend(): Promise<boolean>;
   send(item: OutboxItem): Promise<SendResult>;
 }
 

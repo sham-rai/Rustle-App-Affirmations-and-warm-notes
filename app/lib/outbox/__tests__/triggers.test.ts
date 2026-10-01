@@ -54,7 +54,10 @@ describe('outbox triggers', () => {
     outbox.enqueue(createOp(noteId));
     await idle(outbox);
     expect(server.tables.notes.size).toBe(0);
-    expect(clock.pending()).toHaveLength(1); // in backoff
+    // Never sent: no attempt counted, no backoff.
+    expect(server.calls).toEqual([]);
+    expect(outbox.items()[0]?.attempts).toBe(0);
+    expect(clock.pending()).toEqual([]);
 
     // An event without a session, or an unrelated one, sends nothing.
     auth.emit('INITIAL_SESSION', null);
@@ -108,5 +111,39 @@ describe('outbox triggers', () => {
     stop();
     expect(auth.listeners.size).toBe(0);
     expect(app.listeners.size).toBe(0);
+  });
+
+  it('a write made and deleted before the session exists never reaches the server', async () => {
+    const { outbox, server } = setup({ online: true });
+    server.setSignedIn(false);
+    const auth = fakeAuth();
+    outbox.start();
+    attachOutboxTriggers(outbox, { auth: auth.auth });
+    const noteId = testUuid();
+    outbox.enqueue(createOp(noteId));
+    await idle(outbox);
+    expect(outbox.enqueue({ kind: 'note_delete', noteId, deleted_at: '2026-10-01T12:10:00.000Z' })).toBeNull();
+    expect(outbox.items()).toEqual([]);
+
+    server.setSignedIn(true);
+    auth.emit('SIGNED_IN', { access_token: 'jwt' });
+    await idle(outbox);
+    expect(server.calls).toEqual([]);
+  });
+
+  it('a stale offline reading does not block a foreground retry', async () => {
+    const { outbox, server, net } = setup({ online: false });
+    const app = fakeAppState();
+    outbox.start();
+    attachOutboxTriggers(outbox, { appState: app.appState });
+    outbox.enqueue(createOp(testUuid()));
+    await idle(outbox);
+    expect(server.calls).toEqual([]);
+
+    net.setSilently(true); // back online, but no change event arrived
+    app.emit('active');
+    await idle(outbox);
+    expect(outbox.items()).toEqual([]);
+    expect(server.tables.notes.size).toBe(1);
   });
 });

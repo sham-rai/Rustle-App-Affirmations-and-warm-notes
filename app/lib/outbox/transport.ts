@@ -71,9 +71,13 @@ export function classify(result: WriteResult): SendResult {
  */
 export function createSupabaseTransport(getDb: () => OutboxDb | null): OutboxTransport {
   return {
+    async canSend() {
+      const db = getDb();
+      return db !== null && (await db.hasSession());
+    },
     async send(item: OutboxItem): Promise<SendResult> {
       const db = getDb();
-      // Not configured, or the anonymous session is not there yet (first launch offline): wait.
+      // The worker checks canSend first; this guards a session lost between the two calls.
       if (!db || !(await db.hasSession())) return { outcome: 'transient', status: 0, code: 'no_session' };
       const { op } = item;
       switch (op.kind) {
