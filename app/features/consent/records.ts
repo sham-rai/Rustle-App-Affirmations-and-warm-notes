@@ -33,8 +33,10 @@ export type WriteResult =
 export type ConsentClient = Pick<SupabaseClient, 'auth' | 'from'>;
 
 /**
- * `null` means no Supabase project is configured (tests, a build without app/.env.local): there is
- * no account to write to, so the flow goes on and the write is reported as skipped.
+ * Idempotent: when the server already holds a non-withdrawn row of this kind (a resumed onboarding,
+ * a double tap), nothing is inserted and the result is ok. `null` means no Supabase project is
+ * configured (tests, a build without app/.env.local): there is no account to write to, so the flow
+ * goes on and the write is reported as skipped.
  */
 export async function recordConsent(
   client: ConsentClient | null,
@@ -43,7 +45,16 @@ export async function recordConsent(
 ): Promise<WriteResult> {
   if (!client) return { ok: true, skipped: true };
   const { data } = await client.auth.getSession();
-  if (!data.session) return { ok: false, reason: 'no_session' };
+  const userId = data.session?.user.id;
+  if (!userId) return { ok: false, reason: 'no_session' };
+  const existing = await client
+    .from('consents')
+    .select('kind')
+    .eq('user_id', userId)
+    .eq('kind', kind)
+    .is('withdrawn_at', null);
+  if (existing.error) return { ok: false, reason: 'write_failed' };
+  if ((existing.data ?? []).length > 0) return { ok: true, skipped: true };
   // user_id defaults to auth.uid() and granted_at to now(); RLS checks the row is the user's own.
   const { error } = await client
     .from('consents')
@@ -53,7 +64,8 @@ export async function recordConsent(
 
 /**
  * Records that the gate passed. Only the time of the confirmation is stored (D46); the date of
- * birth never leaves the screen.
+ * birth never leaves the screen. Callers check `age_confirmed_at` is null first
+ * (features/consent/onboarding-state), so the gate asks once.
  */
 export async function confirmAge(client: ConsentClient | null, now: Date): Promise<WriteResult> {
   if (!client) return { ok: true, skipped: true };

@@ -18,6 +18,7 @@ import YouScreen from '../../../app/(tabs)/you';
 import { isIntroSeen, markIntroSeen } from '../../intro/intro-seen';
 import { CONTENT_DELAY_MS, CONTENT_FADE_MS } from '../../intro/timing';
 import { clearAgeBlockedForTests, isAgeBlocked, isConsentsComplete, markConsentsComplete, resetConsentsComplete } from '../onboarding-flags';
+import { leaveOnboarding } from '../leave';
 import { fake, USER_ID } from './fake-supabase';
 
 // An English (Canada) device; fonts load at once; Skia is stood in for (its maths is tested elsewhere).
@@ -174,6 +175,13 @@ describe('the age gate (docs/21 §1.2)', () => {
     expect(router.getPathname()).toBe('/consent/terms');
   });
 
+  it('never asks again once the server holds age_confirmed_at: resumes at the first missing consent', async () => {
+    fake.seed(true, ['terms']);
+    const router = await renderAt('/age');
+    expect(router.getPathname()).toBe('/consent/ai');
+    expect(fake.writes).toEqual([]);
+  });
+
   it('a failed save stays on the gate with a calm message', async () => {
     fake.failWrites = true;
     const router = await renderAt('/age');
@@ -185,6 +193,7 @@ describe('the age gate (docs/21 §1.2)', () => {
 
 describe('the three consents (docs/21 §1.3–1.4)', () => {
   it('each writes its own row with kind, version and locale, then Today', async () => {
+    fake.seed(true, []);
     const router = await renderAt('/consent/terms');
 
     // No step numbers in onboarding (docs/05 §3).
@@ -213,7 +222,6 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
   });
 
   it('declining AI processing deletes the account, resets the intro, then says goodbye kindly', async () => {
-    markConsentsComplete(); // as if left over: leaving must clear it
     const router = await renderAt('/consent/ai');
     expect(screen.getByText('If you’d rather not, Rustle stops here and keeps nothing.')).toBeOnTheScreen();
 
@@ -244,6 +252,14 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
     expect(isConsentsComplete()).toBe(false);
   });
 
+  it('resumes where the server says and never inserts a consent twice', async () => {
+    fake.seed(true, ['terms', 'ai_processing']);
+    const router = await renderAt('/consent/ai');
+    await press('I agree');
+    expect(fake.writes).toEqual([]);
+    expect(router.getPathname()).toBe('/consent/special-category');
+  });
+
   it('"Not now" is the same size as "I agree" (docs/20 §7.5)', async () => {
     await renderAt('/consent/terms');
     const size = (name: string) => {
@@ -251,5 +267,32 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
       return { minHeight: style.minHeight, alignSelf: style.alignSelf };
     };
     expect(size('Not now')).toEqual(size('I agree'));
+  });
+});
+
+describe('deep links on an onboarded install (security review)', () => {
+  it.each(['/age', '/consent/terms', '/consent/ai', '/consent/special-category', '/consent/goodbye', '/rustle'])(
+    '%s redirects to Today and deletes nothing',
+    async (url) => {
+      markConsentsComplete();
+      const router = await renderAt(url);
+      expect(router.getPathname()).toBe('/today');
+      expect(fake.deleteAnonymousAccount).not.toHaveBeenCalled();
+      expect(fake.writes).toEqual([]);
+    },
+  );
+
+  it('still opens the crisis lines', async () => {
+    markConsentsComplete();
+    const router = await renderAt('/help');
+    expect(router.getPathname()).toBe('/help');
+    expect(screen.getByText('Get help now')).toBeOnTheScreen();
+  });
+
+  it('leaveOnboarding refuses on an onboarded install', async () => {
+    markConsentsComplete();
+    await expect(leaveOnboarding()).resolves.toEqual({ refused: true });
+    expect(fake.deleteAnonymousAccount).not.toHaveBeenCalled();
+    expect(isConsentsComplete()).toBe(true);
   });
 });

@@ -12,7 +12,6 @@ import YouScreen from '../../../app/(tabs)/you';
 import RootLayout from '../../../app/_layout';
 import Index from '../../../app/index';
 import type { AuthBootstrapState } from '../../../lib/auth';
-import { deleteAnonymousAccount } from '../../../lib/supabase';
 import {
   clearAgeBlockedForTests,
   isConsentsComplete,
@@ -20,6 +19,7 @@ import {
   markConsentsComplete,
   resetConsentsComplete,
 } from '../../consent/onboarding-flags';
+import { fake } from '../../consent/__tests__/fake-supabase';
 import { isIntroSeen, markIntroSeen, resetIntroSeen } from '../intro-seen';
 
 // The cold-start gate (docs/21 §1.0): with a Supabase project configured, "/" waits for the
@@ -34,10 +34,10 @@ jest.mock('expo-splash-screen', () => ({
 jest.mock('../../../i18n/preferences');
 jest.mock('../tree/Tree', () => ({ Tree: () => null }));
 jest.mock('../FoldedNoteMark', () => ({ FoldedNoteMark: () => null }));
+// The in-memory server from the consent tests, with a project "configured".
 jest.mock('../../../lib/supabase', () => ({
+  ...jest.requireActual('../../consent/__tests__/fake-supabase').fakeSupabaseModule,
   isSupabaseConfigured: () => true,
-  getSupabase: () => null,
-  deleteAnonymousAccount: jest.fn(() => Promise.resolve({ serverDeleted: false, signedOut: true, localCleared: true })),
 }));
 
 // A controllable session: tests move it from loading to ready.
@@ -81,6 +81,7 @@ beforeEach(() => {
   resetIntroSeen();
   resetConsentsComplete();
   clearAgeBlockedForTests();
+  fake.reset();
   mockAuthState = { status: 'loading' };
 });
 afterEach(() => jest.useRealTimers());
@@ -113,8 +114,9 @@ describe('the launch gate', () => {
     expect(router.getPathname()).toBe('/today');
   });
 
-  it('sends a session that stopped between Begin and the last consent back to the age gate', async () => {
+  it('sends a session that stopped before the age gate was passed to the gate (server truth)', async () => {
     markIntroSeen();
+    fake.seed(false, []);
     const router = renderRouter(routes, { initialUrl: '/' });
     await act(async () => {
       setAuth({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom: 'session' });
@@ -130,10 +132,11 @@ describe('the launch gate', () => {
     expect(router.getPathname()).toBe('/age');
     expect(screen.getByText('Rustle is for adults')).toBeOnTheScreen();
     // The fallback delete for an account that already exists on this install.
-    expect(deleteAnonymousAccount).toHaveBeenCalled();
+    expect(fake.deleteAnonymousAccount).toHaveBeenCalled();
   });
 
-  it('sends a reinstall restored from the Keychain to Today and marks it onboarded', async () => {
+  it('sends a reinstall restored from the Keychain to Today once the server shows it onboarded', async () => {
+    fake.seed(true, ['terms', 'ai_processing', 'special_category']);
     const router = renderRouter(routes, { initialUrl: '/' });
     await act(async () => {
       setAuth({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom: 'keychain' });
@@ -141,6 +144,16 @@ describe('the launch gate', () => {
     expect(router.getPathname()).toBe('/today');
     expect(isIntroSeen()).toBe(true);
     expect(isConsentsComplete()).toBe(true);
+  });
+
+  it('goes to Today without caching anything when the server cannot be read', async () => {
+    fake.failReads = true;
+    const router = renderRouter(routes, { initialUrl: '/' });
+    await act(async () => {
+      setAuth({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom: 'keychain' });
+    });
+    expect(router.getPathname()).toBe('/today');
+    expect(isConsentsComplete()).toBe(false);
   });
 
   it('hides the native splash after the cap even if the session never comes back', async () => {

@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -9,8 +9,8 @@ import { getSupabase } from '../../lib/supabase';
 import { Button } from '../../components/Button';
 import { leaveOnboarding } from './leave';
 import { OnboardingPage } from './OnboardingPage';
-import { markConsentsComplete } from './onboarding-flags';
-import { CONSENT_KINDS, recordConsent, type ConsentKind } from './records';
+import { nextOnboardingRoute, type OnboardingRoute } from './onboarding-state';
+import { recordConsent, type ConsentKind } from './records';
 
 const COPY = {
   terms: 'terms',
@@ -27,7 +27,7 @@ type Phase = 'ask' | 'saving' | 'error' | 'leaving';
  * row with the kind, the copy's version and locale, then moves on. Declining ends onboarding
  * kindly: the anonymous account is deleted first, then the goodbye screen shows.
  */
-export function ConsentStep({ kind, next }: { kind: ConsentKind; next: Href }) {
+export function ConsentStep({ kind, next }: { kind: ConsentKind; next: OnboardingRoute }) {
   const router = useRouter();
   const { t, language } = useT();
   const { space } = useTheme();
@@ -37,20 +37,20 @@ export function ConsentStep({ kind, next }: { kind: ConsentKind; next: Href }) {
 
   const onAgree = async () => {
     setPhase('saving');
-    const result = await recordConsent(getSupabase(), kind, language);
+    const client = getSupabase();
+    const result = await recordConsent(client, kind, language);
     if (!result.ok) {
       setPhase('error');
       return;
     }
-    // The last consent's row is written: from now on a restored session skips the gate.
-    if (kind === CONSENT_KINDS[CONSENT_KINDS.length - 1]) markConsentsComplete();
-    router.replace(next);
+    // The server decides what is still missing; reaching Today caches "done" locally.
+    router.replace(await nextOnboardingRoute(client, next));
   };
 
   const onDecline = async () => {
     setPhase('leaving');
-    await leaveOnboarding();
-    router.replace(GOODBYE_ROUTE);
+    const left = await leaveOnboarding();
+    router.replace(left.refused ? '/today' : GOODBYE_ROUTE);
   };
 
   return (

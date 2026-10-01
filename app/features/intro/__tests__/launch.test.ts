@@ -1,5 +1,5 @@
 import { isIntroSeen, markIntroSeen, resetIntroSeen } from '../intro-seen';
-import { GATE_ROUTE, HOME_ROUTE, INTRO_ROUTE, launchRoute, shouldMarkOnboardedOnLaunch } from '../launch';
+import { CHECK_SERVER, GATE_ROUTE, HOME_ROUTE, INTRO_ROUTE, launchRoute } from '../launch';
 import { splitLink } from '../link-text';
 import { easingFromToken } from '../timing';
 
@@ -8,71 +8,46 @@ const ready = (restoredFrom: RestoredFrom) =>
   ({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom }) as const;
 
 describe('launchRoute (docs/21 §1.0–1.3)', () => {
-  const fresh = { introSeen: false, consentsComplete: false, accountsConfigured: true };
-  const done = { introSeen: true, consentsComplete: true, accountsConfigured: true };
-  const killedAfterBegin = { introSeen: true, consentsComplete: false, accountsConfigured: true };
+  const fresh = { introSeen: false, consentsComplete: false, accountsConfigured: true, blocked: false };
+  const done = { ...fresh, introSeen: true, consentsComplete: true };
+  const afterBegin = { ...fresh, introSeen: true };
 
-  // [case, input, expected route]
+  // [case, input, expected]
   const cases: [string, Parameters<typeof launchRoute>[0], ReturnType<typeof launchRoute>][] = [
-    ['a new account on a fresh install → the intro', { ...fresh, auth: ready('new') }, INTRO_ROUTE],
-    ['a new account after the intro was seen → the gate', { ...killedAfterBegin, auth: ready('new') }, GATE_ROUTE],
-    ['a cached session, killed before Begin → the intro', { ...fresh, auth: ready('session') }, INTRO_ROUTE],
-    ['a cached session, killed before the last consent → the gate', { ...killedAfterBegin, auth: ready('session') }, GATE_ROUTE],
-    ['a cached session, onboarded → Today', { ...done, auth: ready('session') }, HOME_ROUTE],
-    ['a Keychain restore (reinstall) → Today', { ...fresh, auth: ready('keychain') }, HOME_ROUTE],
-    ['a Keystore restore (reinstall) → Today', { ...fresh, auth: ready('keystore') }, HOME_ROUTE],
-    ['a Block Store restore (reinstall) → Today', { ...fresh, auth: ready('block_store') }, HOME_ROUTE],
-    ['loading, not yet onboarded → wait', { ...fresh, auth: { status: 'loading' } }, null],
-    ['loading, intro seen but consents not complete → wait', { ...killedAfterBegin, auth: { status: 'loading' } }, null],
-    ['loading, onboarded → Today at once', { ...done, auth: { status: 'loading' } }, HOME_ROUTE],
-    ['onboarded, even with a new account → Today', { ...done, auth: ready('new') }, HOME_ROUTE],
+    ['blocked → the gate (its block screen), before anything else', { ...done, blocked: true, auth: { status: 'loading' } }, GATE_ROUTE],
+    ['blocked, with the bootstrap saying so → the gate', { ...fresh, blocked: true, auth: { status: 'failed', reason: 'blocked' } }, GATE_ROUTE],
+    ['no account system → Today', { ...fresh, accountsConfigured: false, auth: { status: 'loading' } }, HOME_ROUTE],
+    ['not configured → Today', { ...fresh, auth: { status: 'not_configured' } }, HOME_ROUTE],
+    ['both local flags set → Today at once, even while loading', { ...done, auth: { status: 'loading' } }, HOME_ROUTE],
+    ['both local flags set, any session → Today', { ...done, auth: ready('session') }, HOME_ROUTE],
+    ['loading, not onboarded → wait', { ...fresh, auth: { status: 'loading' } }, null],
+    ['a new account → the intro', { ...fresh, auth: ready('new') }, INTRO_ROUTE],
+    ['a new account after the intro was seen → the gate', { ...afterBegin, auth: ready('new') }, GATE_ROUTE],
+    ['a cached session, flags unset → ask the server', { ...fresh, auth: ready('session') }, CHECK_SERVER],
+    ['a cached session, intro seen → ask the server', { ...afterBegin, auth: ready('session') }, CHECK_SERVER],
+    ['a Keychain restore → ask the server', { ...fresh, auth: ready('keychain') }, CHECK_SERVER],
+    ['a Keystore restore → ask the server', { ...fresh, auth: ready('keystore') }, CHECK_SERVER],
+    ['a Block Store restore → ask the server', { ...fresh, auth: ready('block_store') }, CHECK_SERVER],
     [
       'a first launch offline (provably no token) → the intro',
       { ...fresh, auth: { status: 'failed', reason: 'offline', hasStoredToken: false } },
       INTRO_ROUTE,
     ],
     [
-      'offline with no token after the intro → the gate',
-      { ...killedAfterBegin, auth: { status: 'failed', reason: 'offline', hasStoredToken: false } },
-      GATE_ROUTE,
-    ],
-    [
-      'a reinstall whose stored token could not be refreshed yet (offline) → Today',
+      'a stored token not refreshed yet (offline) → Today, flags left unset',
       { ...fresh, auth: { status: 'failed', reason: 'offline', hasStoredToken: true } },
       HOME_ROUTE,
     ],
     [
-      'a reinstall whose stored token could not be refreshed yet (server) → Today',
+      'a stored token not refreshed yet (server) → Today',
       { ...fresh, auth: { status: 'failed', reason: 'server', hasStoredToken: true } },
       HOME_ROUTE,
     ],
     ['an unknown token state (the store threw) → Today', { ...fresh, auth: { status: 'failed', reason: 'server' } }, HOME_ROUTE],
-    ['no account system, loading → Today', { ...fresh, accountsConfigured: false, auth: { status: 'loading' } }, HOME_ROUTE],
-    ['not configured → Today', { ...fresh, auth: { status: 'not_configured' } }, HOME_ROUTE],
-    ['blocked by the 18+ gate → the gate (its block screen)', { ...fresh, auth: { status: 'failed', reason: 'blocked' } }, GATE_ROUTE],
   ];
 
   it.each(cases)('%s', (_name, input, expected) => {
     expect(launchRoute(input)).toBe(expected);
-  });
-});
-
-describe('shouldMarkOnboardedOnLaunch', () => {
-  it('marks an existing account whose local flags may be lost', () => {
-    expect(shouldMarkOnboardedOnLaunch(ready('keychain'))).toBe(true);
-    expect(shouldMarkOnboardedOnLaunch(ready('keystore'))).toBe(true);
-    expect(shouldMarkOnboardedOnLaunch(ready('block_store'))).toBe(true);
-    expect(shouldMarkOnboardedOnLaunch({ status: 'failed', reason: 'offline', hasStoredToken: true })).toBe(true);
-    expect(shouldMarkOnboardedOnLaunch({ status: 'failed', reason: 'server' })).toBe(true);
-    expect(shouldMarkOnboardedOnLaunch({ status: 'not_configured' })).toBe(true);
-  });
-
-  it('leaves the flags of this install’s own session, a new account and a first launch alone', () => {
-    expect(shouldMarkOnboardedOnLaunch(ready('session'))).toBe(false);
-    expect(shouldMarkOnboardedOnLaunch(ready('new'))).toBe(false);
-    expect(shouldMarkOnboardedOnLaunch({ status: 'loading' })).toBe(false);
-    expect(shouldMarkOnboardedOnLaunch({ status: 'failed', reason: 'offline', hasStoredToken: false })).toBe(false);
-    expect(shouldMarkOnboardedOnLaunch({ status: 'failed', reason: 'blocked' })).toBe(false);
   });
 });
 

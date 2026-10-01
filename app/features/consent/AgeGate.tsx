@@ -12,9 +12,8 @@ import { BlockedView } from './BlockedView';
 import { Button } from '../../components/Button';
 import { leaveOnboarding } from './leave';
 import { OnboardingPage } from './OnboardingPage';
+import { fetchOnboardingState, markOnboarded, onboardingRoute, type OnboardingState } from './onboarding-state';
 import { confirmAge } from './records';
-
-export const FIRST_CONSENT_ROUTE = '/consent/terms';
 
 type Phase = 'ask' | 'invalid' | 'saving' | 'error' | 'leaving' | 'blocked';
 type Field = keyof DateOfBirthEntry;
@@ -40,13 +39,37 @@ export function AgeGate() {
   const [entry, setEntry] = useState<DateOfBirthEntry>(EMPTY);
   const [phase, setPhase] = useState<Phase>(() => (isAgeBlocked() ? 'blocked' : 'ask'));
   const inputs = useRef<Partial<Record<Field, TextInput | null>>>({});
+  // What the server already holds, read once on arrival (the gate asks once: D46, M1-09).
+  const known = useRef<OnboardingState | null>(null);
 
   // A blocked install that opens Rustle again has a fresh anonymous account from the launch; it
   // goes too, so a minor never keeps an account (D46).
   const blockedOnArrival = useRef(phase === 'blocked');
   useEffect(() => {
-    if (blockedOnArrival.current) void leaveOnboarding();
+    if (blockedOnArrival.current) {
+      void leaveOnboarding();
+      return;
+    }
+    let active = true;
+    void fetchOnboardingState(getSupabase())
+      .then((result) => {
+        if (!active || !result.ok || !result.state) return;
+        known.current = result.state;
+        // Age already confirmed for this account: never ask again, go where onboarding stands.
+        if (result.state.ageConfirmed) goTo(onboardingRoute(result.state));
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+    // goTo only wraps the router; this runs once on arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function goTo(route: ReturnType<typeof onboardingRoute>) {
+    if (route === '/today') markOnboarded();
+    router.replace(route);
+  }
 
   if (phase === 'blocked') return <BlockedView />;
 
@@ -76,13 +99,25 @@ export function AgeGate() {
       return;
     }
     setPhase('saving');
-    const result = await confirmAge(getSupabase(), now);
-    if (result.ok) {
-      setEntry(EMPTY);
-      router.replace(FIRST_CONSENT_ROUTE);
-    } else {
-      setPhase('error');
+    const client = getSupabase();
+    let state = known.current;
+    if (!state) {
+      const read = await fetchOnboardingState(client);
+      if (!read.ok) {
+        setPhase('error');
+        return;
+      }
+      state = read.state ?? { ageConfirmed: false, consentKinds: [] };
     }
+    if (!state.ageConfirmed) {
+      const result = await confirmAge(client, now);
+      if (!result.ok) {
+        setPhase('error');
+        return;
+      }
+    }
+    setEntry(EMPTY);
+    goTo(onboardingRoute({ ageConfirmed: true, consentKinds: state.consentKinds }));
   };
 
   const message = phase === 'invalid' ? t('age.invalid') : phase === 'error' ? t('age.saveError') : null;

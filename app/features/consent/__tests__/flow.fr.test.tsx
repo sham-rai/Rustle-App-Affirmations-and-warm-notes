@@ -12,7 +12,7 @@ import TabLayout from '../../../app/(tabs)/_layout';
 import TodayScreen from '../../../app/(tabs)/today';
 import Index from '../../../app/index';
 import { setAddress } from '../../../i18n/preferences';
-import { clearAgeBlockedForTests } from '../onboarding-flags';
+import { clearAgeBlockedForTests, resetConsentsComplete } from '../onboarding-flags';
 import { fake } from './fake-supabase';
 
 // A French (Quebec) device: "tu" by default, "vous" when chosen, never mixed.
@@ -62,6 +62,7 @@ async function enterBirthDate(year: string) {
 beforeEach(() => {
   fake.reset();
   clearAgeBlockedForTests();
+  resetConsentsComplete();
 });
 afterEach(() => setAddress('tu'));
 
@@ -88,6 +89,7 @@ describe('the age gate in French', () => {
 
 describe('the consents in French', () => {
   it('records the fr-CA copy locale and shows the AI disclosure', async () => {
+    fake.seed(true, []);
     const router = await renderAt('/consent/terms');
     // No step numbers in onboarding (docs/05 §3).
     expect(screen.queryByText(/Étape/)).toBeNull();

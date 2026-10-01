@@ -1,37 +1,56 @@
 import { Redirect } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import { isAgeBlocked, isConsentsComplete, markConsentsComplete } from '../features/consent/onboarding-flags';
+import { isAgeBlocked, isConsentsComplete } from '../features/consent/onboarding-flags';
+import { fetchOnboardingState, markOnboarded, onboardingRoute, type OnboardingRoute } from '../features/consent/onboarding-state';
 import { CompanySplashView } from '../features/intro/CompanySplashView';
-import { isIntroSeen, markIntroSeen } from '../features/intro/intro-seen';
-import { GATE_ROUTE, launchRoute, shouldMarkOnboardedOnLaunch } from '../features/intro/launch';
+import { isIntroSeen } from '../features/intro/intro-seen';
+import { CHECK_SERVER, HOME_ROUTE, launchRoute } from '../features/intro/launch';
 import { useAuth } from '../lib/auth';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+
+/**
+ * Asks the server where onboarding stands. Today caches "done" in the local flags; a failed read
+ * goes to Today without setting them, so the next launch asks again.
+ */
+async function resolveFromServer(): Promise<OnboardingRoute> {
+  const result = await fetchOnboardingState(getSupabase()).catch(() => null);
+  if (!result?.ok || !result.state) return HOME_ROUTE;
+  const route = onboardingRoute(result.state);
+  if (route === HOME_ROUTE) markOnboarded();
+  return route;
+}
 
 // "/" opens on Today, on the company splash and the Rustle screen for a freshly created account,
-// or on the 18+ gate for an install that stopped between Begin and the last consent (docs/05 §2,
-// docs/21 §1.0–1.3, D46). While the session is still being established the native splash stays
-// up (see the root layout, capped at a few seconds); behind it, and after the cap, "/" shows the
-// same paper and company name as the company splash, never a blank screen.
+// on the 18+ block screen for a blocked install, or wherever the server says an unfinished
+// onboarding stands (docs/05 §2, docs/21 §1.0–1.3, D46). While the session is still being
+// established the native splash stays up (see the root layout, capped at a few seconds); behind
+// it, after the cap and while the server is asked, "/" shows the same paper and company name as
+// the company splash, never a blank screen.
 export default function Index() {
   const auth = useAuth();
-  const blocked = isAgeBlocked();
-  const route = launchRoute({
+  const decision = launchRoute({
     auth,
     introSeen: isIntroSeen(),
     consentsComplete: isConsentsComplete(),
     accountsConfigured: isSupabaseConfigured(),
+    blocked: isAgeBlocked(),
   });
+  const [checked, setChecked] = useState<OnboardingRoute | null>(null);
 
+  // Resolved once per launch: the decision only becomes CHECK_SERVER when the session is ready.
   useEffect(() => {
-    if (!blocked && shouldMarkOnboardedOnLaunch(auth)) {
-      markIntroSeen();
-      markConsentsComplete();
-    }
-  }, [auth, blocked]);
+    if (decision !== CHECK_SERVER) return;
+    let active = true;
+    void resolveFromServer().then((route) => {
+      if (active) setChecked(route);
+    });
+    return () => {
+      active = false;
+    };
+  }, [decision]);
 
-  // An install the 18+ gate blocked goes back to the block screen before anything else.
-  if (blocked) return <Redirect href={GATE_ROUTE} />;
-  if (route === null) return <CompanySplashView />;
-  return <Redirect href={route} />;
+  if (decision === null) return <CompanySplashView />;
+  if (decision === CHECK_SERVER) return checked === null ? <CompanySplashView /> : <Redirect href={checked} />;
+  return <Redirect href={decision} />;
 }

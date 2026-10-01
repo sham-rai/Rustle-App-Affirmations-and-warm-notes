@@ -13,6 +13,12 @@ describe('recordConsent (docs/21 §1.3)', () => {
     ]);
   });
 
+  it('inserts nothing when the server already holds that consent (idempotent)', async () => {
+    fake.seed(true, ['terms']);
+    await expect(recordConsent(client, 'terms', 'en')).resolves.toEqual({ ok: true, skipped: true });
+    expect(fake.writes).toEqual([]);
+  });
+
   it('records French consents with the Canadian French copy locale', async () => {
     await recordConsent(client, 'special_category', 'fr');
     expect(fake.writes[0]?.row).toEqual({ kind: 'special_category', version: '2026-10-01', locale: 'fr-CA' });
