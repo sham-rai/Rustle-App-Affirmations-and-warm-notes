@@ -96,6 +96,7 @@ Edge Functions have hard wall-clock and CPU-time limits per invocation (check Su
 users (id uuid pk = auth.users.id, created_at, is_anonymous bool, locale text,
        timezone text, age_confirmed_at timestamptz,
        welcome_week_ends_at timestamptz null,   -- set when the user taps "Not now" (doc 09 §3)
+       last_opened_at timestamptz null,         -- the 24-month rule for never-linked accounts (§5, D47)
        deleted_at timestamptz)
 
 consents (id uuid pk, user_id, kind text,   -- 'terms'|'ai_processing'|'special_category'|'quality_review'|'marketing_use'
@@ -154,14 +155,15 @@ deliveries (id uuid pk, user_id, body text /* encrypted */, kind text,     -- DE
               reaction text null,                            -- heart|not_quite
               reaction_reason text null,                     -- too_generic|too_positive|wrong_topic|too_long|dont_mention
               memory_refs uuid[],                            -- which memory items it used
-              model text, prompt_version text, cost_micros int, created_at)
+              model text, prompt_version text, cost_micros int, created_at,
+              unique (user_id, kind, scheduled_for))         -- one Rustle per slot, however often a batch result is ingested (D48)
 
 replies (id, user_id, note_id fk, body text /* encrypted */, visible_at timestamptz,
          reaction text null, reaction_reason text null, model, prompt_version, created_at)
 
 recaps (id, user_id, period_start, period_end, cards jsonb /* encrypted */,
         helped text null,             -- 'a_lot'|'a_little'|'not_really' (the one feedback question, doc 01 §5.4)
-        created_at, viewed_at, shared bool)
+        created_at, viewed_at, shared bool, unique (user_id, period_start))
 
 warm_notes (id text pk /* short, unguessable slug */, sender_user_id, recipient_label text null,
             situation text, body text /* encrypted, follow-up migration before M5 (D48) */, card_style text,
@@ -177,8 +179,10 @@ entitlement_grants (id uuid pk, code text unique, kind text,   -- beta|creator|s
                     max_redemptions int default 1, redeemed_by uuid[], created_at, expires_at)  -- doc 09 §9
 
 -- Ops
-jobs (id, type, user_id, payload jsonb, run_at, status, attempts, last_error)
-push_tokens (id, user_id, token, platform, updated_at)
+jobs (id, type, user_id, payload jsonb, idempotency_key text unique null,   -- e.g. 'seed_notes:<user>:<date>'; insert ... on conflict do nothing (D48)
+      run_at, status, lease_until timestamptz null, locked_by text null,      -- a running job past its lease was abandoned and may be re-claimed (§2.1)
+      attempts, last_error)
+push_tokens (id, user_id, token unique, platform, updated_at)            -- a device token belongs to one account (D48)
 safety_events (id, user_id, note_id, level, action_taken, created_at)   -- minimal, for audit
 ```
 
@@ -298,7 +302,7 @@ Sign in with Apple stays the primary option on iOS: it's the one-tap choice ther
 
 - **Data residency (D25):** **Canada (Central) region first.** Rustle is an Ontario company and the soft launch is Canada, so hosting in Canada is the honest "proudly Canadian" story and the strongest answer to Quebec Law 25's assessment of transfers outside Quebec (verify the region on the chosen Supabase plan). An **EU region** with per-region routing is added before the France/Belgium/Switzerland launch so GDPR users' data stays in the EU. LLM calls still leave the region (Anthropic's API; if the failover hook is ever built, a Bedrock region in Canada if Claude is offered there, otherwise US/EU), which the privacy policy discloses as a sub-processor transfer.
 - **Encryption (D29):** TLS 1.2+ in transit and AES-256 at rest (managed). On top, **column encryption with `pgcrypto`** for `notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards` and `warm_notes.body` (the last by a follow-up migration before M5 writes any warm note, D48), using a key held in **Supabase Vault**, with **decrypting views under RLS** so the app keeps reading through PostgREST and the Edge Functions read plaintext for the AI pipeline. This protects against database dumps, backup leaks and casual access; it does **not** protect against a database administrator, and the privacy policy says so honestly ("encrypted at rest, access audited", not "end-to-end"). Trade-off: no SQL full-text search on encrypted columns, so board search is on-device over the cached notes. Revisit app-layer envelope encryption with per-user keys before the EU launch. Encrypt from **migration 1**: retrofitting a live table is the migration nobody wants.
-- **How the decrypting views work (D46):** each view is created with `security_invoker = true`, so the base table's RLS applies to the caller. The view calls a `SECURITY DEFINER` function owned by `postgres` that reads the key from Vault internally and never returns it; `EXECUTE` on it is granted only to `authenticated` and `service_role`. **Writes go through the same views** via `INSTEAD OF INSERT/UPDATE` triggers that encrypt, so the app reads and writes one view over PostgREST and the Edge Functions use the same views with the service role. pgTAP proves that `authenticated` cannot read `vault.decrypted_secrets`, cannot read another user's rows through the view or the base table, and can read and write its own rows through the view.
+- **How the decrypting views work (D46):** each view is created with `security_invoker = true`, so the base table's RLS applies to the caller. The view calls a `SECURITY DEFINER` function owned by `postgres` that reads the key from Vault internally and never returns it; `EXECUTE` on it is granted only to `authenticated` and `service_role`. **Writes go through the same views** via `INSTEAD OF INSERT/UPDATE` triggers that encrypt, so the app reads and writes one view over PostgREST and the Edge Functions use the same views with the service role. pgTAP proves that `authenticated` cannot read `vault.decrypted_secrets`, cannot read another user's rows through the view or the base table, and can read and write its own rows through the view. **Where things live (D47, migration 1):** the six encrypted base tables sit in a schema `enc` that PostgREST does not expose (`enc.notes.body_enc` and so on); the views carry the glossary names in `public` (`notes`, `memory_items`, `memory_summary`, `deliveries`, `replies`, `recaps`), so the app and the Edge Functions never see a `_enc` name. `authenticated` may change only `locale`, `timezone`, `age_confirmed_at` and `last_opened_at` on `users` and only `withdrawn_at` on `consents` (column grants); everything else on those tables is server-side. Account deletion is the `delete_own_account()` RPC (SECURITY DEFINER): it deletes the `auth.users` row and every table cascades from `users`.
 - **The two RLS exceptions (D46):** `warm_notes` keeps sender-only RLS; the public page reads through a `SECURITY DEFINER` RPC by slug that returns only the fields the page shows (body, card style, recipient label, sender first name) and honours revoked, expired and moderation state, and a second RPC sets `thanked_at` once. The Next.js site calls both with the anon key, never a service-role key. `entitlement_grants` has RLS enabled with no policies for users (deny all) and is read and written only by the redeem Edge Function.
 - **On-device cache (D46):** MMKV is encrypted with a random key held in secure storage (Keychain / Keystore-backed). Losing the key on an Android uninstall is fine because the cache is re-fetchable.
 - **LLM provider:** use API terms under which **inputs are not used for training**. Disclose every provider that can receive note text as a sub-processor: Anthropic, plus AWS or Google only if the failover hook is ever built (D48). Strip unnecessary identifiers before sending (no email or user ID in prompts).

@@ -46,7 +46,7 @@ export function getSupabase(): SupabaseClient | null {
 }
 
 export interface DeleteAnonymousAccountResult {
-  /** True when the server confirmed the deletion. False when the function is unreachable or absent. */
+  /** True when the RPC confirmed the deletion. False on a PostgREST error (network, RLS, or no session: 28000). */
   serverDeleted: boolean;
   /** True when the local session was signed out; false if supabase-js reported an error doing so. */
   signedOut: boolean;
@@ -56,8 +56,9 @@ export interface DeleteAnonymousAccountResult {
 
 /**
  * For M1-09: when the 18+ gate blocks, the anonymous account created on first launch is removed.
- * The server side is the `account-delete` Edge Function (M1-02, service role, cascades). Until it
- * exists the call fails and only the local material is wiped, which the result says.
+ * The server side is the `delete_own_account()` RPC from migration 1 (SECURITY DEFINER; deletes the
+ * auth row and everything cascades). If the call fails only the local material is wiped, which the
+ * result says.
  */
 export async function deleteAnonymousAccount(): Promise<DeleteAnonymousAccountResult> {
   const supabase = getSupabase();
@@ -66,7 +67,7 @@ export async function deleteAnonymousAccount(): Promise<DeleteAnonymousAccountRe
   if (supabase) {
     const { data } = await supabase.auth.getSession();
     if (data.session?.user.is_anonymous) {
-      const { error } = await supabase.functions.invoke('account-delete', { region: FUNCTION_REGION });
+      const { error } = await supabase.rpc('delete_own_account');
       serverDeleted = error === null;
     }
     const { error } = await supabase.auth.signOut({ scope: 'local' });

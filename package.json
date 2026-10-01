@@ -14,9 +14,12 @@
     "dev": "npm run start --workspace app",
     "typecheck": "npm run typecheck --workspaces --if-present && tsc -p scripts",
     "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present && npm run check:strings && npm run check:contrast",
+    "test:db": "supabase test db",
+    "lint": "npm run lint --workspaces --if-present && npm run check:strings && npm run check:contrast && npm run check:enums && npm run check:api-schemas",
     "check:strings": "tsx scripts/check-strings.ts",
     "check:contrast": "tsx scripts/check-contrast.ts",
+    "check:enums": "tsx scripts/check-enums.ts",
+    "check:api-schemas": "tsx scripts/check-api-schemas.ts",
     "eval": "npm run eval --workspace evals",
     "prepare": "husky"
   },
