@@ -101,6 +101,19 @@ describe('the consents in French', () => {
     expect(fake.writes[0]?.row).toEqual({ kind: 'terms', version: '2026-10-01', locale: 'fr-CA' });
   });
 
+  it('says it is offline in the "vous" form', async () => {
+    setAddress('vous');
+    fake.seed(true, []);
+    fake.session = false;
+    await renderAt('/consent/terms');
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'J’accepte' }));
+    });
+    expect(
+      screen.getByText('Rustle n’arrive pas à joindre son serveur pour le moment. Vérifiez votre connexion, puis réessayez.'),
+    ).toBeOnTheScreen();
+  });
+
   it('never "tu"-es a "vous" user on the AI consent or the goodbye', async () => {
     setAddress('vous');
     await renderAt('/consent/ai');

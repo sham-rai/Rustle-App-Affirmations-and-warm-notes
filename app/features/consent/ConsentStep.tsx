@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { Text } from '../../components/Text';
 import { useTheme } from '../../hooks/useTheme';
 import { useT } from '../../i18n/useT';
+import { useAuthRetry } from '../../lib/auth/AuthProvider';
 import { getSupabase } from '../../lib/supabase';
 import { Button } from '../../components/Button';
 import { leaveOnboarding } from './leave';
@@ -20,7 +21,7 @@ const COPY = {
 
 export const GOODBYE_ROUTE = '/consent/goodbye';
 
-type Phase = 'ask' | 'saving' | 'error' | 'leaving';
+type Phase = 'ask' | 'saving' | 'error' | 'offline' | 'leaving';
 
 /**
  * One consent, on its own screen (docs/11 §4.2, §4.4, docs/21 §1.3). Agreeing writes a `consents`
@@ -29,6 +30,7 @@ type Phase = 'ask' | 'saving' | 'error' | 'leaving';
  */
 export function ConsentStep({ kind, next }: { kind: ConsentKind; next: OnboardingRoute }) {
   const router = useRouter();
+  const retryAuth = useAuthRetry();
   const { t, language } = useT();
   const { space } = useTheme();
   const [phase, setPhase] = useState<Phase>('ask');
@@ -36,11 +38,14 @@ export function ConsentStep({ kind, next }: { kind: ConsentKind; next: Onboardin
   const busy = phase === 'saving' || phase === 'leaving';
 
   const onAgree = async () => {
+    // No session last time (offline at first launch): bring the account up before writing.
+    const offline = phase === 'offline';
     setPhase('saving');
+    if (offline) await retryAuth();
     const client = getSupabase();
     const result = await recordConsent(client, kind, language);
     if (!result.ok) {
-      setPhase('error');
+      setPhase(result.reason === 'no_session' ? 'offline' : 'error');
       return;
     }
     // The server decides what is still missing; reaching Today caches "done" locally.
@@ -58,8 +63,12 @@ export function ConsentStep({ kind, next }: { kind: ConsentKind; next: Onboardin
       title={t(`consent.${copy}.title`)}
       actions={
         <View testID={`consent-${kind}`} style={{ gap: space[2] }}>
-          <Text variant="label" color={phase === 'error' ? 'warm' : 'ink2'} accessibilityLiveRegion="polite">
-            {phase === 'error' ? t('consent.saveError') : t('consent.declineNote')}
+          <Text variant="label" color={phase === 'error' || phase === 'offline' ? 'warm' : 'ink2'} accessibilityLiveRegion="polite">
+            {phase === 'error'
+              ? t('consent.saveError')
+              : phase === 'offline'
+                ? t('common.offline')
+                : t('consent.declineNote')}
           </Text>
           <Button label={t('consent.agree')} onPress={() => void onAgree()} busy={phase === 'saving'} disabled={busy} />
           <Button

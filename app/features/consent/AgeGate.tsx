@@ -5,6 +5,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { fontFamily, Text, textStyleFor } from '../../components/Text';
 import { useTheme } from '../../hooks/useTheme';
 import { useT, type StringKey } from '../../i18n/useT';
+import { useAuthRetry } from '../../lib/auth/AuthProvider';
 import { getSupabase } from '../../lib/supabase';
 import { isAdult, parseDateOfBirth, type DateOfBirthEntry } from './age';
 import { isAgeBlocked, markAgeBlocked } from './onboarding-flags';
@@ -15,7 +16,7 @@ import { OnboardingPage } from './OnboardingPage';
 import { fetchOnboardingState, markOnboarded, onboardingRoute, type OnboardingState } from './onboarding-state';
 import { confirmAge } from './records';
 
-type Phase = 'ask' | 'invalid' | 'saving' | 'error' | 'leaving' | 'blocked';
+type Phase = 'ask' | 'invalid' | 'saving' | 'error' | 'offline' | 'leaving' | 'blocked';
 type Field = keyof DateOfBirthEntry;
 
 const EMPTY: DateOfBirthEntry = { day: '', month: '', year: '' };
@@ -34,6 +35,7 @@ const FIELDS: readonly { field: Field; label: StringKey; hint: StringKey; length
  */
 export function AgeGate() {
   const router = useRouter();
+  const retryAuth = useAuthRetry();
   const { t } = useT();
   const { colors, radius, space } = useTheme();
   const [entry, setEntry] = useState<DateOfBirthEntry>(EMPTY);
@@ -98,13 +100,16 @@ export function AgeGate() {
       setPhase('blocked');
       return;
     }
+    // No session last time (offline at first launch): bring the account up before writing.
+    const offline = phase === 'offline';
     setPhase('saving');
+    if (offline) await retryAuth();
     const client = getSupabase();
     let state = known.current;
     if (!state) {
       const read = await fetchOnboardingState(client);
       if (!read.ok) {
-        setPhase('error');
+        setPhase(read.reason === 'no_session' ? 'offline' : 'error');
         return;
       }
       state = read.state ?? { ageConfirmed: false, consentKinds: [] };
@@ -112,7 +117,7 @@ export function AgeGate() {
     if (!state.ageConfirmed) {
       const result = await confirmAge(client, now);
       if (!result.ok) {
-        setPhase('error');
+        setPhase(result.reason === 'no_session' ? 'offline' : 'error');
         return;
       }
     }
@@ -120,7 +125,14 @@ export function AgeGate() {
     goTo(onboardingRoute({ ageConfirmed: true, consentKinds: state.consentKinds }));
   };
 
-  const message = phase === 'invalid' ? t('age.invalid') : phase === 'error' ? t('age.saveError') : null;
+  const message =
+    phase === 'invalid'
+      ? t('age.invalid')
+      : phase === 'error'
+        ? t('age.saveError')
+        : phase === 'offline'
+          ? t('common.offline')
+          : null;
 
   return (
     <OnboardingPage

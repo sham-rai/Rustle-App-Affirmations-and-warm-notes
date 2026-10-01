@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { isAgeBlocked } from '../../features/consent/onboarding-flags';
@@ -14,7 +14,13 @@ export type AuthBootstrapState = { status: 'loading' } | AuthBootstrapResult;
  * One attempt is in flight at a time; a remount (Fast Refresh, StrictMode) joins it instead of
  * starting another or dropping its result.
  */
-export function useAuthBootstrap(): AuthBootstrapState {
+export type AuthBootstrap = {
+  readonly state: AuthBootstrapState;
+  /** Runs the bootstrap again (joining one in flight) and resolves once its result is in state. */
+  readonly retry: () => Promise<void>;
+};
+
+export function useAuthBootstrap(): AuthBootstrap {
   const [state, setState] = useState<AuthBootstrapState>({ status: 'loading' });
   const latest = useRef<AuthBootstrapState>({ status: 'loading' });
   const mounted = useRef(false);
@@ -59,5 +65,5 @@ export function useAuthBootstrap(): AuthBootstrapState {
     };
   }, [run]);
 
-  return state;
+  return useMemo(() => ({ state, retry: run }), [state, run]);
 }

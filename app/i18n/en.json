@@ -22,7 +22,8 @@
     "begin": "Begin",
     "done": "Done",
     "errorSaved": "Something went wrong. Your note is saved; I’ll try again in a moment.",
-    "notNow": "Not now"
+    "notNow": "Not now",
+    "offline": "Rustle can’t reach its server right now. Check your connection, then try again."
   },
   "consent": {
     "agree": "I agree",

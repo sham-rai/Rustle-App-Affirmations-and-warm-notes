@@ -27,20 +27,31 @@ describe('useAuthBootstrap on an install the 18+ gate blocked (M1-09)', () => {
     const { result } = renderHook(() => useAuthBootstrap());
     await act(async () => {});
 
-    expect(result.current).toEqual({ status: 'failed', reason: 'blocked' });
+    expect(result.current.state).toEqual({ status: 'failed', reason: 'blocked' });
     expect(getSupabase).not.toHaveBeenCalled();
 
     await act(async () => {
       appStateListener?.('active');
     });
     expect(getSupabase).not.toHaveBeenCalled();
-    expect(result.current).toEqual({ status: 'failed', reason: 'blocked' });
+    expect(result.current.state).toEqual({ status: 'failed', reason: 'blocked' });
   });
 
   it('runs the normal bootstrap otherwise', async () => {
     const { result } = renderHook(() => useAuthBootstrap());
     await act(async () => {});
     expect(getSupabase).toHaveBeenCalled();
-    expect(result.current).toEqual({ status: 'not_configured' });
+    expect(result.current.state).toEqual({ status: 'not_configured' });
+  });
+
+  it('retry() runs the bootstrap again and resolves with the new state', async () => {
+    const { result } = renderHook(() => useAuthBootstrap());
+    await act(async () => {});
+    jest.mocked(getSupabase).mockClear();
+    await act(async () => {
+      await result.current.retry();
+    });
+    expect(getSupabase).toHaveBeenCalledTimes(1);
+    expect(result.current.state).toEqual({ status: 'not_configured' });
   });
 });

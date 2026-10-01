@@ -56,6 +56,7 @@ jest.mock('../../../lib/auth/AuthProvider', () => {
   return {
     AuthProvider: ({ children }: { children: unknown }) => children,
     useAuth: () => useSyncExternalStore(subscribe, () => mockAuthState),
+    useAuthRetry: () => () => Promise.resolve(),
   };
 });
 

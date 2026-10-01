@@ -189,6 +189,19 @@ describe('the age gate (docs/21 §1.2)', () => {
     expect(fake.writes).toEqual([]);
   });
 
+  it('with no session, says it is offline, then retries the bootstrap and the write', async () => {
+    fake.session = false;
+    const router = await renderAt('/age');
+    await enterBirthDate('7', '3', '1990');
+    expect(router.getPathname()).toBe('/age');
+    expect(screen.getByText('Rustle can’t reach its server right now. Check your connection, then try again.')).toBeOnTheScreen();
+
+    fake.session = true;
+    await press('Continue');
+    expect(router.getPathname()).toBe('/consent/terms');
+    expect(fake.writes.map((write) => write.table)).toEqual(['users']);
+  });
+
   it('a failed save stays on the gate with a calm message', async () => {
     fake.failWrites = true;
     const router = await renderAt('/age');
@@ -249,6 +262,20 @@ describe('the three consents (docs/21 §1.3–1.4)', () => {
     await press('Not now');
     expect(router.getPathname()).toBe('/consent/goodbye');
     expect(isIntroSeen()).toBe(false);
+  });
+
+  it('a consent with no session says it is offline, then retries and writes', async () => {
+    fake.seed(true, []);
+    fake.session = false;
+    const router = await renderAt('/consent/terms');
+    await press('I agree');
+    expect(router.getPathname()).toBe('/consent/terms');
+    expect(screen.getByText('Rustle can’t reach its server right now. Check your connection, then try again.')).toBeOnTheScreen();
+
+    fake.session = true;
+    await press('I agree');
+    expect(router.getPathname()).toBe('/consent/ai');
+    expect(fake.writes).toHaveLength(1);
   });
 
   it('a failed write stays on the step and says so', async () => {

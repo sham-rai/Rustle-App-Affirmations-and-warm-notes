@@ -27,7 +27,9 @@
     "done": "Terminé",
     "errorSaved": "Quelque chose n’a pas fonctionné. Ta note est enregistrée ; je réessaie dans un instant.",
     "errorSaved_vous": "Quelque chose n’a pas fonctionné. Votre note est enregistrée ; je réessaie dans un instant.",
-    "notNow": "Pas maintenant"
+    "notNow": "Pas maintenant",
+    "offline": "Rustle n’arrive pas à joindre son serveur pour le moment. Vérifie ta connexion, puis réessaie.",
+    "offline_vous": "Rustle n’arrive pas à joindre son serveur pour le moment. Vérifiez votre connexion, puis réessayez."
   },
   "consent": {
     "agree": "J’accepte",
