@@ -8,7 +8,6 @@ import {
   CHECKIN_LINE_MAX_CHARS,
   NOTE_BODY_MAX_CHARS,
   charLength,
-  noteFieldsSchema,
 } from '../../lib/outbox/types';
 import { getSupabase } from '../../lib/supabase';
 
@@ -22,13 +21,32 @@ export const checkinsQueryKey = ['checkins'] as const;
 const NOTE_COLUMNS =
   'id, body, mood, source, wants_reply, pinned, hidden_from_recap, exclude_from_ai, life_areas, created_at, edited_at, deleted_at';
 
-const noteRowSchema = noteFieldsSchema.extend({
+/**
+ * What the server already holds is shown as it is: no client-side length cap (that applies to
+ * writes only), and `source` / `life_areas` read as plain strings, so a value added server-side
+ * later never hides a note. Parsed loosely, then cast to the typed fields.
+ */
+const serverNoteRowSchema = z.object({
   id: z.string(),
+  body: z.string(),
+  mood: z.number().nullable(),
+  source: z.string(),
+  wants_reply: z.boolean(),
+  pinned: z.boolean(),
+  hidden_from_recap: z.boolean(),
+  exclude_from_ai: z.boolean(),
+  life_areas: z.array(z.string()),
   created_at: z.string(),
   edited_at: z.string().nullable(),
   deleted_at: z.string().nullable(),
 });
-export type NoteRow = z.infer<typeof noteRowSchema>;
+
+export interface NoteRow extends NoteFields {
+  id: string;
+  created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
 
 export interface BoardNote extends NoteRow {
   /** True while a write to this note waits in the outbox. */
@@ -199,11 +217,28 @@ export async function fetchNoteRows(): Promise<BoardNote[]> {
     .order('created_at', { ascending: false });
   // The error carries a code only; never its details, which may quote the row.
   if (error) throw new Error(`notes_fetch_failed:${error.code}`);
+  return parseNoteRows(data ?? []);
+}
+
+/** Rows from the `notes` view as board notes. Unreadable rows are counted in one warning, count only. */
+export function parseNoteRows(data: readonly unknown[]): BoardNote[] {
   const rows: BoardNote[] = [];
-  for (const row of data ?? []) {
-    const parsed = noteRowSchema.safeParse(row);
-    if (parsed.success) rows.push({ ...parsed.data, pending: false });
+  let unreadable = 0;
+  for (const row of data) {
+    const parsed = serverNoteRowSchema.safeParse(row);
+    if (!parsed.success) {
+      unreadable += 1;
+      continue;
+    }
+    const { source, life_areas, ...rest } = parsed.data;
+    rows.push({
+      ...rest,
+      source: source as NoteFields['source'],
+      life_areas: life_areas as NoteFields['life_areas'],
+      pending: false,
+    });
   }
+  if (unreadable > 0) console.warn(`notes_unreadable_rows:${unreadable}`);
   return rows;
 }
 

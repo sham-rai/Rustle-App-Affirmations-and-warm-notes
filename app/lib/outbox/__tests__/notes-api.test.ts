@@ -10,6 +10,7 @@ import {
   editNote,
   notesQueryKey,
   overlayPending,
+  parseNoteRows,
   type BoardNote,
   type Checkin,
   type NotesApiDeps,
@@ -145,5 +146,29 @@ describe('notes api over the outbox', () => {
     expect(queryClient.getQueryData(checkinsQueryKey)).toBeUndefined();
     expect(() => createCheckin(deps, { mood: 3, line: 'a'.repeat(CHECKIN_LINE_MAX_CHARS) })).not.toThrow();
     expect(new CheckinLineTooLongError(300).limit).toBe(CHECKIN_LINE_MAX_CHARS);
+  });
+
+  it('shows what the server holds: no length cap on read, unknown enum values kept, unreadable rows counted only', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const row = {
+      id: testUuid(),
+      body: 'x'.repeat(NOTE_BODY_MAX_CHARS + 500),
+      mood: null,
+      source: 'a_future_source',
+      wants_reply: true,
+      pinned: false,
+      hidden_from_recap: false,
+      exclude_from_ai: false,
+      life_areas: ['a_future_area'],
+      created_at: '2026-01-01T00:00:00.000Z',
+      edited_at: null,
+      deleted_at: null,
+    };
+    const rows = parseNoteRows([row, { id: 'broken', body: 'secret text' }]);
+    expect(rows.map((note) => note.id)).toEqual([row.id]);
+    expect(rows[0]?.body).toHaveLength(NOTE_BODY_MAX_CHARS + 500);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith('notes_unreadable_rows:1');
+    warn.mockRestore();
   });
 });
