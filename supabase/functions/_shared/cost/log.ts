@@ -46,9 +46,18 @@ export const CACHE_READ_MULTIPLIER = 0.1;
 export const CACHE_WRITE_MULTIPLIER = 1.25;
 export const BATCH_MULTIPLIER = 0.5;
 
+/** Real ids are dated or suffixed (claude-haiku-4-5-20251001): the longest key the id starts with wins. */
+export function priceFor(model: string): ModelPrice | undefined {
+  let best: string | undefined;
+  for (const key of Object.keys(PRICE_PER_MTOK)) {
+    if (model.startsWith(key) && (best === undefined || key.length > best.length)) best = key;
+  }
+  return best === undefined ? undefined : PRICE_PER_MTOK[best];
+}
+
 /** Cost in millionths of a USD, rounded up to a whole micro. Unknown model: 0, and the caller should log it. */
 export function costMicros(model: string, usage: LlmUsage, opts: { batch?: boolean } = {}): number {
-  const price = PRICE_PER_MTOK[model];
+  const price = priceFor(model);
   if (!price) return 0;
   // USD per Mtok equals micro-USD per token.
   const raw =

@@ -13,6 +13,13 @@ Deno.test('costMicros prices tokens, cache reads and batch', () => {
   assertEquals(costMicros('unknown', usage), 0);
 });
 
+Deno.test('costMicros resolves dated model ids by the longest matching key', () => {
+  const usage = { input_tokens: 1_000_000, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  assertEquals(costMicros('claude-haiku-4-5-20251001', usage), 1_000_000);
+  assertEquals(costMicros('claude-opus-5-5-20260101', usage), 4_000_000);
+  assertEquals(costMicros('claude-opus-5-20260101', usage), 5_000_000);
+});
+
 Deno.test('logLlmCall inserts one row and survives an error', async () => {
   const rows: Record<string, unknown>[] = [];
   const record: LlmCallRecord = {
