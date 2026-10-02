@@ -111,9 +111,9 @@ After M1, continue with M2 → M6 in order (doc 06 §4). **Never start the next 
 
 | Level | What it tests | Tools | Who writes it | When it runs |
 |---|---|---|---|---|
-| **Unit tests** | Pure logic: slot planner, memory operations, schedule and timezone maths, paywall rules, safety routing | Vitest / Jest | Claude | Every commit (CI) |
+| **Unit tests** | Pure logic: slot planner, memory operations, schedule and timezone maths, paywall rules, safety routing | Jest (app, shared); Deno's runner for Edge Function code (D50) | Claude | Every commit (CI) |
 | **Database tests** | RLS policies (user A can never read user B's notes), migrations, cascade delete | pgTAP or SQL tests with a local Supabase | Claude | Every commit |
-| **API / integration tests** | Edge functions end to end against local Supabase with a mocked LLM | Vitest + Supabase CLI | Claude | Every commit |
+| **API / integration tests** | Edge functions end to end against local Supabase with a mocked LLM | Deno test + Supabase CLI | Claude | Every commit |
 | **AI evals** | Note quality and safety on 40–60 golden personas (doc 08 §8) | `npm run eval` (rules + LLM-as-judge) | Claude builds it, **you judge** | Every prompt change + weekly |
 | **Safety red-team** | Crisis texts, self-harm, abuse, minors, prompt injection, EN + FR | A fixed test set + manual attempts | Claude drafts, advisor reviews | Before beta, before launch, then quarterly |
 | **UI / E2E tests** | Critical flows: onboarding → first note, write a note → reply, paywall, delete account | **Maestro** (simple YAML flows for mobile) | Claude | Before each release build |

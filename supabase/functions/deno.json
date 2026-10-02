@@ -1,5 +1,9 @@
 {
   "imports": {
-    "@rustle/shared/": "../../packages/shared/"
+    "@rustle/shared/": "../../packages/shared/",
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@0.131.0",
+    "@anthropic-ai/sdk/": "npm:/@anthropic-ai/sdk@0.131.0/",
+    "zod": "npm:zod@3.25.76",
+    "zod/v4": "npm:zod@3.25.76/v4"
   }
 }
