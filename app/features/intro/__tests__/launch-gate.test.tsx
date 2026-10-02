@@ -34,6 +34,8 @@ jest.mock('expo-splash-screen', () => ({
 jest.mock('../../../i18n/preferences');
 jest.mock('../tree/Tree', () => ({ Tree: () => null }));
 jest.mock('../FoldedNoteMark', () => ({ FoldedNoteMark: () => null }));
+// The root layout starts the outbox worker at module scope (M1-08); routing tests do not need it.
+jest.mock('../../../lib/outbox', () => ({ startOutbox: () => () => undefined }));
 // The in-memory server from the consent tests, with a project "configured".
 jest.mock('../../../lib/supabase', () => ({
   ...jest.requireActual('../../consent/__tests__/fake-supabase').fakeSupabaseModule,
