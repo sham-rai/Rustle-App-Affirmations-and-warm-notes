@@ -48,18 +48,18 @@ values
 -- Catalog invariants (docs/21 §0.3, CLAUDE.md rules). These hold for every future migration too.
 -- ---------------------------------------------------------------------------
 select is(
-  (select coalesce(string_agg(schemaname || '.' || tablename, ', ' order by 1), '') from pg_tables where schemaname in ('public', 'enc') and not rowsecurity),
+  (select coalesce(string_agg(schemaname || '.' || tablename, ', ' order by schemaname, tablename), '') from pg_tables where schemaname in ('public', 'enc') and not rowsecurity),
   '', 'every table in public and enc has RLS enabled');
 
 select is(
-  (select coalesce(string_agg(n.nspname || '.' || p.proname, ', ' order by 1), '')
+  (select coalesce(string_agg(n.nspname || '.' || p.proname, ', ' order by n.nspname, p.proname), '')
    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname in ('public', 'enc') and p.prosecdef
      and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')),
   '', 'every SECURITY DEFINER function in public and enc pins search_path');
 
 select is(
-  (select coalesce(string_agg(n.nspname || '.' || c.relname, ', ' order by 1), '')
+  (select coalesce(string_agg(n.nspname || '.' || c.relname, ', ' order by n.nspname, c.relname), '')
    from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname in ('public', 'enc') and c.relkind in ('r', 'v', 'p')
      and has_table_privilege('anon', c.oid, 'SELECT, INSERT, UPDATE, DELETE')),
@@ -67,7 +67,7 @@ select is(
 
 -- Tables with RLS and no policy at all are the deny-all set, and nothing else (docs/07 §8).
 select is(
-  (select string_agg(t.tablename, ', ' order by 1)
+  (select string_agg(t.tablename, ', ' order by t.tablename)
    from pg_tables t
    where t.schemaname in ('public', 'enc')
      and not exists (select 1 from pg_policies p where p.schemaname = t.schemaname and p.tablename = t.tablename)),
@@ -76,11 +76,11 @@ select is(
 
 -- Every encrypted base table is paired with a decrypting view of the glossary name.
 select is(
-  (select string_agg(tablename, ', ' order by 1) from pg_tables where schemaname = 'enc'),
+  (select string_agg(tablename, ', ' order by tablename) from pg_tables where schemaname = 'enc'),
   'deliveries, memory_items, memory_summary, notes, recaps, replies, warm_notes',
   'the seven encrypted base tables live in enc');
 select is(
-  (select string_agg(viewname, ', ' order by 1) from pg_views where schemaname = 'public'),
+  (select string_agg(viewname, ', ' order by viewname) from pg_views where schemaname = 'public'),
   'deliveries, memory_items, memory_summary, notes, recaps, replies, warm_notes',
   'each has a view in public');
 select is(
