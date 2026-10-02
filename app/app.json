@@ -14,6 +14,9 @@
         "com.apple.security.application-groups": [
           "group.app.rustle"
         ]
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
