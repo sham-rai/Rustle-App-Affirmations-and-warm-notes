@@ -10,13 +10,13 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 | M1-02 | Migration 1: schema, RLS, pgcrypto + Vault + views, pgTAP | done | lead · fable | M1-01 | #2, merged 2026-09-30 (144 pgTAP green in CI) |
 | M1-03 | Anonymous sign-in, Keychain / Block Store persistence, backup status | done | lead · fable | M1-01 | merged 2026-09-30 |
 | M1-04 | i18n EN/FR, design tokens, ThemeProvider, tab skeleton | done | subagent · opus | M1-01 | merged 2026-09-30 |
-| M1-05 | Sentry, PostHog, first events, cost-logging table | PR open (PO) | subagent · sonnet | M1-01, M1-02 | `feat/M1-05-observability` pushed 2026-10-01 after two review rounds; PO opens the PR |
-| M1-06 | LLMClient: Messages, Batches, caching, structured output, cost logging, failover hooks | PR open (PO) | lead · fable | M1-01 | `feat/M1-06-llm-client` pushed 2026-10-01 after the code review; PO opens the PR |
+| M1-05 | Sentry, PostHog, first events, cost-logging table | done | subagent · sonnet | M1-01, M1-02 | #5 merged 2026-10-02 after two review rounds |
+| M1-06 | LLMClient: Messages, Batches, caching, structured output, cost logging, failover hooks | done | lead · fable | M1-01 | #6 merged 2026-10-02 after the code review (D50) |
 | M1-07 | Rustle voice prompt v1 + test screen showing a real note | ready | lead drafts · subagent wires (opus) | M1-06 | |
-| M1-08 | Offline outbox for notes and check-ins | PR open (PO) | subagent · opus | M1-03 | `feat/M1-08-offline-outbox` pushed 2026-10-01 after two review rounds; PO opens the PR |
-| M1-09 | Consent screens, 18+ gate, `consents` rows | PR open (PO) | subagent · opus | M1-02, M1-04 | `feat/M1-09-consent-and-age-gate` ready 2026-10-01 after two review rounds and a security review; PO pushes and opens the PR |
+| M1-08 | Offline outbox for notes and check-ins | done | subagent · opus | M1-03 | #7 merged 2026-10-02 after two review rounds; local caps and the `board_note_created` hook move to the shared modules in the lead integration pass |
+| M1-09 | Consent screens, 18+ gate, `consents` rows | done | subagent · opus | M1-02, M1-04 | #8 merged 2026-10-02 after two review rounds and a security review; helpline numbers and the French copy still need the PO |
 | M1-10 | Device checklist v1 and the first status note | ready | lead · fable | all | |
-| M1-11 | Migration 1 follow-ups from the D48 review (warm_notes.body encrypted, read/opened RPC split, catalog tests) | PR open (PO) | lead · fable | M1-02 | `feat/M1-11-migration-1-follow-ups` pushed 2026-10-01; PO opens the PR, CI `db` job runs the 7 pgTAP files |
+| M1-11 | Migration 1 follow-ups from the D48 review (warm_notes.body encrypted, read/opened RPC split, catalog tests) | done | lead · fable | M1-02 | #4 merged 2026-10-02; CI pgTAP runs the 7 files |
 
 ## M2 · Splash, Rustle screen, onboarding, first note, Today
 
@@ -34,7 +34,7 @@ Updated by the lead on every state change. Weekly notes in `docs/status/`.
 | Week | Run together |
 |---|---|
 | 1 | M1-01 → M1-04 + M1-03 |
-| 2 | M2-01 + M1-02 (done) · wave A, started 2026-10-01: M1-09 + M1-05 + M1-08 (subagents) · M1-11 then M1-06 (lead) |
+| 2 | M2-01 + M1-02 (done) · wave A merged 2026-10-02 (#4 to #8): M1-11, M1-05, M1-06, M1-08, M1-09 |
 | 3 | Wave B: M2-02 (after M1-09) · M1-07 (after M1-06) · M2-06 (after the first device build) |
 | 4 | Wave C: M2-03 (lead) → M2-04 + M2-05 · M1-10 closes M1 |
 
