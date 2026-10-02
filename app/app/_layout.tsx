@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, ThemeProvider as NavigationThemeProvider, type Theme as NavigationTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,6 +13,7 @@ import { i18n, useDeviceLanguage } from '../i18n';
 import { AuthProvider, useAuth } from '../lib/auth/AuthProvider';
 import { identifyAnalyticsUser, track } from '../lib/analytics';
 import { initSentry } from '../lib/sentry';
+import { startOutbox } from '../lib/outbox';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 // Keep the splash up until the fonts are ready (M1-04) and, on a cold start, until the session is
@@ -19,9 +21,23 @@ import { isSupabaseConfigured } from '../lib/supabase';
 // account to the company splash, with nothing in between. AuthProvider creates or restores the
 // anonymous account (M1-03).
 void SplashScreen.preventAutoHideAsync();
+// Replay notes and check-ins written offline (M1-08); a no-op until Supabase is configured.
+startOutbox();
 
 // Module scope: before anything can crash. Off without a DSN.
 initSentry();
+
+/**
+ * One query cache for the app (M1-08). Offline-first: a query runs even without a connection, so
+ * cached data and the outbox overlay show on a plane instead of a paused query. No persister yet;
+ * the outbox is what survives a kill, and the server data cache is a later ticket.
+ */
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { networkMode: 'offlineFirst', retry: 1, staleTime: 60_000, gcTime: 24 * 60 * 60_000 },
+    mutations: { networkMode: 'offlineFirst', retry: 1 },
+  },
+});
 
 /** Never hold the native splash longer than this, even if the session is slow to come back. */
 const MAX_NATIVE_SPLASH_MS = 4000;
@@ -34,21 +50,23 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    <I18nextProvider i18n={i18n}>
-      <ThemeProvider>
-        <TokenNavigationTheme>
-          <AuthProvider>
-            <HideSplashWhenLaunchKnown />
-            <ObservabilityEffects />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(onboarding)" options={{ animation: 'none' }} />
-              <Stack.Screen name="(tabs)" />
-            </Stack>
-          </AuthProvider>
-        </TokenNavigationTheme>
-      </ThemeProvider>
-    </I18nextProvider>
+    <QueryClientProvider client={queryClient}>
+      <I18nextProvider i18n={i18n}>
+        <ThemeProvider>
+          <TokenNavigationTheme>
+            <AuthProvider>
+              <HideSplashWhenLaunchKnown />
+              <ObservabilityEffects />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(onboarding)" options={{ animation: 'none' }} />
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+            </AuthProvider>
+          </TokenNavigationTheme>
+        </ThemeProvider>
+      </I18nextProvider>
+    </QueryClientProvider>
   );
 }
 
