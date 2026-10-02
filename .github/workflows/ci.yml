@@ -37,10 +37,10 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: 2.1.4
-      - run: deno check _shared/shared-smoke.ts _shared/cost/log.ts _shared/cost/log.test.ts
+      - run: deno check _shared/shared-smoke.ts _shared/cost/log.ts _shared/cost/log.test.ts _shared/llm/*.ts
         working-directory: supabase/functions
-      - name: Deno tests (cost logging)
-        run: deno test _shared/cost/
+      - name: Deno tests (cost logging, LLMClient)
+        run: deno test _shared/cost/ _shared/llm/
         working-directory: supabase/functions
 
   db:
