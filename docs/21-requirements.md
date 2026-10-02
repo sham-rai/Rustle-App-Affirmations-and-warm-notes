@@ -7,7 +7,7 @@
 1. Monorepo with `/app`, `/supabase`, `/packages/shared`, `/evals`, `/web`, `/scripts`, `CLAUDE.md`; `npm run typecheck`, `npm run lint` and `npm test` run in CI on every PR and a failure blocks merge; `npm run eval` runs in CI on every PR that changes `supabase/functions/_shared/prompts/**` or `evals/**` (it calls the Claude API) and a failure blocks merge.
 2. Three Supabase projects (dev, staging, prod) with matching EAS profiles; secrets only in EAS/Supabase secrets; a pre-commit secret scanner is installed.
 3. Migration 1 creates every table in doc 07 §3 with RLS in the same migration; tables without a `user_id` (`entitlement_grants`) get deny-all policies and are reached only through Edge Functions or `SECURITY DEFINER` RPCs (doc 07 §8); pgTAP tests prove user A cannot read, update or delete user B's rows in any table.
-4. Encrypted columns (`notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards`, and `warm_notes.body` through a follow-up migration before M5 writes any warm note, D48) are unreadable in a raw `SELECT` and readable and writable through the decrypting views under RLS (`security_invoker` views with `INSTEAD OF` triggers, doc 07 §8); the key lives in Vault and pgTAP proves `authenticated` cannot read it.
+4. Encrypted columns (`notes.body`, `memory_items.content`, `memory_summary.summary`, `deliveries.body`, `replies.body`, `recaps.cards`, and `warm_notes.body` since migration 2, M1-11, before M5 writes any warm note, D48) are unreadable in a raw `SELECT` and readable and writable through the decrypting views under RLS (`security_invoker` views with `INSTEAD OF` triggers, doc 07 §8); the key lives in Vault and pgTAP proves `authenticated` cannot read it.
 5. Sentry receives a test crash with request bodies scrubbed; PostHog receives `app_opened` with no content properties; both run in their EU/Canada-appropriate regions.
 6. `packages/shared` exports zod schemas, the glossary constants and the design tokens, and is imported by both the Expo app and a Deno Edge Function without a build step.
 
@@ -93,7 +93,7 @@
 ## 11. Send a warm note (doc 05 §10, doc 07 §4.5, doc 08 §5.9)
 1. Situation chips + optional line → three drafts in one call → edit → re-moderation of the edited text (a failed check does not publish) → card style → system share sheet with link and image.
 2. `POST /warm-notes` requires App Attest / Play Integrity and is rate-limited; unlimited for every entitlement state within the abuse limits.
-3. The web page renders server-side with an OG image, is `noindex`, unguessable, expires 30 days after creation, can be revoked, shows a "Need support now?" link, has a report link, and carries only a page-view counter.
+3. The web page renders server-side with an OG image, is `noindex`, unguessable, expires 30 days after creation, can be revoked, shows a "Need support now?" link, has a report link, and carries only a page-view counter, reported by the page once after a successful read (`warm_note_opened`), never by the server route (D49).
 4. The recipient's one-tap ❤️ sets `thanked_at` once and sends the sender a single push; there is no text reply.
 5. The install CTA deep-links with referral attribution and logs `warm_note_install`.
 
