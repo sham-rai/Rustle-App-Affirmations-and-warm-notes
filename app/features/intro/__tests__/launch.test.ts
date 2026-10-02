@@ -1,57 +1,53 @@
 import { isIntroSeen, markIntroSeen, resetIntroSeen } from '../intro-seen';
-import { HOME_ROUTE, INTRO_ROUTE, launchRoute, shouldMarkSeenOnLaunch } from '../launch';
+import { CHECK_SERVER, GATE_ROUTE, HOME_ROUTE, INTRO_ROUTE, launchRoute } from '../launch';
 import { splitLink } from '../link-text';
 import { easingFromToken } from '../timing';
 
-const ready = (restoredFrom: 'new' | 'session' | 'keychain') =>
+type RestoredFrom = 'new' | 'session' | 'keychain' | 'keystore' | 'block_store';
+const ready = (restoredFrom: RestoredFrom) =>
   ({ status: 'ready', userId: 'u1', isAnonymous: true, restoredFrom }) as const;
 
-describe('launchRoute (docs/21 §1.0)', () => {
-  const base = { introSeen: false, accountsConfigured: true };
+describe('launchRoute (docs/21 §1.0–1.3)', () => {
+  const fresh = { introSeen: false, consentsComplete: false, accountsConfigured: true, blocked: false };
+  const done = { ...fresh, introSeen: true, consentsComplete: true };
+  const afterBegin = { ...fresh, introSeen: true };
 
-  it('shows the intro for a freshly created anonymous account', () => {
-    expect(launchRoute({ ...base, auth: ready('new') })).toBe(INTRO_ROUTE);
-  });
-
-  it('goes straight to Today for a restored session', () => {
-    expect(launchRoute({ ...base, auth: ready('session') })).toBe(HOME_ROUTE);
-    expect(launchRoute({ ...base, auth: ready('keychain') })).toBe(HOME_ROUTE);
-  });
-
-  it('waits (native splash stays up) while the session is loading', () => {
-    expect(launchRoute({ ...base, auth: { status: 'loading' } })).toBeNull();
-  });
-
-  it('never replays once seen', () => {
-    expect(launchRoute({ ...base, introSeen: true, auth: ready('new') })).toBe(HOME_ROUTE);
-    expect(launchRoute({ ...base, introSeen: true, auth: { status: 'loading' } })).toBe(HOME_ROUTE);
-  });
-
-  it('shows the intro on a first launch offline, and skips it with no account system', () => {
-    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'offline', hasStoredToken: false } })).toBe(
+  // [case, input, expected]
+  const cases: [string, Parameters<typeof launchRoute>[0], ReturnType<typeof launchRoute>][] = [
+    ['blocked → the gate (its block screen), before anything else', { ...done, blocked: true, auth: { status: 'loading' } }, GATE_ROUTE],
+    ['blocked, with the bootstrap saying so → the gate', { ...fresh, blocked: true, auth: { status: 'failed', reason: 'blocked' } }, GATE_ROUTE],
+    ['no account system → Today', { ...fresh, accountsConfigured: false, auth: { status: 'loading' } }, HOME_ROUTE],
+    ['not configured → Today', { ...fresh, auth: { status: 'not_configured' } }, HOME_ROUTE],
+    ['both local flags set → Today at once, even while loading', { ...done, auth: { status: 'loading' } }, HOME_ROUTE],
+    ['both local flags set, any session → Today', { ...done, auth: ready('session') }, HOME_ROUTE],
+    ['loading, not onboarded → wait', { ...fresh, auth: { status: 'loading' } }, null],
+    ['a new account → the intro', { ...fresh, auth: ready('new') }, INTRO_ROUTE],
+    ['a new account after the intro was seen → the gate', { ...afterBegin, auth: ready('new') }, GATE_ROUTE],
+    ['a cached session, intro never passed (killed before Begin) → the intro', { ...fresh, auth: ready('session') }, INTRO_ROUTE],
+    ['a cached session, intro seen → ask the server', { ...afterBegin, auth: ready('session') }, CHECK_SERVER],
+    ['a Keychain restore → ask the server', { ...fresh, auth: ready('keychain') }, CHECK_SERVER],
+    ['a Keystore restore → ask the server', { ...fresh, auth: ready('keystore') }, CHECK_SERVER],
+    ['a Block Store restore → ask the server', { ...fresh, auth: ready('block_store') }, CHECK_SERVER],
+    [
+      'a first launch offline (provably no token) → the intro',
+      { ...fresh, auth: { status: 'failed', reason: 'offline', hasStoredToken: false } },
       INTRO_ROUTE,
-    );
-    expect(launchRoute({ ...base, accountsConfigured: false, auth: { status: 'loading' } })).toBe(HOME_ROUTE);
-    expect(launchRoute({ ...base, auth: { status: 'not_configured' } })).toBe(HOME_ROUTE);
-  });
-
-  it('never replays the intro for a reinstall whose stored token could not be refreshed yet', () => {
-    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'offline', hasStoredToken: true } })).toBe(
+    ],
+    [
+      'a stored token not refreshed yet (offline) → Today, flags left unset',
+      { ...fresh, auth: { status: 'failed', reason: 'offline', hasStoredToken: true } },
       HOME_ROUTE,
-    );
-    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'server', hasStoredToken: true } })).toBe(
+    ],
+    [
+      'a stored token not refreshed yet (server) → Today',
+      { ...fresh, auth: { status: 'failed', reason: 'server', hasStoredToken: true } },
       HOME_ROUTE,
-    );
-  });
+    ],
+    ['an unknown token state (the store threw) → Today', { ...fresh, auth: { status: 'failed', reason: 'server' } }, HOME_ROUTE],
+  ];
 
-  it('treats an unknown token state (the store threw) as an existing account', () => {
-    expect(launchRoute({ ...base, auth: { status: 'failed', reason: 'server' } })).toBe(HOME_ROUTE);
-  });
-
-  it('counts a restored session as seen', () => {
-    expect(shouldMarkSeenOnLaunch(ready('session'))).toBe(true);
-    expect(shouldMarkSeenOnLaunch(ready('new'))).toBe(false);
-    expect(shouldMarkSeenOnLaunch({ status: 'loading' })).toBe(false);
+  it.each(cases)('%s', (_name, input, expected) => {
+    expect(launchRoute(input)).toBe(expected);
   });
 });
 

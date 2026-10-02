@@ -2,6 +2,7 @@ import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-librar
 
 import RootLayout from '../../../app/_layout';
 import OnboardingLayout from '../../../app/(onboarding)/_layout';
+import AgeScreen from '../../../app/(onboarding)/age';
 import RustleScreen from '../../../app/(onboarding)/rustle';
 import CompanySplash from '../../../app/(onboarding)/splash';
 import TabLayout from '../../../app/(tabs)/_layout';
@@ -37,12 +38,16 @@ function mockStandIn(testID: string) {
   return createElement(StandIn, { testID });
 }
 
+// Whole-router renders: a loaded machine can take longer than Jest's 5 s default.
+jest.setTimeout(30000);
+
 const routes = {
   _layout: RootLayout,
   index: Index,
   '(onboarding)/_layout': OnboardingLayout,
   '(onboarding)/splash': CompanySplash,
   '(onboarding)/rustle': RustleScreen,
+  '(onboarding)/age': AgeScreen,
   '(tabs)/_layout': TabLayout,
   '(tabs)/today': TodayScreen,
   '(tabs)/notes': NotesScreen,
@@ -113,20 +118,20 @@ describe('the Rustle screen (docs/21 §1.1)', () => {
       screen.getByText('Tell me a little. I’ll remember, and leave you something kind when you need it.'),
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Begin' })).toBeOnTheScreen();
-    expect(screen.getByText('Not a medical service.')).toBeOnTheScreen();
-    // No dead controls: the account link and the crisis link arrive with their screens.
+    expect(screen.getByText('Not a medical service. If you’re in crisis, get help now.')).toBeOnTheScreen();
+    expect(screen.getByText('get help now')).toBeOnTheScreen();
+    // No dead controls: the account link arrives with its screen.
     expect(screen.queryByText('I already have an account')).toBeNull();
-    expect(screen.queryByText(/get help now/)).toBeNull();
     expect(screen.getByText('Rustle is AI, not a therapist or a crisis service.')).toBeOnTheScreen();
   });
 
-  it('Begin marks the intro seen and, until the age gate exists, opens Today', async () => {
+  it('Begin marks the intro seen and opens the age gate (M1-09)', async () => {
     const router = await renderAt('/rustle');
     advance(HOLD + FADE);
 
     fireEvent.press(screen.getByRole('button', { name: 'Begin' }));
 
     expect(isIntroSeen()).toBe(true);
-    expect(router.getPathname()).toBe('/today');
+    expect(router.getPathname()).toBe('/age');
   });
 });

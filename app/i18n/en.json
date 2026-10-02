@@ -1,10 +1,57 @@
 {
+  "age": {
+    "blocked": {
+      "body": "Thank you for telling me. Rustle is made for people 18 and older, so this is where we stop. Nothing you entered was kept.",
+      "resourcesIntro": "If things feel heavy right now, these lines are there for young people. They’re free and confidential.",
+      "title": "Rustle is for adults"
+    },
+    "continue": "Continue",
+    "day": "Day",
+    "dayHint": "DD",
+    "invalid": "That date doesn’t look right. Check the day, month and year.",
+    "month": "Month",
+    "monthHint": "MM",
+    "saveError": "Something went wrong. Nothing was saved; try again in a moment.",
+    "sub": "Rustle asks everyone this once. The date itself is never kept.",
+    "title": "When were you born?",
+    "year": "Year",
+    "yearHint": "YYYY"
+  },
   "common": {
     "back": "Back",
     "begin": "Begin",
     "done": "Done",
     "errorSaved": "Something went wrong. Your note is saved; I’ll try again in a moment.",
-    "notNow": "Not now"
+    "notNow": "Not now",
+    "offline": "Rustle can’t reach its server right now. Check your connection, then try again."
+  },
+  "consent": {
+    "agree": "I agree",
+    "ai": {
+      "body": "To write your notes, what you share is sent to our AI partner, Anthropic, in the United States. It is used only to write your notes, and never to train AI models.",
+      "title": "Your words and our AI partner"
+    },
+    "declineNote": "If you’d rather not, Rustle stops here and keeps nothing.",
+    "goodbye": {
+      "body": "Rustle needs your agreement to write your notes, so we’ll stop here. Nothing you shared was kept, and this account has been removed.",
+      "later": "If you change your mind, open Rustle again and start from the beginning.",
+      "title": "That’s all right"
+    },
+    "saveError": "Something went wrong. Nothing was saved; try again in a moment.",
+    "specialCategory": {
+      "body": "What you share may touch on your health, your relationships or your beliefs. Rustle keeps it encrypted, uses it only to write your notes, and never sells it. You can see what Rustle remembers, change it, export it or delete everything at any time.",
+      "title": "The personal things you share"
+    },
+    "terms": {
+      "body": "Rustle writes short notes of support from what you share. It is not therapy, not a medical service and not a crisis line. Agreeing means you accept Rustle’s terms of use and privacy policy.",
+      "title": "Before we begin"
+    }
+  },
+  "help": {
+    "elsewhere": "Somewhere else? <link>findahelpline.com</link> lists lines near you.",
+    "emergency": "In immediate danger, call 911 (Canada, US), 112 (Europe), 999 (UK), 000 (Australia) or 15 (France).",
+    "intro": "If you’re in crisis or thinking about ending your life, please reach out to one of these lines now. You don’t have to go through this alone.",
+    "title": "Get help now"
   },
   "intro": {
     "aiDisclosure": "Rustle is AI, not a therapist or a crisis service.",
@@ -12,10 +59,39 @@
     "crisis": "Not a medical service. If you’re in crisis, <link>get help now</link>.",
     "haveAccount": "I already have an account",
     "headline": "Notes that know what you’re going through.",
-    "notMedical": "Not a medical service.",
     "sub": "Tell me a little. I’ll remember, and leave you something kind when you need it.",
     "wordmark": "rustle",
     "wordmarkLabel": "Rustle"
+  },
+  "resources": {
+    "call": "Call {{name}} at {{number}}",
+    "countries": {
+      "AU": "Australia",
+      "BE": "Belgium",
+      "CA": "Canada",
+      "CH": "Switzerland",
+      "FR": "France",
+      "GB": "United Kingdom",
+      "IE": "Ireland",
+      "US": "United States"
+    },
+    "dialIt": "This device can’t place the call. Dial {{number}} from any phone.",
+    "lines": {
+      "belgiumCps": "Centre de Prévention du Suicide",
+      "canada988": "Suicide Crisis Helpline, call or text",
+      "childline": "Childline",
+      "filSanteJeunes": "Fil Santé Jeunes",
+      "france3114": "3114, national suicide prevention line",
+      "kidsHelpPhone": "Kids Help Phone",
+      "lifeline988": "988 Suicide & Crisis Lifeline, call or text",
+      "lifelineAu": "Lifeline",
+      "mainTendue": "La Main Tendue",
+      "quebecAppelle": "Quebec suicide prevention line",
+      "samaritans": "Samaritans",
+      "sosAmitie": "SOS Amitié, listening line and chat"
+    },
+    "open": "Open {{name}}",
+    "visitIt": "Open {{address}} in a browser."
   },
   "settings": {
     "backup": {

@@ -4,4 +4,4 @@ export { Tree, type TreeProps } from './tree/Tree';
 export type { TreeIntensity } from './tree/maths';
 export { FoldedNoteMark } from './FoldedNoteMark';
 export { isIntroSeen, markIntroSeen, resetIntroSeen } from './intro-seen';
-export { HOME_ROUTE, INTRO_ROUTE, launchRoute, shouldMarkSeenOnLaunch, type LaunchRoute } from './launch';
+export { CHECK_SERVER, GATE_ROUTE, HOME_ROUTE, INTRO_ROUTE, launchRoute, type LaunchDecision, type LaunchRoute } from './launch';
