@@ -4,16 +4,10 @@ import type { Message, MessageCreateParamsNonStreaming, MessageStreamEvent } fro
 
 import type { LlmCallsClient } from '../cost/log.ts';
 import { MODELS } from './config.ts';
-import {
-  batchErrorReason,
-  classifyError,
-  LLMClient,
-  type BatchLike,
-  type BatchResultLike,
-  type MessagesApi,
-  type MessageStreamLike,
-  type RequestOptions,
-} from './LLMClient.ts';
+import type { RequestOptions } from '@anthropic-ai/sdk/internal/request-options';
+import type { MessageBatch, MessageBatchIndividualResponse } from '@anthropic-ai/sdk/resources/messages/batches';
+
+import { batchErrorReason, classifyError, LLMClient, type MessagesApi, type MessageStreamLike } from './LLMClient.ts';
 import { loadPrompt, promptUrl, promptVersionOf } from './prompts.ts';
 
 function assertEquals<T>(actual: T, expected: T, label = '') {
@@ -132,7 +126,10 @@ Deno.test('generate: cached system prefix, user turn as data, effort by tier, a 
   assertEquals(system.length, 1);
   assertEquals(system[0]!.cache_control, { type: 'ephemeral' });
   assertEquals(params.output_config, { effort: 'low' });
+  assertEquals(params.max_tokens, 4096);
   assertEquals(options?.maxRetries, 2);
+  assertEquals(options?.timeout, 60_000);
+  assert(options?.signal instanceof AbortSignal, 'the whole call is capped by an AbortSignal');
 
   assertEquals(f.rows.length, 1);
   const row = f.rows[0]!;
@@ -211,8 +208,9 @@ Deno.test('generate: SDK errors map to reasons, log an error row, and never thro
     assertEquals(result.ok, false, reason);
     if (!result.ok) assertEquals(result.reason, reason);
     assertEquals(f.rows[0]!.status, 'error');
-    assertEquals(f.calls[0]!.options, { timeout: 8_000, maxRetries: 0 });
+    assertEquals([f.calls[0]!.options?.timeout, f.calls[0]!.options?.maxRetries], [8_000, 0]);
   }
+  assertEquals(classifyError(new DOMException('timed out', 'TimeoutError')), { reason: 'timeout', retryable: true });
 });
 
 Deno.test('stream: deltas arrive in order and the result matches the final message', async () => {
@@ -243,9 +241,21 @@ Deno.test('cost logging never breaks a generation', async () => {
 
 Deno.test('batches: create, poll, and ingest results with batch pricing and unknown ids skipped', async () => {
   let created: { requests: Array<{ custom_id: string; params: MessageCreateParamsNonStreaming }> } | null = null;
-  const handle: BatchLike = { id: 'msgbatch_1', processing_status: 'in_progress', request_counts: { processing: 2, succeeded: 0, errored: 0, canceled: 0, expired: 0 } };
-  const results: BatchResultLike[] = [
-    { custom_id: 'b', result: { type: 'errored', error: { type: 'rate_limit' } } },
+  const handle: MessageBatch = {
+    id: 'msgbatch_1',
+    type: 'message_batch',
+    processing_status: 'in_progress',
+    request_counts: { processing: 2, succeeded: 0, errored: 0, canceled: 0, expired: 0 },
+    created_at: '2026-10-01T02:00:00Z',
+    expires_at: '2026-10-02T02:00:00Z',
+    ended_at: null,
+    archived_at: null,
+    cancel_initiated_at: null,
+    results_url: null,
+  };
+  // The wire shape of an errored result: an ErrorResponse whose inner error carries the API type.
+  const results: MessageBatchIndividualResponse[] = [
+    { custom_id: 'b', result: { type: 'errored', error: { type: 'error', request_id: null, error: { type: 'rate_limit_error', message: 'slow down' } } } },
     { custom_id: 'a', result: { type: 'succeeded', message: message({ text: 'note for a' }) } },
     { custom_id: 'zzz', result: { type: 'expired' } },
   ];
@@ -281,6 +291,7 @@ Deno.test('batches: create, poll, and ingest results with batch pricing and unkn
   assertEquals(out, [['b', false, 'rate_limited'], ['a', true, undefined]]);
   assertEquals(f.warnings.some((w) => w.includes('unknown custom_id')), true);
   assertEquals(f.rows.map((r) => r.batch_id), ['msgbatch_1', 'msgbatch_1']);
+  assertEquals(f.rows.map((r) => r.latency_ms), [null, null], 'batch rows carry no latency');
   const okRow = f.rows[1]!;
   // 100 input at $2 + 20 output at $10 + 1100 cache reads at $0.20 = 620 micro-USD, halved for the batch.
   assertEquals(okRow.cost_micros, 310);
@@ -292,7 +303,8 @@ Deno.test('batches: create, poll, and ingest results with batch pricing and unkn
     threw = true;
   }
   assert(threw, 'duplicate custom ids are refused');
-  assertEquals(batchErrorReason('invalid_request'), { reason: 'bad_request', retryable: false });
+  assertEquals(batchErrorReason('invalid_request_error'), { reason: 'bad_request', retryable: false });
+  assertEquals(batchErrorReason('api_error'), { reason: 'server_error', retryable: true });
 });
 
 Deno.test('prompts: versioned path and name, empty or missing files throw', async () => {

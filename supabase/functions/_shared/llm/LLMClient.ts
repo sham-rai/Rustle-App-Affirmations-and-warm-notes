@@ -13,12 +13,14 @@
 // system prompt, and never logs or throws with any of it.
 
 import Anthropic from '@anthropic-ai/sdk';
+import type { RequestOptions } from '@anthropic-ai/sdk/internal/request-options';
 import type {
   Message,
   MessageCreateParamsNonStreaming,
   MessageStreamEvent,
   TextBlockParam,
 } from '@anthropic-ai/sdk/resources/messages';
+import type { MessageBatch, MessageBatchIndividualResponse } from '@anthropic-ai/sdk/resources/messages/batches';
 import type {
   BatchCounts,
   BatchStatus,
@@ -53,7 +55,10 @@ export interface GenerateRequest<T = string> {
   readonly user: string;
   readonly schema?: OutputSchema<T>;
   readonly maxTokens?: number;
-  /** Wall-clock budget for the call including retries; real-time paths pass REALTIME_TIMEOUT_MS. */
+  /**
+   * Wall-clock budget for the whole call, retries included (an AbortSignal caps it; the SDK's own
+   * per-attempt timeout is set to the same value). Real-time paths pass REALTIME_TIMEOUT_MS.
+   */
   readonly timeoutMs?: number;
   /** Retries inside the SDK for 429 and 5xx; real-time paths pass 0 or 1. */
   readonly maxRetries?: number;
@@ -79,36 +84,22 @@ export interface BatchResultItem<T> {
   readonly result: LlmResult<T>;
 }
 
-/** The slice of the SDK this module uses, so tests can pass a fake. The real client satisfies it. */
+/**
+ * The slice of the SDK this module uses, typed with the SDK's own objects so a wire shape cannot
+ * drift behind a hand-written copy; narrow enough that a test can pass a fake.
+ */
 export interface MessagesApi {
   create(params: MessageCreateParamsNonStreaming, options?: RequestOptions): Promise<Message>;
   stream(params: MessageCreateParamsNonStreaming, options?: RequestOptions): MessageStreamLike;
   batches: {
-    create(params: { requests: Array<{ custom_id: string; params: MessageCreateParamsNonStreaming }> }): Promise<BatchLike>;
-    retrieve(id: string): Promise<BatchLike>;
-    results(id: string): Promise<AsyncIterable<BatchResultLike>>;
+    create(params: { requests: Array<{ custom_id: string; params: MessageCreateParamsNonStreaming }> }): Promise<MessageBatch>;
+    retrieve(id: string): Promise<MessageBatch>;
+    results(id: string): Promise<AsyncIterable<MessageBatchIndividualResponse>>;
   };
-}
-export interface RequestOptions {
-  readonly timeout?: number;
-  readonly maxRetries?: number;
 }
 export interface MessageStreamLike extends AsyncIterable<MessageStreamEvent> {
   finalMessage(): Promise<Message>;
 }
-export interface BatchLike {
-  readonly id: string;
-  readonly processing_status: BatchStatus;
-  readonly request_counts: BatchCounts;
-}
-export type BatchResultLike = {
-  readonly custom_id: string;
-  readonly result:
-    | { readonly type: 'succeeded'; readonly message: Message }
-    | { readonly type: 'errored'; readonly error: { readonly type: string } }
-    | { readonly type: 'canceled' }
-    | { readonly type: 'expired' };
-};
 
 export interface LLMClientOptions {
   /** The messages API to call; defaults to the Anthropic SDK with `ANTHROPIC_API_KEY`. */
@@ -163,14 +154,11 @@ export class LLMClient {
     const started = this.now();
     let message: Message;
     try {
-      message = await this.messages.create(params, {
-        timeout: request.timeoutMs ?? BACKGROUND_TIMEOUT_MS,
-        maxRetries: request.maxRetries ?? DEFAULT_MAX_RETRIES,
-      });
+      message = await this.messages.create(params, requestOptions(request));
     } catch (error) {
-      return this.failed(request, model, started, classifyError(error), null);
+      return this.failed(request, model, this.now() - started, classifyError(error), null);
     }
-    return this.finish(request, model, started, message, null);
+    return this.finish(request, model, this.now() - started, message, null);
   }
 
   /**
@@ -184,18 +172,15 @@ export class LLMClient {
     const started = this.now();
     let message: Message;
     try {
-      const stream = this.messages.stream(params, {
-        timeout: request.timeoutMs ?? BACKGROUND_TIMEOUT_MS,
-        maxRetries: request.maxRetries ?? DEFAULT_MAX_RETRIES,
-      });
+      const stream = this.messages.stream(params, requestOptions(request));
       for await (const event of stream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') onText(event.delta.text);
       }
       message = await stream.finalMessage();
     } catch (error) {
-      return this.failed(request, model, started, classifyError(error), null);
+      return this.failed(request, model, this.now() - started, classifyError(error), null);
     }
-    return this.finish(request, model, started, message, null);
+    return this.finish(request, model, this.now() - started, message, null);
   }
 
   /** Submits a Message Batch (the nightly notes, docs/07 §2.1). Returns at once; poll with `batch()`. */
@@ -223,7 +208,8 @@ export class LLMClient {
   /**
    * The results of an ended batch, each matched to its request by `customId` through `lookup`
    * (a result for an unknown id is skipped with a warning). Logs one cost row per result at the
-   * batch price. Results arrive in any order.
+   * batch price, with no latency (the batch ran hours earlier; `latency_ms` is null for it).
+   * Results arrive in any order.
    */
   async *batchResults<T = string>(
     id: string,
@@ -237,12 +223,11 @@ export class LLMClient {
         continue;
       }
       const model = this.models[request.tier];
-      const started = this.now();
       const r = entry.result;
       let result: LlmResult<T>;
-      if (r.type === 'succeeded') result = await this.finish(request, model, started, r.message, id);
-      else if (r.type === 'errored') result = await this.failed(request, model, started, batchErrorReason(r.error.type), id);
-      else result = await this.failed(request, model, started, { reason: 'unknown', retryable: true }, id);
+      if (r.type === 'succeeded') result = await this.finish(request, model, null, r.message, id);
+      else if (r.type === 'errored') result = await this.failed(request, model, null, batchErrorReason(r.error.error.type), id);
+      else result = await this.failed(request, model, null, { reason: r.type === 'expired' ? 'timeout' : 'unknown', retryable: true }, id);
       yield { customId: entry.custom_id, result };
     }
   }
@@ -290,12 +275,11 @@ export class LLMClient {
   private async finish<T>(
     request: Omit<GenerateRequest<T>, 'timeoutMs' | 'maxRetries'>,
     model: ModelConfig,
-    started: number,
+    latencyMs: number | null,
     message: Message,
     batchId: string | null,
   ): Promise<LlmResult<T>> {
     const usage = normaliseUsage(message.usage);
-    const latencyMs = this.now() - started;
     const info = { provider: this.provider, model: message.model || model.id, promptVersion: request.prompt.promptVersion, latencyMs, usage };
 
     if (message.stop_reason === 'refusal') {
@@ -328,18 +312,37 @@ export class LLMClient {
   private async failed<T>(
     request: Omit<GenerateRequest<T>, 'timeoutMs' | 'maxRetries'>,
     model: ModelConfig,
-    started: number,
+    latencyMs: number | null,
     failure: { reason: LlmFallbackReason; retryable: boolean },
     batchId: string | null,
   ): Promise<LlmResult<T>> {
-    const info = { provider: this.provider, model: model.id, promptVersion: request.prompt.promptVersion, latencyMs: this.now() - started, usage: null };
+    const info = { provider: this.provider, model: model.id, promptVersion: request.prompt.promptVersion, latencyMs, usage: null };
     await this.log(request, info, EMPTY_USAGE, batchId, 'error');
     return { ok: false, ...failure, ...info };
   }
 
+  /**
+   * Writes the cost row. On the Supabase Edge runtime the insert runs after the response is sent
+   * (`EdgeRuntime.waitUntil`), so a slow Postgres never adds to the first note's 8-second budget;
+   * elsewhere (tests, the prompt lab) it is awaited.
+   */
   private async log<T>(
     request: Omit<GenerateRequest<T>, 'timeoutMs' | 'maxRetries'>,
-    info: { model: string; promptVersion: string; latencyMs: number },
+    info: { model: string; promptVersion: string; latencyMs: number | null },
+    usage: LlmUsage,
+    batchId: string | null,
+    status: 'ok' | 'error' | 'fallback',
+  ): Promise<void> {
+    if (!this.costLog) return;
+    const write = this.writeRow(request, info, usage, batchId, status);
+    const runtime = (globalThis as { EdgeRuntime?: { waitUntil(promise: Promise<unknown>): void } }).EdgeRuntime;
+    if (runtime) runtime.waitUntil(write);
+    else await write;
+  }
+
+  private async writeRow<T>(
+    request: Omit<GenerateRequest<T>, 'timeoutMs' | 'maxRetries'>,
+    info: { model: string; promptVersion: string; latencyMs: number | null },
     usage: LlmUsage,
     batchId: string | null,
     status: 'ok' | 'error' | 'fallback',
@@ -378,13 +381,23 @@ export function normaliseUsage(usage: Message['usage']): LlmUsage {
   };
 }
 
-function toHandle(batch: BatchLike): BatchHandle {
+function toHandle(batch: MessageBatch): BatchHandle {
   return { id: batch.id, status: batch.processing_status, counts: batch.request_counts };
+}
+
+/**
+ * The SDK's `timeout` is per attempt and a timed-out attempt is retried, so the budget is also
+ * enforced with an AbortSignal over the whole call; the SDK does not retry a user abort.
+ */
+function requestOptions(request: GenerateRequest<unknown>): RequestOptions {
+  const timeout = request.timeoutMs ?? BACKGROUND_TIMEOUT_MS;
+  return { timeout, maxRetries: request.maxRetries ?? DEFAULT_MAX_RETRIES, signal: AbortSignal.timeout(timeout) };
 }
 
 /** Maps an SDK error to a fallback reason. Never includes the error message: it can quote the request. */
 export function classifyError(error: unknown): { reason: LlmFallbackReason; retryable: boolean } {
   if (error instanceof Anthropic.APIConnectionTimeoutError) return { reason: 'timeout', retryable: true };
+  if (error instanceof Anthropic.APIUserAbortError) return { reason: 'timeout', retryable: true };
   if (error instanceof Anthropic.APIConnectionError) return { reason: 'network', retryable: true };
   if (error instanceof Anthropic.APIError) {
     const status = error.status;
@@ -394,24 +407,30 @@ export function classifyError(error: unknown): { reason: LlmFallbackReason; retr
     if (status !== undefined && status >= 500) return { reason: 'server_error', retryable: true };
     if (status !== undefined && status >= 400) return { reason: 'bad_request', retryable: false };
   }
-  if (error instanceof Error && error.name === 'AbortError') return { reason: 'timeout', retryable: true };
+  if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')) return { reason: 'timeout', retryable: true };
   return { reason: 'unknown', retryable: true };
 }
 
-/** Batch results carry an error type string rather than an exception. */
-export function batchErrorReason(type: string): { reason: LlmFallbackReason; retryable: boolean } {
+/**
+ * A batch result that errored carries an `ErrorResponse` whose inner `error.type` is the API error
+ * type (`invalid_request_error`, `rate_limit_error`, ...), the same strings the Messages API puts
+ * in an error body.
+ */
+export function batchErrorReason(type: MessageBatchIndividualResponse extends { result: infer R } ? R extends { error: { error: { type: infer U } } } ? U : never : never): { reason: LlmFallbackReason; retryable: boolean } {
   switch (type) {
-    case 'invalid_request':
+    case 'invalid_request_error':
+    case 'not_found_error':
       return { reason: 'bad_request', retryable: false };
-    case 'rate_limit':
+    case 'rate_limit_error':
       return { reason: 'rate_limited', retryable: true };
-    case 'overloaded':
+    case 'overloaded_error':
       return { reason: 'overloaded', retryable: true };
-    case 'authentication':
-    case 'permission':
-    case 'billing':
+    case 'timeout_error':
+      return { reason: 'timeout', retryable: true };
+    case 'authentication_error':
+    case 'permission_error':
+    case 'billing_error':
       return { reason: 'auth', retryable: false };
-    case 'server_error':
     case 'api_error':
       return { reason: 'server_error', retryable: true };
     default:

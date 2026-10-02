@@ -15,7 +15,12 @@ export interface ModelConfig {
   readonly supportsEffort: boolean;
   /** The effort LLMClient sends when the caller gives none. */
   readonly defaultEffort: LlmEffort | null;
-  /** Default `max_tokens` for this tier; a note is one to four sentences, a recap a few cards. */
+  /**
+   * Default `max_tokens` for this tier. Sonnet 5 and Opus 5.5 think adaptively whenever `thinking`
+   * is omitted (which LLMClient never sends), and thinking tokens count against `max_tokens`, so
+   * the writer and deep tiers get far more room than a note or a recap needs; a cut answer is a
+   * `max_tokens` fallback, never a retry.
+   */
   readonly defaultMaxTokens: number;
 }
 
@@ -24,9 +29,9 @@ export const MODELS: Readonly<Record<LlmTier, ModelConfig>> = {
   fast: { id: 'claude-haiku-4-5', minCacheableTokens: 4096, supportsEffort: false, defaultEffort: null, defaultMaxTokens: 1024 },
   // Anything the user reads. Sonnet 5 until the blind test picks (docs/08 §2); Sonnet 5.5 is the
   // same price and belongs in that test.
-  writer: { id: 'claude-sonnet-5', minCacheableTokens: 1024, supportsEffort: true, defaultEffort: 'low', defaultMaxTokens: 1024 },
+  writer: { id: 'claude-sonnet-5', minCacheableTokens: 1024, supportsEffort: true, defaultEffort: 'low', defaultMaxTokens: 4096 },
   // The monthly recap: once a month, must be excellent.
-  deep: { id: 'claude-opus-5-5', minCacheableTokens: 512, supportsEffort: true, defaultEffort: 'high', defaultMaxTokens: 4096 },
+  deep: { id: 'claude-opus-5-5', minCacheableTokens: 512, supportsEffort: true, defaultEffort: 'high', defaultMaxTokens: 16000 },
 };
 
 /** The API retries 429 and 5xx this many times by default; real-time paths pass fewer. */

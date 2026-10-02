@@ -55,7 +55,8 @@ export interface LlmCallInfo {
   readonly model: string;
   /** `<prompt name>@v<n>`, stored with every generation (docs/08 §4). */
   readonly promptVersion: string;
-  readonly latencyMs: number;
+  /** Null for a batch result: the batch ran hours earlier and its duration is not a call latency. */
+  readonly latencyMs: number | null;
   readonly usage: LlmUsage | null;
 }
 
