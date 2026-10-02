@@ -63,8 +63,8 @@ Benchmarks from research: typical wellness apps D30 ≈ 3–7%, best health apps
 | `onboarding_completed` | has_key_date, tone, duration_s, variant |
 | `consent_granted` / `_withdrawn` | kind, version |
 | `delivery_first_shown` | latency_ms, fallback_used |
-| `delivery_reaction` | kind (a `DELIVERY_INTENTS` value, packages/shared), reaction (heart/not_quite), reason |
-| `delivery_opened` | slot, intent, minutes_after_delivery, via (push/local/widget) |
+| `delivery_reaction` | delivery_kind (a `DELIVERY_INTENTS` value, packages/shared), reaction (heart/not_quite), reason |
+| `delivery_opened` | slot, delivery_kind, minutes_after_delivery, source (push/local/widget) |
 | `notification_permission` | granted |
 | `board_note_created` / `_edited` / `_deleted` | length_bucket, wants_reply, offline (bool) |
 | `reply_viewed` | delay_min |
